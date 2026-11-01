@@ -1,0 +1,191 @@
+name: ScaleRules foundation
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: foundation-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  initialize:
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          fetch-depth: 0
+          ref: main
+      - name: Import pinned upstream history once
+        shell: bash
+        run: |
+          set -euo pipefail
+          if test -f Makefile; then
+            echo "Upstream already imported."
+            exit 0
+          fi
+          bootstrap=$(git rev-parse HEAD)
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git remote add upstream https://github.com/tailscale/tailscale-android.git
+          git fetch --no-tags upstream refs/tags/1.104.4-t938213198-gb9d487fe6
+          upstream=$(git rev-parse 'FETCH_HEAD^{commit}')
+          test "$upstream" = b9d487fe6d7203aeac889aeec2faccb9d32bb701
+          git merge --allow-unrelated-histories -s ours --no-commit "$upstream"
+          git read-tree --reset -u "$upstream"
+          git rm -r .github/workflows
+          git checkout "$bootstrap" -- .github/workflows/foundation.yml
+          mkdir -p docs
+          cp README.md docs/UPSTREAM_README.md
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path("android/build.gradle.kts")
+          s = p.read_text()
+          assert '    minSdk = 26' in s
+          p.write_text(s.replace('    minSdk = 26', '    applicationId = "io.github.teddybaerd.scalerules"\n    minSdk = 26', 1))
+          p = Path("android/src/main/AndroidManifest.xml")
+          p.write_text(p.read_text().replace('android:label="Tailscale"', 'android:label="ScaleRules"'))
+          p = Path("android/src/main/res/values/strings.xml")
+          p.write_text(p.read_text().replace('name="app_name" translatable="false">Tailscale<', 'name="app_name" translatable="false">ScaleRules<'))
+          Path("README.md").write_text("""# ScaleRules
+
+          Android VPN client for Tailscale and Headscale with automatic connection rules.
+
+          **Development foundation — no production release yet.** This first milestone
+          establishes a buildable Tailscale Android fork. Automatic rules and the in-app
+          updater are planned; they are not implemented in this milestone.
+
+          ## Foundation
+
+          - Based on Tailscale Android 1.104.4.
+          - Application ID: io.github.teddybaerd.scalerules.
+          - Existing upstream Kotlin/Java namespace is retained to simplify updates.
+          - Original Git history and BSD-3-Clause license are preserved.
+          - CI builds and tests a debug APK; it does not publish a release.
+          - Some inherited branding remains during development.
+          - Built with assistance from OpenAI ChatGPT/Codex; upstream authors retain credit.
+
+          ## Planned milestones
+
+          1. Verify the foundation build and Headscale login on a physical Android device.
+          2. Integrate trusted Wi-Fi/mobile connection rules and a decision journal.
+          3. Test DNS, exit nodes, split tunneling, Android Auto and background operation.
+          4. Add GitHub release notes, direct APK download, install, postpone and skip.
+          5. Publish signed APKs on GitHub Releases, compatible with manual installs and Obtainium.
+
+          No Google Play distribution is planned. Users will be able to disable the
+          built-in update checks when using Obtainium.
+
+          ## Build
+
+          See [upstream build instructions](docs/UPSTREAM_README.md) and
+          [the foundation workflow](.github/workflows/foundation.yml).
+          CI artifacts are temporary debug builds with a disposable signing key.
+          They are not suitable as the long-term update channel.
+
+          ## License and attribution
+
+          Tailscale Android is BSD-3-Clause licensed; see [LICENSE](LICENSE).
+          ScaleRules is an independent project, not affiliated with or endorsed by
+          Tailscale Inc. Tailscale and Headscale names identify interoperability.
+          Tailscale Auto Rules is a planned source for MIT-licensed rule logic;
+          its code has not yet been incorporated. Its license and attribution will
+          be included when that code is imported.
+          """)
+          Path("docs/UPSTREAM.md").write_text("""# Upstream provenance
+
+          Repository: https://github.com/tailscale/tailscale-android
+          Release: 1.104.4-t938213198-gb9d487fe6
+          Commit: b9d487fe6d7203aeac889aeec2faccb9d32bb701
+
+          The imported release retains its original Git ancestry. Upstream workflows
+          were replaced by a foundation workflow with explicit permissions.
+          The VPN engine and pinned Go dependencies are unchanged.
+
+          For updates, merge a reviewed stable Android release and retain its matching
+          go.mod, go.sum and go.toolchain.rev together. Do not blindly run update-oss:
+          upstream's target tracks the development main branch.
+
+          Monitor https://tailscale.com/security-bulletins and releases in both
+          tailscale/tailscale-android and tailscale/tailscale.
+          Review platform/configuration impact, build, test, then publish a signed APK.
+          """)
+          Path("docs/RELEASES.md").write_text("""# Distribution and update requirements
+
+          Distribution is exclusively through GitHub Releases. All installation paths
+          must use the same application ID and production signing certificate:
+          in-app updater, manual GitHub download and Obtainium.
+
+          Before the first release, create and securely back up a production signing
+          key. Never commit private keys or passwords. Debug CI keys are disposable.
+
+          Planned updater:
+          - Show version and release notes before download.
+          - Install now, remind later or skip that version.
+          - Download the APK with progress and cancellation.
+          - Check package ID, newer version and expected signing certificate.
+          - Hand installation to Android's package installer with user confirmation.
+          - Support disabling automatic checks and checking manually.
+          - Exclude prereleases unless explicitly opted in.
+          - Warn that updating the app can briefly interrupt its VPN connection.
+
+          Security maintenance will combine official bulletins, upstream release
+          monitoring and dependency checks. These are requirements, not implemented
+          automation in the foundation milestone.
+          """)
+          PY
+          git add README.md docs android/build.gradle.kts android/src/main/AndroidManifest.xml android/src/main/res/values/strings.xml
+          git commit -m "Initialize ScaleRules from Tailscale Android 1.104.4"
+          git push origin HEAD:main
+
+  build:
+    needs: initialize
+    if: always() && (needs.initialize.result == 'success' || needs.initialize.result == 'skipped')
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event_name == 'pull_request' && github.ref || 'main' }}
+          persist-credentials: false
+      - uses: actions/setup-go@0aaccfd150d50ccaeb58ebd88d36e91967a5f35b
+        with:
+          go-version-file: go.mod
+      - uses: actions/setup-java@3a4f6e1af504cf6a31855fa899c6aa5355ba6c12
+        with:
+          distribution: temurin
+          java-version: '21'
+      - name: Install pinned Android SDK components
+        shell: bash
+        run: |
+          set -euo pipefail
+          api=$(sed -n 's/^androidApiLevel=//p' android/gradle.properties)
+          tools=$(sed -n 's/^androidBuildToolsVersion=//p' android/gradle.properties)
+          sdkmanager "platforms;android-$api" "build-tools;$tools" "ndk;23.1.7779620"
+          echo "NDK_ROOT=$ANDROID_HOME/ndk/23.1.7779620" >> "$GITHUB_ENV"
+      - name: Build debug APK and run unit tests
+        run: make apk
+      - name: Check formatting
+        run: make fmt-check
+      - name: Run Go tests
+        run: make go-test
+      - name: Run release lint
+        run: make release-lint
+      - name: Upload development APK
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: scalerules-foundation-debug
+          path: tailscale-debug.apk
+          if-no-files-found: error
+          retention-days: 14
