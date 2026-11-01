@@ -1,0 +1,37 @@
+# Manual connection rules
+
+Open Settings > Verbindungsregeln. No rules are created automatically. There is
+no learning function. Create rules, set their order, then explicitly start automation.
+
+Conditions: exact Wi-Fi SSID, any Wi-Fi, mobile, offline, any connected network.
+Actions: connect, disconnect, or preserve the current VPN state.
+The first enabled matching rule wins. No match preserves the current state.
+Warnings identify rules completely hidden by earlier rules, including conflicting actions.
+A specific SSID exception should precede a general Wi-Fi rule.
+
+Every configuration change pauses automation. Review changes and start it again.
+Pausing never disconnects the VPN. A separate foreground notification permits pausing
+while the VPN itself is off. Physical networks are chosen with the same selection
+logic as the existing Tailscale client; the VPN interface is excluded.
+
+SSID rules require precise location permission and Android location enabled, solely
+for reading the Wi-Fi name. No GPS locations or network scans are collected.
+If an SSID cannot be read while SSID rules are enabled, Wi-Fi evaluation preserves
+the VPN state rather than falling through to a general rule.
+
+Decisions are debounced for two seconds and only reapplied when the network context,
+selected rule, or rule configuration changes. Manual VPN changes do not cause a
+continuous reconnect fight. The journal contains the latest 200 decisions and requests;
+a connection request is not proof that the tunnel successfully established.
+Exit node, DNS and app exclusions are not modified.
+
+## Test milestone limitations
+
+- Automation must be resumed explicitly after reboot, process termination or force-stop.
+- No import/export, Bluetooth, time, battery, or combined conditions in this first version.
+- No automated learning and no remote rules.
+- SSID names alone do not authenticate a Wi-Fi access point.
+- Device tests still required: mobile/Wi-Fi transitions, unknown SSID, permission denial,
+  screen off, Samsung background restrictions, pause and rapid network changes.
+- Production signing and the in-app updater are separate milestones. CI debug builds
+  may use different signing certificates and cannot be assumed to update existing installs.

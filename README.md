@@ -3,8 +3,8 @@
 Android VPN client for Tailscale and Headscale with automatic connection rules.
 
 **Development foundation — no production release yet.** This first milestone
-establishes a buildable Tailscale Android fork. Automatic rules and the in-app
-updater are planned; they are not implemented in this milestone.
+establishes a buildable Tailscale Android fork. Manual connection rules are implemented on the feature branch; the in-app
+updater is planned. See [manual rules](docs/RULES.md) for behavior and test limits.
 
 ## Foundation
 

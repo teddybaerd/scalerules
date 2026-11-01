@@ -29,6 +29,11 @@
         android:name="android.hardware.touchscreen"
         android:required="false" />
 
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_LOCATION" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
+
     <application
         android:name=".App"
         android:allowBackup="false"
@@ -41,6 +46,17 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:enableOnBackInvokedCallback="true"
         android:theme="@style/Theme.App.SplashScreen">
+        <activity
+            android:name="com.tailscale.ipn.rules.RulesActivity"
+            android:exported="false" />
+        <service
+            android:name="com.tailscale.ipn.rules.RulesService"
+            android:exported="false"
+            android:foregroundServiceType="specialUse|location">
+            <property
+                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+                android:value="Observe physical network changes and apply user-authored VPN connection rules, including while the VPN is disconnected" />
+        </service>
         <activity
             android:name="MainActivity"
             android:configChanges="orientation|screenSize|screenLayout|smallestScreenSize|keyboardHidden"
