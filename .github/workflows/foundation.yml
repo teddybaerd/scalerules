@@ -41,7 +41,7 @@ jobs:
           test "$upstream" = b9d487fe6d7203aeac889aeec2faccb9d32bb701
           git merge --allow-unrelated-histories -s ours --no-commit "$upstream"
           git read-tree --reset -u "$upstream"
-          git rm -r .github/workflows
+          git rm -rf .github/workflows
           git checkout "$bootstrap" -- .github/workflows/foundation.yml
           mkdir -p docs
           cp README.md docs/UPSTREAM_README.md
