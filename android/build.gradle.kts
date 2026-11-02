@@ -27,7 +27,8 @@ android {
     targetSdk = androidApiLevel
 
     versionCode = computeVersionCode()
-    versionName = getVersionProperty("VERSION_LONG")
+    versionName =
+        project.findProperty("SCALERULES_VERSION")?.toString() ?: getVersionProperty("VERSION_LONG")
     testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
     buildConfigField(

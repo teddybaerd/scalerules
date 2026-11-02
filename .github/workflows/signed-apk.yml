@@ -1,0 +1,134 @@
+name: Signed APK
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'ScaleRules version, e.g. 0.1.0 or 0.1.0-rc.1'
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: signed-apk-main
+  cancel-in-progress: false
+
+jobs:
+  build:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Validate version
+        id: version
+        env:
+          SCALERULES_VERSION: ${{ inputs.version }}
+        run: |
+          python3 - <<'PY'
+          import os, re
+          version = os.environ['SCALERULES_VERSION']
+          assert re.fullmatch(r'[0-9]+\.[0-9]+\.[0-9]+(?:-[0-9A-Za-z][0-9A-Za-z.-]*)?', version), 'Invalid version'
+          with open(os.environ['GITHUB_OUTPUT'], 'a') as output:
+              output.write('version=' + version + '\n')
+          PY
+      - uses: actions/setup-go@0aaccfd150d50ccaeb58ebd88d36e91967a5f35b
+        with:
+          go-version-file: go.mod
+      - uses: actions/setup-java@3a4f6e1af504cf6a31855fa899c6aa5355ba6c12
+        with:
+          distribution: temurin
+          java-version: '21'
+      - name: Install pinned Android SDK components
+        run: |
+          api=$(sed -n 's/^androidApiLevel=//p' android/gradle.properties)
+          tools=$(sed -n 's/^androidBuildToolsVersion=//p' android/gradle.properties)
+          "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "platforms;android-$api" "build-tools;$tools" "ndk;23.1.7779620"
+          echo "NDK_ROOT=$ANDROID_HOME/ndk/23.1.7779620" >> "$GITHUB_ENV"
+      - name: Build and test unsigned release
+        env:
+          SCALERULES_VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          python3 scripts/check_translations.py
+          make libtailscale version
+          cd android
+          ./gradlew --no-daemon test assembleRelease lintVitalRelease "-PSCALERULES_VERSION=$SCALERULES_VERSION"
+      - name: Upload unsigned APK for signing job
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: unsigned-release
+          path: android/build/outputs/apk/release/android-release-unsigned.apk
+          retention-days: 1
+          if-no-files-found: error
+
+  sign:
+    needs: build
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    environment: release-signing
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+      - uses: actions/setup-java@3a4f6e1af504cf6a31855fa899c6aa5355ba6c12
+        with:
+          distribution: temurin
+          java-version: '21'
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: unsigned-release
+          path: unsigned
+      - name: Install Android signing tools
+        run: |
+          tools=$(sed -n 's/^androidBuildToolsVersion=//p' android/gradle.properties)
+          "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "build-tools;$tools"
+      - name: Sign and verify release APK
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_SIGNING_CERT_SHA256: ${{ vars.ANDROID_SIGNING_CERT_SHA256 }}
+          SCALERULES_VERSION: ${{ needs.build.outputs.version }}
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import base64, os, re
+          from pathlib import Path
+          for name in ['ANDROID_KEYSTORE_BASE64', 'ANDROID_KEYSTORE_PASSWORD', 'ANDROID_SIGNING_CERT_SHA256']:
+              assert os.environ.get(name), 'Missing signing configuration: ' + name
+          assert re.fullmatch(r'[0-9a-fA-F:\s]+', os.environ['ANDROID_SIGNING_CERT_SHA256']), 'Invalid fingerprint'
+          os.umask(0o077)
+          directory = Path(os.environ['RUNNER_TEMP']) / 'scalerules-signing'
+          directory.mkdir(exist_ok=True)
+          key = base64.b64decode(''.join(os.environ['ANDROID_KEYSTORE_BASE64'].split()), validate=True)
+          assert 0 < len(key) < 30000, 'Unexpected keystore size'
+          (directory / 'release.p12').write_bytes(key)
+          PY
+          bash scripts/sign-release-apk.sh unsigned/android-release-unsigned.apk "dist/scalerules-$SCALERULES_VERSION.apk" "$RUNNER_TEMP/scalerules-signing/release.p12"
+          python3 - <<'PY'
+          import hashlib, json, os, re
+          from pathlib import Path
+          version = os.environ['SCALERULES_VERSION']
+          apk = Path('dist') / ('scalerules-' + version + '.apk')
+          digest = hashlib.sha256(apk.read_bytes()).hexdigest()
+          (apk.parent / 'SHA256SUMS').write_text(digest + '  ' + apk.name + '\n')
+          fingerprint = re.sub(r'[:\s]', '', os.environ['ANDROID_SIGNING_CERT_SHA256']).lower()
+          (apk.parent / 'signing-certificate-sha256.txt').write_text(fingerprint + '\n')
+          (apk.parent / 'build-info.json').write_text(json.dumps({'version': version, 'source_commit': os.environ['GITHUB_SHA'], 'package': 'io.github.teddybaerd.scalerules', 'certificate_sha256': fingerprint, 'apk_sha256': digest}, indent=2) + '\n')
+          PY
+      - name: Remove private signing material
+        if: always()
+        run: rm -rf "$RUNNER_TEMP/scalerules-signing"
+      - name: Upload verified signed APK
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: scalerules-${{ needs.build.outputs.version }}-signed
+          path: dist/
+          retention-days: 90
+          if-no-files-found: error

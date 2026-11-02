@@ -20,3 +20,11 @@ Planned updater:
 Security maintenance will combine official bulletins, upstream release
 monitoring and dependency checks. These are requirements, not implemented
 automation in the foundation milestone.
+
+## Permanent signing setup
+
+The implementation and owner setup steps are documented in [SIGNING.md](SIGNING.md).
+The manually triggered **Signed APK** workflow builds an unsigned release separately
+from the environment-protected signing job. It does not publish a GitHub release.
+The private production key must be created and backed up by the repository owner;
+normal CI only uses disposable test keys.

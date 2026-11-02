@@ -46,3 +46,10 @@ Tailscale Inc. Tailscale and Headscale names identify interoperability.
 Tailscale Auto Rules is a planned source for MIT-licensed rule logic;
 its code has not yet been incorporated. Its license and attribution will
 be included when that code is imported.
+
+## Permanently signed APKs
+
+See [signing setup (German)](docs/SIGNING.md) to create and back up your own key on
+Windows and configure the main-only GitHub signing environment. The **Signed APK**
+workflow produces verified release APKs with a stable certificate. Normal CI debug
+artifacts remain disposable and are not the update channel.
