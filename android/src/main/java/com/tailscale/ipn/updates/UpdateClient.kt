@@ -151,8 +151,8 @@ class UpdateClient(private val context: Context) {
             code(archive) <= code(installed) ||
             installedSigners.isEmpty() ||
             signers(archive) != installedSigners ||
-            (archive.applicationInfo?.flags ?: 0) and
-                android.content.pm.ApplicationInfo.FLAG_DEBUGGABLE != 0
+            ((archive.applicationInfo?.flags ?: 0) and
+                android.content.pm.ApplicationInfo.FLAG_DEBUGGABLE) != 0
     ) {
       throw IOException("APK identity, version or signer mismatch")
     }

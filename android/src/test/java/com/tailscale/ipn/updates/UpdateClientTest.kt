@@ -30,19 +30,19 @@ class UpdateClientTest {
       val signature = mock<Signature> { on { toByteArray() } doReturn byteArrayOf(1, 2, 3) }
       val foreignSignature = mock<Signature> { on { toByteArray() } doReturn byteArrayOf(4, 5, 6) }
       val installed =
-          PackageInfo().apply {
+          mock<PackageInfo>().apply {
             packageName = "io.github.teddybaerd.scalerules"
             versionName = "0.1.0"
             versionCode = 100
             signatures = arrayOf(signature)
           }
       val archive =
-          PackageInfo().apply {
+          mock<PackageInfo>().apply {
             packageName = installed.packageName
             versionName = "0.2.0"
             versionCode = 101
             signatures = arrayOf(signature)
-            applicationInfo = ApplicationInfo().apply { flags = 0 }
+            applicationInfo = mock<ApplicationInfo>().apply { flags = 0 }
           }
       val manager =
           mock<PackageManager> {
