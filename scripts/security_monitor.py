@@ -276,7 +276,7 @@ def publish(report, call=get_json):
     for page in range(1, 101):
         items = call(f'{base}/issues?state=all&per_page=100&page={page}', token=token)
         for issue in items:
-            if issue.get('title') == TITLE and MARKER in (issue.get('body') or '') and issue.get('user', {}).get('login') == 'github-actions[bot]' and not issue.get('pull_request'):
+            if MARKER in (issue.get('body') or '') and issue.get('user', {}).get('login') == 'github-actions[bot]' and not issue.get('pull_request'):
                 if existing is not None:
                     raise ValueError('Multiple monitor issues found; resolve duplicates manually')
                 existing = issue
