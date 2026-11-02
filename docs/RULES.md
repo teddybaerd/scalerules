@@ -46,3 +46,16 @@ the app language. Diagnostic messages supplied by the VPN backend are not transl
 
 Condition and VPN action are labeled, outlined dropdown fields with an arrow and
 a tap hint. Their full field area opens the menu without opening a keyboard.
+
+## Copy the current Wi-Fi into a rule
+
+For a specific-SSID condition, **Use current Wi-Fi / Aktuelles WLAN übernehmen**
+reads the connected Wi-Fi name only after an explicit tap and puts it in the
+current draft. Save explicitly to persist the rule; cancelling discards the draft.
+Manual entry remains available. Failures preserve any existing SSID text.
+
+The button can request Android coarse/precise location permission together;
+precise permission and enabled Android location services are required to read
+SSID information. If permission is denied, settings can be opened from the editor.
+After changing settings, tap the capture button again. No Wi-Fi scans, GPS reads,
+background listeners or VPN changes are performed by this button.

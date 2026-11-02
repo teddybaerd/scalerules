@@ -18,6 +18,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -266,10 +267,10 @@ private fun RuleEditor(
     onDismiss: () -> Unit,
     onSave: (ConnectionRule) -> Unit,
 ) {
-  var name by remember { mutableStateOf(rule.name) }
-  var ssid by remember { mutableStateOf(rule.ssid) }
-  var condition by remember { mutableStateOf(rule.condition) }
-  var action by remember { mutableStateOf(rule.action) }
+  var name by rememberSaveable(rule.id) { mutableStateOf(rule.name) }
+  var ssid by rememberSaveable(rule.id) { mutableStateOf(rule.ssid) }
+  var condition by rememberSaveable(rule.id) { mutableStateOf(rule.condition) }
+  var action by rememberSaveable(rule.id) { mutableStateOf(rule.action) }
   var conditionMenu by remember { mutableStateOf(false) }
   var actionMenu by remember { mutableStateOf(false) }
   AlertDialog(
@@ -323,6 +324,7 @@ private fun RuleEditor(
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true,
             )
+            CurrentWifiButton(onSsid = { ssid = it })
           }
           ExposedDropdownMenuBox(
               expanded = actionMenu,
