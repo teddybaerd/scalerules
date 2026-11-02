@@ -469,4 +469,32 @@
     <string name="sr_android_icon">Android device</string>
     <string name="sr_globe_icon">Internet</string>
     <string name="sr_menu">Menu</string>
+
+    <!-- ScaleRules app updates -->
+    <string name="su_title">App updates</string>
+    <string name="su_settings_hint">GitHub releases, changelog and installation</string>
+    <string name="su_installed">Installed: %1$s</string>
+    <string name="su_automatic">Check automatically when opening the app</string>
+    <string name="su_source">Checks GitHub at most once a day. Disable this if you prefer Obtainium. Downloads and installation always require your action.</string>
+    <string name="su_check">Check for updates</string>
+    <string name="su_current">You are up to date.</string>
+    <string name="su_manual_version">This development version cannot be compared automatically. Please use GitHub releases.</string>
+    <string name="su_check_failed">Could not check for updates. Check your connection or try again later.</string>
+    <string name="su_download_failed">Download or security check failed. No APK was passed to the installer. Please try again or use GitHub.</string>
+    <string name="su_ready">Download verified. Tap Install update to continue.</string>
+    <string name="su_permission_hint">Allow ScaleRules to install apps, then return here and tap Install update again.</string>
+    <string name="su_install_failed">Could not open the verified update for installation. You can retry the download or use GitHub.</string>
+    <string name="su_available">Update %1$s available</string>
+    <string name="su_changelog">What is new</string>
+    <string name="su_no_notes">No release notes provided.</string>
+    <string name="su_download">Download update</string>
+    <string name="su_install">Install update</string>
+    <string name="su_now">Install now</string>
+    <string name="su_later">Later</string>
+    <string name="su_skip">Skip this version</string>
+    <string name="su_skipped">Version skipped. You can still find it with a manual check.</string>
+    <string name="su_github">Open GitHub releases</string>
+    <string name="su_back">Back</string>
+    <string name="su_working">Checking…</string>
+    <string name="su_downloading">Downloading: %1$d%%</string>
 </resources>

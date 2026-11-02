@@ -166,6 +166,19 @@ fun SettingsView(
       }
 
       Lists.SectionDivider()
+      Setting.Text(
+          R.string.su_title,
+          subtitle = stringResource(R.string.su_settings_hint),
+          onClick = {
+            context.startActivity(
+                android.content.Intent(
+                    context,
+                    com.tailscale.ipn.updates.UpdatesActivity::class.java,
+                )
+            )
+          },
+      )
+      Lists.ItemDivider()
       Setting.Text(R.string.bug_report, onClick = settingsNav.onNavigateToBugReport)
 
       Lists.ItemDivider()
