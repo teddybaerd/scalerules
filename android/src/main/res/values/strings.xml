@@ -505,4 +505,20 @@
     <string name="sr_current_wifi_location">Turn on Android location services, then tap Use current Wi-Fi again.</string>
     <string name="sr_current_wifi_unavailable">Android did not provide a Wi-Fi name. Try again or enter it manually.</string>
     <string name="sr_current_wifi_settings">Open settings</string>
+
+    <string name="sr_background_title">Background operation</string>
+    <string name="sr_background_explanation">Android may restrict background activity to save battery. Allow unrestricted battery usage for ScaleRules so VPN connection rules can respond reliably when the screen is off. This may increase battery usage.</string>
+    <string name="sr_background_android_steps">Select ScaleRules in the battery optimization settings and choose Not optimized. In app info, check Battery → Unrestricted, if available. Menu names vary by device.</string>
+    <string name="sr_background_samsung">Samsung: remove ScaleRules from Sleeping apps and Deep sleeping apps. Where available, add it to Never auto sleeping apps under Settings → Battery → Background usage limits. Availability and menu names vary by One UI version. The Android status above does not verify these Samsung lists.</string>
+    <string name="sr_background_battery_button">Open battery settings</string>
+    <string name="sr_background_app_button">Open ScaleRules app info</string>
+    <string name="sr_background_samsung_button">Open Samsung standby settings</string>
+    <string name="sr_background_exempt">Android battery optimization: ScaleRules is exempt. Check any additional manufacturer restrictions separately.</string>
+    <string name="sr_background_optimized">Android battery optimization: ScaleRules is not on the exemption list.</string>
+    <string name="sr_background_limits">Battery settings do not guarantee uninterrupted operation. Resume rule automation manually after a reboot or if its process was terminated. This screen does not change your VPN, rules or system settings automatically.</string>
+    <string name="sr_background_unavailable">This settings screen could not be opened. Please open Android Settings and select Apps → ScaleRules manually.</string>
+    <string name="sr_background_later">Later</string>
+    <string name="sr_background_later_note">You can revisit these instructions under Settings → Background operation.</string>
+    <string name="sr_background_settings_hint">Battery optimization and standby settings</string>
+    <string name="sr_background_back">Back</string>
 </resources>

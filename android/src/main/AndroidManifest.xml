@@ -48,6 +48,7 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:enableOnBackInvokedCallback="true"
         android:theme="@style/Theme.App.SplashScreen">
+        <activity android:name="com.tailscale.ipn.background.BackgroundSettingsActivity" android:exported="false" />
         <activity android:name="com.tailscale.ipn.updates.UpdatesActivity" android:exported="false" android:launchMode="singleTask" />
         <provider
             android:name="androidx.core.content.FileProvider"

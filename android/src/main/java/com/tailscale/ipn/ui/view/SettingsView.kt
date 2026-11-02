@@ -167,6 +167,19 @@ fun SettingsView(
 
       Lists.SectionDivider()
       Setting.Text(
+          R.string.sr_background_title,
+          subtitle = stringResource(R.string.sr_background_settings_hint),
+          onClick = {
+            context.startActivity(
+                android.content.Intent(
+                    context,
+                    com.tailscale.ipn.background.BackgroundSettingsActivity::class.java,
+                )
+            )
+          },
+      )
+      Lists.ItemDivider()
+      Setting.Text(
           R.string.su_title,
           subtitle = stringResource(R.string.su_settings_hint),
           onClick = {

@@ -83,6 +83,7 @@ class RulesActivity : ComponentActivity() {
 
   @Composable
   private fun RulesScreen() {
+    com.tailscale.ipn.background.BackgroundSetupPrompt()
     val store = remember { RulesStore(this) }
     var revision by remember { mutableIntStateOf(0) }
     DisposableEffect(store) {
@@ -118,6 +119,18 @@ class RulesActivity : ComponentActivity() {
           style = MaterialTheme.typography.titleMedium,
       )
       Text(stringResource(R.string.sr_rules_permissions))
+      TextButton(
+          onClick = {
+            startActivity(
+                Intent(
+                    this@RulesActivity,
+                    com.tailscale.ipn.background.BackgroundSettingsActivity::class.java,
+                )
+            )
+          }
+      ) {
+        Text(stringResource(R.string.sr_background_title))
+      }
       Button(
           onClick = {
             editing =
