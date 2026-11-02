@@ -21,6 +21,9 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.core.content.FileProvider
 import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.lifecycle.viewModelScope
 import com.tailscale.ipn.BuildConfig
 import com.tailscale.ipn.R
@@ -253,29 +256,33 @@ fun UpdatePrompt() {
   val context = LocalContext.current
   val client = remember { UpdateClient(context.applicationContext) }
   var available by remember { mutableStateOf<Release?>(null) }
-  LaunchedEffect(Unit) {
-    val now = System.currentTimeMillis()
-    val preferences = client.preferences
-    if (
-        !client.automatic ||
-            now < preferences.getLong("deferredUntil", 0) ||
-            now - preferences.getLong("lastAttempt", 0) < UpdatesViewModel.DAY
-    )
-        return@LaunchedEffect
-    val installed = ReleaseVersion.parse(BuildConfig.VERSION_NAME) ?: return@LaunchedEffect
-    preferences.edit().putLong("lastAttempt", now).apply()
-    try {
-      val latest = withContext(Dispatchers.IO) { client.latest() }
+  val lifecycleOwner = LocalLifecycleOwner.current
+  LaunchedEffect(lifecycleOwner) {
+    lifecycleOwner.lifecycle.repeatOnLifecycle(Lifecycle.State.RESUMED) {
+      available = null
+      val now = System.currentTimeMillis()
+      val preferences = client.preferences
       if (
-          latest != null &&
-              latest.version > installed &&
-              latest.tag != preferences.getString("skipped", null)
+          !client.automatic ||
+              now < preferences.getLong("deferredUntil", 0) ||
+              now - preferences.getLong("lastAttempt", 0) < UpdatesViewModel.DAY
       )
-          available = latest
-    } catch (e: CancellationException) {
-      throw e
-    } catch (_: Exception) {
-      /* Manual check reports failures. */
+          return@repeatOnLifecycle
+      val installed = ReleaseVersion.parse(BuildConfig.VERSION_NAME) ?: return@repeatOnLifecycle
+      preferences.edit().putLong("lastAttempt", now).apply()
+      try {
+        val latest = withContext(Dispatchers.IO) { client.latest() }
+        if (
+            latest != null &&
+                latest.version > installed &&
+                latest.tag != preferences.getString("skipped", null)
+        )
+            available = latest
+      } catch (e: CancellationException) {
+        throw e
+      } catch (_: Exception) {
+        /* Manual check reports failures. */
+      }
     }
   }
   fun later() {
