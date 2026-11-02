@@ -78,7 +78,7 @@ fun UserSwitcherView(nav: UserSwitcherNav, viewModel: UserSwitcherViewModel = vi
                     onCustomClick = nav.onNavigateCustomControl,
                 )
                 IconButton(onClick = { viewModel.showHeaderMenu.set(!showHeaderMenu) }) {
-                  Icon(Icons.Default.MoreVert, "menu")
+                  Icon(Icons.Default.MoreVert, stringResource(R.string.sr_menu))
                 }
               }
             },

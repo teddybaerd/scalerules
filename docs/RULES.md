@@ -35,3 +35,14 @@ Exit node, DNS and app exclusions are not modified.
   screen off, Samsung background restrictions, pause and rapid network changes.
 - Production signing and the in-app updater are separate milestones. CI debug builds
   may use different signing certificates and cannot be assumed to update existing installs.
+
+## Languages and rule editor
+
+English is the default fallback; German devices use the complete German string
+resources. Android 13+ also exposes English and German in the system app-language
+settings. Rule names and SSIDs remain user data and are never translated. Existing
+journal entries retain the language in which they were recorded; new entries use
+the app language. Diagnostic messages supplied by the VPN backend are not translated.
+
+Condition and VPN action are labeled, outlined dropdown fields with an arrow and
+a tap hint. Their full field area opens the menu without opening a keyboard.

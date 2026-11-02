@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="docs/assets/scalerules-icon.png" width="160" alt="ScaleRules logo: four bright corner dots and a gray gear on charcoal" />
+</p>
+
 # ScaleRules
 
 Android VPN client for Tailscale and Headscale with automatic connection rules.

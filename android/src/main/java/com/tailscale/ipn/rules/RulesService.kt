@@ -72,13 +72,17 @@ class RulesService : Service() {
             ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) !=
                 PackageManager.PERMISSION_GRANTED
     ) {
-      store.log("Automatik nicht gestartet: Berechtigung für WLAN-Namen fehlt")
+      store.log(getString(R.string.sr_automation_no_permission))
       stopSelf()
       return START_NOT_STICKY
     }
     getSystemService(NotificationManager::class.java)
         .createNotificationChannel(
-            NotificationChannel(CHANNEL, "ScaleRules Automatik", NotificationManager.IMPORTANCE_LOW)
+            NotificationChannel(
+                CHANNEL,
+                getString(R.string.sr_automation_name),
+                NotificationManager.IMPORTANCE_LOW,
+            )
         )
     var types =
         if (Build.VERSION.SDK_INT >= 34) ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE else 0
@@ -88,7 +92,7 @@ class RulesService : Service() {
       ServiceCompat.startForeground(
           this,
           NOTIFICATION_ID,
-          notification("Regeln werden ausgewertet"),
+          notification(getString(R.string.sr_automation_evaluating)),
           types,
       )
       if (!registered) {
@@ -102,12 +106,12 @@ class RulesService : Service() {
         store.preferences.registerOnSharedPreferenceChangeListener(listener)
         registered = true
         active.value = true
-        store.log("Automatik gestartet")
+        store.log(getString(R.string.sr_automation_started))
       }
       lastDecision = null
       schedule()
     } catch (e: RuntimeException) {
-      store.log("Automatik konnte nicht starten: ${e.javaClass.simpleName}")
+      store.log(getString(R.string.sr_automation_failed, e.javaClass.simpleName))
       stopSelf()
     }
     // SSID access is a while-in-use permission. Resume explicitly from the visible activity.
@@ -169,26 +173,32 @@ class RulesService : Service() {
     val app = App.get()
     val result =
         when (decision.action) {
-          RuleAction.KEEP -> "VPN unverändert"
+          RuleAction.KEEP -> getString(R.string.sr_vpn_unchanged)
           RuleAction.CONNECT -> {
             when {
-              VpnService.prepare(this) != null -> "Nicht verbunden: VPN-Freigabe fehlt"
-              !app.isAbleToStartVPN() -> "Nicht verbunden: zuerst anmelden"
-              app.getAppScopedViewModel().vpnActive.value -> "VPN bereits verbunden"
+              VpnService.prepare(this) != null -> getString(R.string.sr_vpn_permission)
+              !app.isAbleToStartVPN() -> getString(R.string.sr_vpn_login)
+              app.getAppScopedViewModel().vpnActive.value -> getString(R.string.sr_vpn_connected)
               else -> {
                 app.startVPN()
-                "VPN-Verbindung angefordert"
+                getString(R.string.sr_vpn_connect_requested)
               }
             }
           }
           RuleAction.DISCONNECT -> {
             if (app.getAppScopedViewModel().vpnActive.value) {
               app.stopVPN()
-              "VPN-Trennung angefordert"
-            } else "VPN bereits getrennt"
+              getString(R.string.sr_vpn_disconnect_requested)
+            } else getString(R.string.sr_vpn_disconnected)
           }
         }
-    val message = "${decision.reason}: $result"
+    val reason =
+        when (decision.reason) {
+          DecisionReason.MATCHED -> decision.rule?.name.orEmpty()
+          DecisionReason.NO_MATCH -> getString(R.string.sr_no_match)
+          DecisionReason.SSID_UNAVAILABLE -> getString(R.string.sr_ssid_unknown)
+        }
+    val message = getString(R.string.sr_decision_message, reason, result)
     store.log(message)
     if (
         Build.VERSION.SDK_INT < 33 ||
@@ -203,7 +213,7 @@ class RulesService : Service() {
   private fun notification(message: String) =
       NotificationCompat.Builder(this, CHANNEL)
           .setSmallIcon(R.drawable.ic_tile)
-          .setContentTitle("ScaleRules Automatik")
+          .setContentTitle(getString(R.string.sr_automation_name))
           .setContentText(message)
           .setStyle(NotificationCompat.BigTextStyle().bigText(message))
           .setOngoing(true)
@@ -217,7 +227,7 @@ class RulesService : Service() {
           )
           .addAction(
               0,
-              "Pausieren",
+              getString(R.string.sr_pause),
               PendingIntent.getService(
                   this,
                   1,
@@ -231,7 +241,7 @@ class RulesService : Service() {
     if (registered) {
       connectivity.unregisterNetworkCallback(callback)
       store.preferences.unregisterOnSharedPreferenceChangeListener(listener)
-      store.log("Automatik pausiert; VPN-Zustand unverändert")
+      store.log(getString(R.string.sr_automation_stopped))
     }
     registered = false
     active.value = false

@@ -31,10 +31,10 @@
 
     <!-- Strings for the about screen -->
     <string name="app_name" translatable="false">ScaleRules</string>
-    <string name="tile_name" translatable="false">Tailscale</string>
+    <string name="tile_name" translatable="false">ScaleRules</string>
     <string name="version">Version</string>
-    <string name="about_view_header">About Tailscale</string>
-    <string name="about_view_title">Tailscale for Android</string>
+    <string name="about_view_header">About ScaleRules</string>
+    <string name="about_view_title">ScaleRules for Android</string>
     <string name="acknowledgements">Acknowledgements</string>
     <string name="privacy_policy">Privacy Policy</string>
     <string name="terms_of_service">Terms of Service</string>
@@ -52,7 +52,7 @@
     <string name="settings_title">Settings</string>
     <string name="settings_admin_prefix">"Manage your tailnet settings in the "</string>
     <string name="settings_admin_link">admin console</string>
-    <string name="about_tailscale">About Tailscale</string>
+    <string name="about_tailscale">About ScaleRules</string>
     <string name="bug_report">Bug report</string>
     <string name="use_ts_dns">Use Tailscale DNS</string>
     <string name="internal_debug_options">Internal debug options</string>
@@ -66,9 +66,9 @@
     <string name="starting">Starting…</string>
     <string name="connect_to_tailnet_prefix">"Connect again to talk to the other devices in the "</string>
     <string name="connect_to_tailnet_suffix">" tailnet."</string>
-    <string name="welcome_to_tailscale">Welcome to Tailscale</string>
-    <string name="login_to_join_your_tailnet">Log in to join your tailnet and connect your devices.</string>
-    <string name="give_permissions">Set up a VPN connection so you can start using Tailscale.</string>
+    <string name="welcome_to_tailscale">Welcome to ScaleRules</string>
+    <string name="login_to_join_your_tailnet">Sign in to Tailscale or your Headscale server to connect your devices.</string>
+    <string name="give_permissions">Set up a VPN connection to start using ScaleRules.</string>
     <string name="keyExpiryExplainer">Reauthenticate to remain connected to Tailscale.</string>
     <string name="deviceKeyNeverExpires">Device key does not expire</string>
     <string name="deviceKeyExpires">Device key expires %s</string>
@@ -272,8 +272,8 @@
 
     <!-- Strings for the intro screen -->
     <string name="getStarted">Get Started</string>
-    <string name="welcome1">Tailscale is a mesh VPN for securely connecting your devices.</string>
-    <string name="welcome2">All connections are device-to-device, so we never see your data. We collect and use your email address and name, as well as your device name, OS version, and IP address in order to help you to connect your devices and manage your settings. We log when you are connected to your network.</string>
+    <string name="welcome1">ScaleRules securely connects your devices through Tailscale or your own Headscale server, with user-defined connection rules.</string>
+    <string name="welcome2">Sign-in and network management use your chosen Tailscale or Headscale server. Connection rules and the decision journal stay on this device. You can review VPN client logging in settings.</string>
     <string name="scan_to_connect_to_your_tailnet">Scan this QR code to log in to your tailnet</string>
     <string name="enter_code_to_connect_to_tailnet">or enter this code in the Machines > Add device section of the admin console: </string>
 
@@ -288,7 +288,7 @@
 
     <!-- Strings for the IPNReceiver -->
     <string name="title_connection_failed">Tailscale Connection Failed</string>
-    <string name="body_open_tailscale">Tap here to open Tailscale.</string>
+    <string name="body_open_tailscale">Tap here to open ScaleRules.</string>
 
     <!-- Strings describing notification channels -->
     <string name="taildrop_file_transfers">Taildrop file transfers</string>
@@ -403,4 +403,70 @@
     <string name="copy_magic_dns_address">Copy MagicDNS hostname</string>
     <string name="copy_ipv4_address">Copy IPv4</string>
     <string name="copy_ipv6_address">Copy IPv6</string>
+
+    <!-- ScaleRules connection rules -->
+    <string name="sr_rules_title">Connection rules</string>
+    <string name="sr_rules_subtitle">Your rules, priorities and decision journal</string>
+    <string name="sr_rules_intro">Changes pause automation. The first enabled matching rule wins. If nothing matches, the VPN stays unchanged. Rules are never learned or created automatically.</string>
+    <string name="sr_rules_pause">Pause automation</string>
+    <string name="sr_rules_start">Start automation</string>
+    <string name="sr_rules_active">Automation active</string>
+    <string name="sr_rules_paused">Automation paused</string>
+    <string name="sr_rules_permissions">For Wi-Fi names, allow precise location and enable Android location. No GPS tracking. Resume automation here after a reboot or after Android terminates the app.</string>
+    <string name="sr_rules_add">Add rule</string>
+    <string name="sr_rules_empty">No rules yet. Choose when the VPN should connect or disconnect.</string>
+    <string name="sr_rules_edit">Edit</string>
+    <string name="sr_rules_delete">Delete</string>
+    <string name="sr_rules_higher">Higher priority ↑</string>
+    <string name="sr_rules_lower">Lower priority ↓</string>
+    <string name="sr_rules_journal">Decision journal</string>
+    <string name="sr_rules_clear_journal">Clear journal</string>
+    <string name="sr_rules_delete_title">Delete rule?</string>
+    <string name="sr_rules_editor">Edit rule</string>
+    <string name="sr_rules_name">Rule name</string>
+    <string name="sr_rules_ssid">Wi-Fi name (exact, case-sensitive)</string>
+    <string name="sr_rules_save_note">Saving pauses automation. Check the rule order, then start it again.</string>
+    <string name="sr_rules_save">Save</string>
+    <string name="sr_condition_label">Condition</string>
+    <string name="sr_action_label">VPN action</string>
+    <string name="sr_condition_hint">Tap to choose a network condition</string>
+    <string name="sr_action_hint">Tap to choose what happens to the VPN</string>
+    <string name="sr_condition_ssid">Specific Wi-Fi (SSID)</string>
+    <string name="sr_condition_wifi">Any Wi-Fi</string>
+    <string name="sr_condition_mobile">Mobile data</string>
+    <string name="sr_condition_offline">No network</string>
+    <string name="sr_condition_any">Any network</string>
+    <string name="sr_action_connect">Connect VPN</string>
+    <string name="sr_action_disconnect">Disconnect VPN</string>
+    <string name="sr_action_keep">Keep VPN unchanged</string>
+    <string name="sr_permission_needed">Wi-Fi rules need precise location permission to read Wi-Fi names.</string>
+    <string name="sr_warning_shadowed">“%1$s” is hidden by “%2$s”. The higher rule wins.</string>
+    <string name="sr_warning_conflict">“%1$s” conflicts with and is hidden by “%2$s”. The higher rule wins.</string>
+    <string name="sr_no_match">No matching rule: no change</string>
+    <string name="sr_ssid_unknown">Wi-Fi name unavailable: no change</string>
+    <string name="sr_automation_name">ScaleRules automation</string>
+    <string name="sr_automation_evaluating">Evaluating rules</string>
+    <string name="sr_automation_started">Automation started</string>
+    <string name="sr_automation_no_permission">Automation not started: Wi-Fi name permission missing</string>
+    <string name="sr_automation_failed">Could not start automation: %1$s</string>
+    <string name="sr_automation_stopped">Automation paused; VPN state unchanged</string>
+    <string name="sr_pause">Pause</string>
+    <string name="sr_vpn_unchanged">VPN unchanged</string>
+    <string name="sr_vpn_permission">Not connected: VPN permission missing</string>
+    <string name="sr_vpn_login">Not connected: sign in first</string>
+    <string name="sr_vpn_connected">VPN already connected</string>
+    <string name="sr_vpn_connect_requested">VPN connection requested</string>
+    <string name="sr_vpn_disconnect_requested">VPN disconnection requested</string>
+    <string name="sr_vpn_disconnected">VPN already disconnected</string>
+    <string name="sr_decision_message">%1$s: %2$s</string>
+    <string name="sr_one_file">One file</string>
+    <string name="sr_files">Files</string>
+    <string name="sr_no_ip">No IP address</string>
+    <string name="sr_no_access">No access</string>
+    <string name="sr_not_set">[not set]</string>
+    <string name="sr_forward">Forward</string>
+    <string name="sr_computer_icon">Computer</string>
+    <string name="sr_android_icon">Android device</string>
+    <string name="sr_globe_icon">Internet</string>
+    <string name="sr_menu">Menu</string>
 </resources>

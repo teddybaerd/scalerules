@@ -89,8 +89,8 @@ fun SettingsView(
 
       Lists.SectionDivider()
       Setting.Text(
-          title = "Verbindungsregeln",
-          subtitle = "Eigene Regeln, Prioritäten und Entscheidungsprotokoll",
+          titleRes = R.string.sr_rules_title,
+          subtitle = stringResource(R.string.sr_rules_subtitle),
           onClick = {
             context.startActivity(
                 android.content.Intent(context, com.tailscale.ipn.rules.RulesActivity::class.java)

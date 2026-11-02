@@ -40,7 +40,15 @@ data class ConnectionRule(
 
 data class ConnectionContext(val kind: ConnectionKind, val ssid: String? = null)
 
-data class RuleDecision(val rule: ConnectionRule?, val reason: String) {
+enum class DecisionReason {
+  MATCHED,
+  NO_MATCH,
+  SSID_UNAVAILABLE,
+}
+
+data class RuleWarning(val earlier: ConnectionRule, val later: ConnectionRule)
+
+data class RuleDecision(val rule: ConnectionRule?, val reason: DecisionReason) {
   val action: RuleAction
     get() = rule?.action ?: RuleAction.KEEP
 }
@@ -54,10 +62,10 @@ object RuleEngine {
             context.ssid == null &&
             rules.any { it.enabled && it.condition == RuleCondition.WIFI_NAME }
     ) {
-      return RuleDecision(null, "WLAN-Name unbekannt: keine Änderung")
+      return RuleDecision(null, DecisionReason.SSID_UNAVAILABLE)
     }
     val rule = rules.firstOrNull { it.enabled && matches(it, context) }
-    return RuleDecision(rule, rule?.name ?: "Keine passende Regel: keine Änderung")
+    return RuleDecision(rule, if (rule == null) DecisionReason.NO_MATCH else DecisionReason.MATCHED)
   }
 
   private fun matches(rule: ConnectionRule, context: ConnectionContext): Boolean =
@@ -79,17 +87,14 @@ object RuleEngine {
         else -> earlier.condition == later.condition
       }
 
-  fun warnings(rules: List<ConnectionRule>): List<String> = rules.flatMapIndexed { index, rule ->
-    if (!rule.enabled) emptyList()
-    else
-        rules
-            .take(index)
-            .filter { it.enabled && covers(it, rule) }
-            .take(1)
-            .map {
-              val label =
-                  if (it.action == rule.action) "verdeckt" else "widersprüchlich und verdeckt"
-              "„${rule.name}“ ist durch „${it.name}“ $label. Die höhere Regel entscheidet."
-            }
-  }
+  fun warnings(rules: List<ConnectionRule>): List<RuleWarning> =
+      rules.flatMapIndexed { index, rule ->
+        if (!rule.enabled) emptyList()
+        else
+            rules
+                .take(index)
+                .filter { it.enabled && covers(it, rule) }
+                .take(1)
+                .map { RuleWarning(it, rule) }
+      }
 }

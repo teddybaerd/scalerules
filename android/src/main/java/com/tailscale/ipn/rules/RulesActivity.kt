@@ -19,8 +19,10 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
+import com.tailscale.ipn.R
 import com.tailscale.ipn.ui.theme.AppTheme
 import java.text.DateFormat
 import java.util.Date
@@ -40,7 +42,7 @@ class RulesActivity : ComponentActivity() {
         ) {
           Toast.makeText(
                   this,
-                  "WLAN-Regeln benötigen die Freigabe für den genauen Standort, um WLAN-Namen zu lesen.",
+                  getString(R.string.sr_permission_needed),
                   Toast.LENGTH_LONG,
               )
               .show()
@@ -96,25 +98,25 @@ class RulesActivity : ComponentActivity() {
         Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
-      Text("Verbindungsregeln", style = MaterialTheme.typography.headlineMedium)
-      Text(
-          "Änderungen pausieren die Automatik. Die erste aktive, passende Regel entscheidet. Ohne Treffer bleibt das VPN unverändert. Es werden keine Regeln automatisch gelernt oder angelegt."
-      )
+      Text(stringResource(R.string.sr_rules_title), style = MaterialTheme.typography.headlineMedium)
+      Text(stringResource(R.string.sr_rules_intro))
       Button(
           onClick = {
             if (running) stopService(Intent(this@RulesActivity, RulesService::class.java))
             else resumeRules()
           }
       ) {
-        Text(if (running) "Automatik pausieren" else "Automatik starten")
+        Text(
+            if (running) stringResource(R.string.sr_rules_pause)
+            else stringResource(R.string.sr_rules_start)
+        )
       }
       Text(
-          if (running) "Automatik aktiv" else "Automatik pausiert",
+          if (running) stringResource(R.string.sr_rules_active)
+          else stringResource(R.string.sr_rules_paused),
           style = MaterialTheme.typography.titleMedium,
       )
-      Text(
-          "Für WLAN-Namen: genauen Standort freigeben und Android-Standort einschalten. Keine GPS-Ortung. Nach Neustart oder Beenden durch Android die Automatik hier erneut starten."
-      )
+      Text(stringResource(R.string.sr_rules_permissions))
       Button(
           onClick = {
             editing =
@@ -126,13 +128,20 @@ class RulesActivity : ComponentActivity() {
                 )
           }
       ) {
-        Text("Regel hinzufügen")
+        Text(stringResource(R.string.sr_rules_add))
       }
-      RuleEngine.warnings(rules).forEach { Text(it, color = MaterialTheme.colorScheme.error) }
-      if (rules.isEmpty())
-          Text(
-              "Noch keine Regeln. Lege selbst fest, wann das VPN ein- oder ausgeschaltet werden soll."
-          )
+      RuleEngine.warnings(rules).forEach { warning ->
+        Text(
+            stringResource(
+                if (warning.earlier.action == warning.later.action) R.string.sr_warning_shadowed
+                else R.string.sr_warning_conflict,
+                warning.later.name,
+                warning.earlier.name,
+            ),
+            color = MaterialTheme.colorScheme.error,
+        )
+      }
+      if (rules.isEmpty()) Text(stringResource(R.string.sr_rules_empty))
       rules.forEachIndexed { index, rule ->
         Card(Modifier.fillMaxWidth()) {
           Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
@@ -150,37 +159,43 @@ class RulesActivity : ComponentActivity() {
                     )
                   },
               )
-              TextButton(onClick = { editing = rule }) { Text("Bearbeiten") }
-              TextButton(onClick = { deleting = rule }) { Text("Löschen") }
+              TextButton(onClick = { editing = rule }) {
+                Text(stringResource(R.string.sr_rules_edit))
+              }
+              TextButton(onClick = { deleting = rule }) {
+                Text(stringResource(R.string.sr_rules_delete))
+              }
             }
             Row {
               TextButton(enabled = index > 0, onClick = { move(store, rules, index, index - 1) }) {
-                Text("Höher ↑")
+                Text(stringResource(R.string.sr_rules_higher))
               }
               TextButton(
                   enabled = index < rules.lastIndex,
                   onClick = { move(store, rules, index, index + 1) },
               ) {
-                Text("Tiefer ↓")
+                Text(stringResource(R.string.sr_rules_lower))
               }
             }
           }
         }
       }
       HorizontalDivider()
-      Text("Entscheidungsprotokoll", style = MaterialTheme.typography.titleLarge)
-      TextButton(onClick = { store.clearJournal() }) { Text("Protokoll leeren") }
+      Text(stringResource(R.string.sr_rules_journal), style = MaterialTheme.typography.titleLarge)
+      TextButton(onClick = { store.clearJournal() }) {
+        Text(stringResource(R.string.sr_rules_clear_journal))
+      }
       journal.forEach {
         Text(
             "${DateFormat.getDateTimeInstance(DateFormat.SHORT, DateFormat.MEDIUM).format(Date(it.time))}\n${it.message}"
         )
       }
-      TextButton(onClick = { finish() }) { Text("Zurück") }
+      TextButton(onClick = { finish() }) { Text(stringResource(R.string.back)) }
     }
     deleting?.let { rule ->
       AlertDialog(
           onDismissRequest = { deleting = null },
-          title = { Text("Regel löschen?") },
+          title = { Text(stringResource(R.string.sr_rules_delete_title)) },
           text = { Text(rule.name) },
           confirmButton = {
             TextButton(
@@ -190,10 +205,12 @@ class RulesActivity : ComponentActivity() {
                   deleting = null
                 }
             ) {
-              Text("Löschen")
+              Text(stringResource(R.string.sr_rules_delete))
             }
           },
-          dismissButton = { TextButton(onClick = { deleting = null }) { Text("Abbrechen") } },
+          dismissButton = {
+            TextButton(onClick = { deleting = null }) { Text(stringResource(R.string.cancel)) }
+          },
       )
     }
     editing?.let { rule ->
@@ -224,22 +241,25 @@ class RulesActivity : ComponentActivity() {
   }
 }
 
+@Composable
 private fun conditionLabel(condition: RuleCondition): String =
     when (condition) {
-      RuleCondition.WIFI_NAME -> "Bestimmtes WLAN (SSID)"
-      RuleCondition.ANY_WIFI -> "Beliebiges WLAN"
-      RuleCondition.MOBILE -> "Mobilfunk"
-      RuleCondition.OFFLINE -> "Kein Netzwerk"
-      RuleCondition.ANY_NETWORK -> "Beliebiges Netzwerk"
+      RuleCondition.WIFI_NAME -> stringResource(R.string.sr_condition_ssid)
+      RuleCondition.ANY_WIFI -> stringResource(R.string.sr_condition_wifi)
+      RuleCondition.MOBILE -> stringResource(R.string.sr_condition_mobile)
+      RuleCondition.OFFLINE -> stringResource(R.string.sr_condition_offline)
+      RuleCondition.ANY_NETWORK -> stringResource(R.string.sr_condition_any)
     }
 
+@Composable
 private fun actionLabel(action: RuleAction): String =
     when (action) {
-      RuleAction.CONNECT -> "VPN einschalten"
-      RuleAction.DISCONNECT -> "VPN ausschalten"
-      RuleAction.KEEP -> "VPN unverändert lassen"
+      RuleAction.CONNECT -> stringResource(R.string.sr_action_connect)
+      RuleAction.DISCONNECT -> stringResource(R.string.sr_action_disconnect)
+      RuleAction.KEEP -> stringResource(R.string.sr_action_keep)
     }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun RuleEditor(
     rule: ConnectionRule,
@@ -254,7 +274,7 @@ private fun RuleEditor(
   var actionMenu by remember { mutableStateOf(false) }
   AlertDialog(
       onDismissRequest = onDismiss,
-      title = { Text("Regel bearbeiten") },
+      title = { Text(stringResource(R.string.sr_rules_editor)) },
       text = {
         Column(
             Modifier.verticalScroll(rememberScrollState()),
@@ -263,12 +283,27 @@ private fun RuleEditor(
           OutlinedTextField(
               value = name,
               onValueChange = { name = it },
-              label = { Text("Regelname") },
+              label = { Text(stringResource(R.string.sr_rules_name)) },
+              modifier = Modifier.fillMaxWidth(),
               singleLine = true,
           )
-          Box {
-            TextButton(onClick = { conditionMenu = true }) { Text(conditionLabel(condition)) }
-            DropdownMenu(expanded = conditionMenu, onDismissRequest = { conditionMenu = false }) {
+          ExposedDropdownMenuBox(
+              expanded = conditionMenu,
+              onExpandedChange = { conditionMenu = it },
+          ) {
+            OutlinedTextField(
+                value = conditionLabel(condition),
+                onValueChange = {},
+                readOnly = true,
+                label = { Text(stringResource(R.string.sr_condition_label)) },
+                supportingText = { Text(stringResource(R.string.sr_condition_hint)) },
+                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(conditionMenu) },
+                modifier = Modifier.menuAnchor().fillMaxWidth(),
+            )
+            ExposedDropdownMenu(
+                expanded = conditionMenu,
+                onDismissRequest = { conditionMenu = false },
+            ) {
               RuleCondition.entries.forEach { item ->
                 DropdownMenuItem(
                     text = { Text(conditionLabel(item)) },
@@ -284,13 +319,25 @@ private fun RuleEditor(
             OutlinedTextField(
                 value = ssid,
                 onValueChange = { ssid = it },
-                label = { Text("WLAN-Name (exakt, Groß-/Kleinschreibung)") },
+                label = { Text(stringResource(R.string.sr_rules_ssid)) },
+                modifier = Modifier.fillMaxWidth(),
                 singleLine = true,
             )
           }
-          Box {
-            TextButton(onClick = { actionMenu = true }) { Text(actionLabel(action)) }
-            DropdownMenu(expanded = actionMenu, onDismissRequest = { actionMenu = false }) {
+          ExposedDropdownMenuBox(
+              expanded = actionMenu,
+              onExpandedChange = { actionMenu = it },
+          ) {
+            OutlinedTextField(
+                value = actionLabel(action),
+                onValueChange = {},
+                readOnly = true,
+                label = { Text(stringResource(R.string.sr_action_label)) },
+                supportingText = { Text(stringResource(R.string.sr_action_hint)) },
+                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(actionMenu) },
+                modifier = Modifier.menuAnchor().fillMaxWidth(),
+            )
+            ExposedDropdownMenu(expanded = actionMenu, onDismissRequest = { actionMenu = false }) {
               RuleAction.entries.forEach { item ->
                 DropdownMenuItem(
                     text = { Text(actionLabel(item)) },
@@ -302,9 +349,7 @@ private fun RuleEditor(
               }
             }
           }
-          Text(
-              "Speichern pausiert die Automatik. Prüfe danach die Reihenfolge und starte sie erneut."
-          )
+          Text(stringResource(R.string.sr_rules_save_note))
         }
       },
       confirmButton = {
@@ -322,9 +367,9 @@ private fun RuleEditor(
               )
             },
         ) {
-          Text("Speichern")
+          Text(stringResource(R.string.sr_rules_save))
         }
       },
-      dismissButton = { TextButton(onClick = onDismiss) { Text("Abbrechen") } },
+      dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.cancel)) } },
   )
 }
