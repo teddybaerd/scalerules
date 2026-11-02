@@ -16,7 +16,8 @@ werden. Pull Requests führen dieselben Leseprüfungen aus, schreiben aber keine
   die Prüfung bewusst fehlschlagen, bis ihre Inventarisierung unterstützt wird.
 - OSV-Abgleich der tatsächlich von Gradle aufgelösten Android-Release-Laufzeit-
   und Buildscript-Abhängigkeiten. Damit werden auch BOM-gesteuerte und indirekte
-  Maven-Bibliotheken erfasst. Es wird keine APK gebaut und keine Version geändert.
+  Maven-Bibliotheken erfasst. Die Zuordnung zu Android-Laufzeit bzw. Build-Werkzeugen
+  bleibt pro Paket im Bericht erhalten. Es wird keine APK gebaut und keine Version geändert.
 
 Ein OSV-Treffer bedeutet eine passende Paketversion in der Datenbank. Er beweist
 keine ausnutzbare Lücke in ScaleRules. Build-Tags, Aufrufpfade, Android-Plattform,

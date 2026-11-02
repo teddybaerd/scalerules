@@ -60,7 +60,7 @@ class InventoryTests(unittest.TestCase):
 
 class OSVTests(unittest.TestCase):
     def test_pagination_preserves_package_mapping(self):
-        packages = [{'ecosystem': 'Go', 'name': name, 'version': 'v1.0.0'} for name in ['a', 'b']]
+        packages = [{'ecosystem': 'Go', 'name': name, 'version': 'v1.0.0', 'scopes': ['go-requirement']} for name in ['a', 'b']]
         requests = []
         def fetch(url, **kwargs):
             requests.append(kwargs['data']['queries'])
@@ -72,6 +72,7 @@ class OSVTests(unittest.TestCase):
         result = m.osv_matches(packages, fetch)
         self.assertEqual([x['id'] for x in result], ['GO-2026-1', 'GO-2026-2'])
         self.assertEqual({x['name'] for x in result}, {'a'})
+        self.assertEqual(result[0]['scopes'], ['go-requirement'])
 
     def test_malformed_truncated_or_looping_pages_fail(self):
         packages = [{'ecosystem': 'Go', 'name': 'a', 'version': 'v1.0.0'}]

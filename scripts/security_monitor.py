@@ -210,8 +210,17 @@ def collect(inventory_path):
                           'newer': (stable_version(latest['tag']) > stable_version(embedded) or
                                     (stable_version(latest['tag']) == stable_version(embedded) and
                                      latest['tag'] != embedded))}
-    packages = sorted({(p['ecosystem'], p['name'], p['version']) for p in modules + maven})
-    packages = [dict(zip(('ecosystem', 'name', 'version'), p)) for p in packages]
+    package_map = {}
+    for package in modules + maven:
+        key = (package['ecosystem'], package['name'], package['version'])
+        if package['ecosystem'] == 'Go':
+            scopes = ['go-stdlib' if package['name'] == 'stdlib' else 'go-requirement']
+        else:
+            scopes = package.get('scopes', ['unknown'])
+        if key not in package_map:
+            package_map[key] = {**package, 'scopes': []}
+        package_map[key]['scopes'] = sorted(set(package_map[key]['scopes'] + scopes))
+    packages = [package_map[key] for key in sorted(package_map)]
     return {
         'schema': 1,
         'checked_at': dt.datetime.now(dt.timezone.utc).isoformat(timespec='seconds'),
@@ -250,7 +259,10 @@ def render(report):
         lines += ['Keine passenden bekannten OSV-Einträge gefunden. Das ist kein Sicherheitsnachweis.']
     for finding in deps['matches']:
         name = f"{finding['ecosystem']} {finding['name']}@{finding['version']}"
-        lines += [f"- `{name}`: [{finding['id']}](https://osv.dev/vulnerability/{finding['id']})"]
+        scope_names = {'android-release': 'Android-Release-Laufzeit', 'gradle-build': 'Build-Werkzeuge',
+                       'go-stdlib': 'Go-Standardbibliothek', 'go-requirement': 'Go-Anforderung; Android-Erreichbarkeit offen'}
+        scope = ', '.join(scope_names.get(s, s) for s in finding.get('scopes', ['nicht zugeordnet']))
+        lines += [f"- `{name}` ({scope}): [{finding['id']}](https://osv.dev/vulnerability/{finding['id']})"]
     lines += ['', '## Nächster Schritt', '',
               'Neue Meldungen nach Plattform und Konfiguration bewerten. Native Änderungen über eine geprüfte stabile '
               'Tailscale-Android-Version samt go.mod, go.sum und go.toolchain.rev übernehmen; danach Build, '
