@@ -9,7 +9,6 @@ OSV matches package versions, not Android reachability or exploitability.
 import argparse
 import datetime as dt
 import hashlib
-import html
 import json
 import os
 from pathlib import Path
@@ -130,8 +129,8 @@ def parse_bulletins(raw):
         if title in seen:
             raise ValueError('Duplicate bulletin identity')
         seen.add(title)
-        description = html.unescape(re.sub('<[^>]+>', ' ', item.findtext('description', '')))
-        description = ' '.join(description.split())
+        # Keep HTML attributes: a corrected fix/advisory URL is a meaningful change too.
+        description = ' '.join(item.findtext('description', '').split())
         result.append({'id': title, 'url': link, 'digest': fingerprint(description)})
     if not result:
         raise ValueError('No security bulletins found; source format may have changed')

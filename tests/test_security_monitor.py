@@ -49,10 +49,12 @@ class InventoryTests(unittest.TestCase):
 
     def test_bulletin_revisions_are_detected_but_whitespace_is_stable(self):
         def feed(text):
-            return ('<rss><channel><item><title>TS-2026-017</title><link>https://tailscale.com/security-bulletins/#ts-2026-017</link><description>' + text + '</description></item></channel></rss>').encode()
+            return ('<rss><channel><item><title>TS-2026-017</title><link>https://tailscale.com/security-bulletins/#ts-2026-017</link><description><![CDATA[' + text + ']]></description></item></channel></rss>').encode()
         a = m.parse_bulletins(feed('first text'))
         self.assertEqual(a, m.parse_bulletins(feed('first  text')))
         self.assertNotEqual(a, m.parse_bulletins(feed('changed text')))
+        self.assertNotEqual(m.parse_bulletins(feed('<a href="https://example.com/old">fix</a>')),
+                            m.parse_bulletins(feed('<a href="https://example.com/new">fix</a>')))
         for raw in [b'<rss><channel/></rss>', b'<!DOCTYPE rss><rss/>', feed('text').replace(b'TS-2026-017', b'unknown')]:
             with self.assertRaises(ValueError):
                 m.parse_bulletins(raw)
