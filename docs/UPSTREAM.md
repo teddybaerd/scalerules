@@ -15,3 +15,6 @@ upstream's target tracks the development main branch.
 Monitor https://tailscale.com/security-bulletins and releases in both
 tailscale/tailscale-android and tailscale/tailscale.
 Review platform/configuration impact, build, test, then publish a signed APK.
+
+Automated monitoring, dependency coverage and review workflow:
+[SECURITY-MONITORING.md](SECURITY-MONITORING.md).

@@ -55,3 +55,5 @@ workflow produces verified release APKs with a stable certificate. Normal CI deb
 artifacts remain disposable and are not the update channel.
 
 App update design and release requirements: [docs/UPDATES.md](docs/UPDATES.md).
+
+Security and upstream monitoring: [docs/SECURITY-MONITORING.md](docs/SECURITY-MONITORING.md).
