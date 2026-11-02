@@ -48,9 +48,7 @@ data class Release(
           root["assets"]
               ?.jsonArray
               ?.map { it.jsonObject }
-              ?.singleOrNull {
-                it["name"]?.jsonPrimitive?.content == name
-              } ?: return null
+              ?.singleOrNull { it["name"]?.jsonPrimitive?.content == name } ?: return null
       val url = asset["browser_download_url"]?.jsonPrimitive?.content ?: return null
       if (url != "$REPOSITORY/releases/download/$tag/$name") return null
       val size = asset["size"]?.jsonPrimitive?.longOrNull ?: return null
