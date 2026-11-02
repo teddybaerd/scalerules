@@ -62,9 +62,9 @@ background listeners or VPN changes are performed by this button.
 
 ## Background-operation setup
 
-A one-time optional setup prompt opens Android battery optimization settings after
+A one-time optional setup prompt opens the ScaleRules app-info screen on every manufacturer, with guidance to disable unused-app permission removal. Battery optimization remains separate. The prompt appears after
 the welcome screen, or when first opening rules. Existing installations see it
-once when this feature is introduced. Managed onboarding suppresses the prompt.
+once when this app-info guidance is introduced, including users who saw the earlier battery-list prompt. Managed onboarding suppresses the prompt.
 Later/dismiss never blocks login, VPN or rule setup. Instructions remain available
 under Settings > Background operation and in the rules screen.
 

@@ -449,6 +449,7 @@
     <string name="sr_background_unavailable">Diese Einstellungsseite konnte nicht geöffnet werden. Öffne bitte die Android-Einstellungen und wähle Apps → ScaleRules manuell aus.</string>
     <string name="sr_background_later">Später</string>
     <string name="sr_background_later_note">Du findest diese Hinweise später unter Einstellungen → Hintergrundbetrieb wieder.</string>
-    <string name="sr_background_settings_hint">Akku-Optimierung und Standby-Einstellungen</string>
+    <string name="sr_background_settings_hint">Ungenutzte Apps, Akku-Optimierung und Standby</string>
     <string name="sr_background_back">Zurück</string>
+    <string name="sr_background_unused_steps">Öffne die App-Info von ScaleRules und schalte Berechtigungen für ungenutzte Apps entfernen beziehungsweise App-Aktivität bei Nichtnutzung pausieren aus, sofern vorhanden. So setzt Android die Berechtigungen nach längerer Nichtnutzung nicht zurück. Prüfe für die Hintergrundregeln zusätzlich Akku → Uneingeschränkt. Die Bezeichnungen unterscheiden sich je nach Gerät.</string>
 </resources>

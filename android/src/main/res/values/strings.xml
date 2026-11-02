@@ -519,6 +519,7 @@
     <string name="sr_background_unavailable">This settings screen could not be opened. Please open Android Settings and select Apps → ScaleRules manually.</string>
     <string name="sr_background_later">Later</string>
     <string name="sr_background_later_note">You can revisit these instructions under Settings → Background operation.</string>
-    <string name="sr_background_settings_hint">Battery optimization and standby settings</string>
+    <string name="sr_background_settings_hint">Unused app restrictions, battery optimization and standby</string>
     <string name="sr_background_back">Back</string>
+    <string name="sr_background_unused_steps">Open ScaleRules app info and turn off Remove permissions if app is unused or Pause app activity if unused, if available. This prevents Android from resetting permissions after extended inactivity. Separately check Battery → Unrestricted for background rules. Menu names vary by device.</string>
 </resources>
