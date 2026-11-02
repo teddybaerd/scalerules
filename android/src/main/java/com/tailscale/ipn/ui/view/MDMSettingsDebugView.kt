@@ -14,6 +14,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -54,7 +55,7 @@ fun MDMSettingView(setting: MDMSetting<*>) {
       },
       trailingContent = {
         Text(
-            if (value.isSet) value.value.toString() else "[not set]",
+            if (value.isSet) value.value.toString() else stringResource(R.string.sr_not_set),
             fontFamily = FontFamily.Monospace,
             maxLines = 1,
             fontWeight = FontWeight.SemiBold,

@@ -91,7 +91,7 @@ fun RunExitNodeGraphic() {
   fun ArrowForward() {
     Icon(
         Icons.AutoMirrored.Outlined.ArrowForward,
-        "Arrow Forward",
+        stringResource(R.string.sr_forward),
         modifier = Modifier.size(24.dp),
         tint = MaterialTheme.colorScheme.onSurfaceVariant,
     )
@@ -104,21 +104,21 @@ fun RunExitNodeGraphic() {
   ) {
     Icon(
         painter = painterResource(id = R.drawable.computer),
-        "Computer icon",
+        stringResource(R.string.sr_computer_icon),
         tint = MaterialTheme.colorScheme.onSurface,
         modifier = Modifier.size(36.dp),
     )
     ArrowForward()
     Icon(
         painter = painterResource(id = R.drawable.android),
-        "Android icon",
+        stringResource(R.string.sr_android_icon),
         tint = MaterialTheme.colorScheme.onSurface,
         modifier = Modifier.size(36.dp),
     )
     ArrowForward()
     Icon(
         painter = painterResource(id = R.drawable.globe),
-        "Globe icon",
+        stringResource(R.string.sr_globe_icon),
         tint = MaterialTheme.colorScheme.onSurface,
         modifier = Modifier.size(36.dp),
     )

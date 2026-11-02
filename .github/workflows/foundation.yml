@@ -40,6 +40,8 @@ jobs:
           tools=$(sed -n 's/^androidBuildToolsVersion=//p' android/gradle.properties)
           "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "platforms;android-$api" "build-tools;$tools" "ndk;23.1.7779620"
           echo "NDK_ROOT=$ANDROID_HOME/ndk/23.1.7779620" >> "$GITHUB_ENV"
+      - name: Check translation coverage and format arguments
+        run: python3 scripts/check_translations.py
       - name: Build debug APK and run unit tests
         run: make apk
       - name: Check formatting

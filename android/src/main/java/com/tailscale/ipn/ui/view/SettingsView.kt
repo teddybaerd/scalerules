@@ -22,6 +22,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.SpanStyle
@@ -54,6 +55,7 @@ fun SettingsView(
     appViewModel: AppViewModel = viewModel(),
 ) {
   val handler = LocalUriHandler.current
+  val context = LocalContext.current
 
   val user by viewModel.loggedInUser.collectAsState()
   val isAdmin by viewModel.isAdmin.collectAsState()
@@ -86,6 +88,16 @@ fun SettingsView(
       }
 
       Lists.SectionDivider()
+      Setting.Text(
+          titleRes = R.string.sr_rules_title,
+          subtitle = stringResource(R.string.sr_rules_subtitle),
+          onClick = {
+            context.startActivity(
+                android.content.Intent(context, com.tailscale.ipn.rules.RulesActivity::class.java)
+            )
+          },
+      )
+      Lists.ItemDivider()
       Setting.Text(
           R.string.dns_settings,
           subtitle =
