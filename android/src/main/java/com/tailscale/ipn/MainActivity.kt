@@ -286,6 +286,7 @@ class MainActivity : ComponentActivity() {
       }
 
       AppTheme {
+        com.tailscale.ipn.updates.UpdatePrompt()
         Surface(color = MaterialTheme.colorScheme.inverseSurface) { // Background for the letterbox
           Surface(modifier = Modifier.universalFit()) { // Letterbox for AndroidTV
             NavHost(

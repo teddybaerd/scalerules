@@ -53,3 +53,5 @@ See [signing setup (German)](docs/SIGNING.md) to create and back up your own key
 Windows and configure the main-only GitHub signing environment. The **Signed APK**
 workflow produces verified release APKs with a stable certificate. Normal CI debug
 artifacts remain disposable and are not the update channel.
+
+App update design and release requirements: [docs/UPDATES.md](docs/UPDATES.md).

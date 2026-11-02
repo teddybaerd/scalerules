@@ -399,4 +399,32 @@
     <string name="sr_android_icon">Android-Gerät</string>
     <string name="sr_globe_icon">Internet</string>
     <string name="sr_menu">Menü</string>
+
+    <!-- ScaleRules app updates -->
+    <string name="su_title">App-Updates</string>
+    <string name="su_settings_hint">GitHub-Versionen, Änderungsprotokoll und Installation</string>
+    <string name="su_installed">Installiert: %1$s</string>
+    <string name="su_automatic">Beim Öffnen automatisch nach Updates suchen</string>
+    <string name="su_source">Prüft GitHub höchstens einmal täglich. Für Obtainium kannst du diese Prüfung ausschalten. Download und Installation startest du selbst.</string>
+    <string name="su_check">Nach Updates suchen</string>
+    <string name="su_current">Du bist auf dem aktuellen Stand.</string>
+    <string name="su_manual_version">Diese Entwicklungsversion lässt sich nicht automatisch vergleichen. Bitte nutze die GitHub-Veröffentlichungen.</string>
+    <string name="su_check_failed">Die Update-Prüfung ist fehlgeschlagen. Bitte prüfe deine Verbindung oder versuche es später erneut.</string>
+    <string name="su_download_failed">Download oder Sicherheitsprüfung fehlgeschlagen. Es wurde keine APK an die Installation übergeben. Bitte versuche es erneut oder nutze GitHub.</string>
+    <string name="su_ready">Download geprüft. Tippe zum Fortfahren auf Update installieren.</string>
+    <string name="su_permission_hint">Erlaube ScaleRules die Installation von Apps. Kehre anschließend hierher zurück und tippe erneut auf Update installieren.</string>
+    <string name="su_install_failed">Das geprüfte Update konnte nicht zur Installation geöffnet werden. Du kannst den Download wiederholen oder GitHub nutzen.</string>
+    <string name="su_available">Update %1$s verfügbar</string>
+    <string name="su_changelog">Das ist neu</string>
+    <string name="su_no_notes">Keine Versionshinweise vorhanden.</string>
+    <string name="su_download">Update herunterladen</string>
+    <string name="su_install">Update installieren</string>
+    <string name="su_now">Jetzt installieren</string>
+    <string name="su_later">Später</string>
+    <string name="su_skip">Version überspringen</string>
+    <string name="su_skipped">Version übersprungen. Über die manuelle Prüfung findest du sie weiterhin.</string>
+    <string name="su_github">GitHub-Veröffentlichungen öffnen</string>
+    <string name="su_back">Zurück</string>
+    <string name="su_working">Prüfung läuft …</string>
+    <string name="su_downloading">Download: %1$d%%</string>
 </resources>
