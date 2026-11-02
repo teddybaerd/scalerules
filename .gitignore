@@ -57,3 +57,10 @@ tailscale.version
 
 # local tmp folder
 .tmp/
+
+# Private Android signing material (never commit)
+*.jks
+*.keystore
+*.p12
+*.pfx
+github-keystore-base64.txt

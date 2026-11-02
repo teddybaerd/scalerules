@@ -44,6 +44,15 @@ jobs:
         run: python3 scripts/check_translations.py
       - name: Build debug APK and run unit tests
         run: make apk
+      - name: Build unsigned release APK
+        run: cd android && ./gradlew --no-daemon assembleRelease -PSCALERULES_VERSION=0.0.0-ci
+      - name: Upload unsigned signing-test fixture
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: ci-unsigned-release
+          path: android/build/outputs/apk/release/android-release-unsigned.apk
+          retention-days: 1
+          if-no-files-found: error
       - name: Check formatting
         run: make fmt-check
       - name: Run Go tests
@@ -57,3 +66,69 @@ jobs:
           path: tailscale-debug.apk
           if-no-files-found: error
           retention-days: 14
+
+  windows-keystore:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+      - uses: actions/setup-java@3a4f6e1af504cf6a31855fa899c6aa5355ba6c12
+        with:
+          distribution: temurin
+          java-version: '21'
+      - name: Test Windows key generation and Java PKCS12 compatibility
+        shell: powershell
+        env:
+          SCALERULES_TEST_PASSWORD: ephemeral-ci-test-password-only
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $directory = Join-Path $env:RUNNER_TEMP 'scalerules-key-test'
+          try {
+            $password = ConvertTo-SecureString $env:SCALERULES_TEST_PASSWORD -AsPlainText -Force
+            $result = & ./scripts/New-ScaleRulesSigningKey.ps1 -OutputDirectory $directory -Password $password
+            if ($result.Fingerprint -notmatch '^[0-9a-f]{64}$') { throw 'Invalid certificate fingerprint' }
+            keytool -importkeystore -srckeystore $result.KeyStore -srcstoretype PKCS12 -srcstorepass:env SCALERULES_TEST_PASSWORD -destkeystore (Join-Path $directory 'roundtrip.p12') -deststoretype PKCS12 -deststorepass:env SCALERULES_TEST_PASSWORD -noprompt
+            if ($LASTEXITCODE -ne 0) { throw 'Java could not read the Windows private key' }
+            $failedAsExpected = $false
+            try { & ./scripts/New-ScaleRulesSigningKey.ps1 -OutputDirectory $directory -Password $password } catch { $failedAsExpected = $true }
+            if (-not $failedAsExpected) { throw 'Existing-key overwrite guard failed' }
+          } finally {
+            Remove-Item -LiteralPath $directory -Recurse -Force -ErrorAction SilentlyContinue
+          }
+
+  signing-check:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+      - uses: actions/setup-java@3a4f6e1af504cf6a31855fa899c6aa5355ba6c12
+        with:
+          distribution: temurin
+          java-version: '21'
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: ci-unsigned-release
+          path: unsigned
+      - name: Verify signing and rejection of a wrong certificate
+        env:
+          ANDROID_KEYSTORE_PASSWORD: ephemeral-ci-test-password-only
+          SCALERULES_VERSION: 0.0.0-ci
+        run: |
+          set -euo pipefail
+          tools=$(sed -n 's/^androidBuildToolsVersion=//p' android/gradle.properties)
+          "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "build-tools;$tools"
+          directory=$(mktemp -d "$RUNNER_TEMP/scalerules-key-test.XXXXXX")
+          trap 'rm -rf "$directory"' EXIT
+          keytool -genkeypair -keystore "$directory/test.p12" -storetype PKCS12 -alias test-only -keyalg RSA -keysize 4096 -validity 2 -dname CN=CI-only -storepass:env ANDROID_KEYSTORE_PASSWORD -keypass:env ANDROID_KEYSTORE_PASSWORD
+          keytool -exportcert -keystore "$directory/test.p12" -alias test-only -storepass:env ANDROID_KEYSTORE_PASSWORD -file "$directory/test.cer"
+          export ANDROID_SIGNING_CERT_SHA256=$(sha256sum "$directory/test.cer" | cut -d' ' -f1)
+          bash scripts/sign-release-apk.sh unsigned/android-release-unsigned.apk "$directory/first.apk" "$directory/test.p12"
+          bash scripts/sign-release-apk.sh unsigned/android-release-unsigned.apk "$directory/second.apk" "$directory/test.p12"
+          if ANDROID_SIGNING_CERT_SHA256=$(printf '%064d' 0) bash scripts/sign-release-apk.sh unsigned/android-release-unsigned.apk "$directory/rejected.apk" "$directory/test.p12" > "$directory/rejection.log" 2>&1; then
+            echo 'Wrong signing certificate was accepted' >&2
+            exit 1
+          fi
+          test ! -e "$directory/rejected.apk"
