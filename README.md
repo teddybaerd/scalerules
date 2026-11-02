@@ -1,8 +1,126 @@
+**This README is bilingual: [English](#english) first, followed by [Deutsch](#deutsch).**  
+**Diese README ist zweisprachig: zuerst [Englisch](#english), darunter [Deutsch](#deutsch).**
+
 <p align="center">
-  <img src="docs/assets/scalerules-icon.png" width="160" alt="ScaleRules: vier helle Punkte und ein graues Zahnrad auf dunklem Hintergrund" />
+  <img src="docs/assets/scalerules-icon.png" width="160" alt="ScaleRules: four bright dots and a gray gear on a dark background" />
 </p>
 
 # ScaleRules
+
+<a id="english"></a>
+
+# English
+
+ScaleRules is an independent Android VPN client for **Tailscale and Headscale**, with automatic connection rules that you define yourself.
+
+Signed APKs are available from [GitHub Releases](https://github.com/teddybaerd/scalerules/releases). Distribution is through GitHub, the built-in updater or Obtainium. Publication on the Google Play Store is not planned.
+
+## Features
+
+### English and German
+
+The app interface, connection rules and related notifications are available in **English and German**. The language follows your Android settings; Android 13 and later also let you select it through the system's per-app language settings.
+
+Your rule names and Wi-Fi names remain unchanged. Existing journal entries retain their original language. Technical diagnostics supplied by the VPN engine may still appear in English.
+
+### Connection rules with priorities
+
+Under **Settings → Connection rules**, you define conditions and actions:
+
+- Conditions: a specific Wi-Fi SSID, any Wi-Fi, mobile data, offline or any connected network.
+- Actions: connect the VPN, disconnect it or leave its current state unchanged.
+- The order determines priority: **the first enabled matching rule wins.**
+- Without a matching rule, the VPN state stays unchanged.
+- Warnings help identify conflicting rules and rules hidden by earlier rules.
+- A decision journal records recent automation actions.
+
+There is **no automatic learning feature**. Editing the rules pauses automation, which you must explicitly resume. You also need to restart automation after rebooting the device or terminating its automation process.
+
+For SSID rules, Android requires precise location permission and enabled location services to provide the Wi-Fi name. An SSID alone does not establish that a Wi-Fi network is trustworthy.
+
+More details: [Connection rules](docs/RULES.md).
+
+### Split tunneling and default exclusions
+
+Under **Settings → Split tunneling**, you can choose which apps use or bypass the VPN.
+
+In the normal exclusion configuration, the built-in exclusions inherited from Tailscale include these apps when installed:
+
+| App | Package name |
+| --- | --- |
+| Android Auto | `com.google.android.projection.gearhead` |
+| Google Home / Chromecast | `com.google.android.apps.chromecast.app` |
+| Google Messages | `com.google.android.apps.messaging` |
+
+These apps send their traffic **outside the VPN tunnel**, using the normal network connection. This also applies when an exit node is selected; DNS and ad filtering provided through the VPN path therefore do not apply to excluded apps.
+
+These default exclusions are inherited from Tailscale Android. Additional exclusions, such as Sonos, are also included. The respective inclusion and exclusion rules apply when switching to “only selected apps through VPN” or using managed MDM configurations.
+
+### In-app updates
+
+Under **Settings → App updates**, you can:
+
+- manually check for a newer stable GitHub release;
+- read its changelog inside the app;
+- download the APK and install it through Android after verification;
+- postpone an update or skip a version.
+
+Automatic checks run at most once a day when opening or returning to the app. You can disable them, for example when using Obtainium. A manual check also shows previously skipped versions.
+
+Before handing the APK to Android, the app checks its checksum, size, package name, version and signing certificate. Android asks you to confirm installation. Future releases use the same permanent signing key so that updates retain your settings and rules.
+
+Details: [Updater and release requirements](docs/UPDATES.md).
+
+## Changes in previous builds
+
+- **Early test builds:** Tailscale/Headscale foundation, user-defined connection rules with priorities, warnings and a decision journal.
+- **Revised interface:** English and German texts, plus clearly identifiable selection fields for network conditions and VPN actions.
+- **0.1.0:** first version signed with the permanent key used for subsequent updates.
+- **0.2.0:** custom gear icon and built-in GitHub updater.
+- **0.2.1:** first follow-up release for testing the complete in-app update path; the same feature set as 0.2.0. The update was successfully tested on a device.
+- **Repository monitoring:** daily checks of official Tailscale releases, security bulletins and dependencies, plus Dependabot proposals for Android and GitHub Actions.
+
+Split tunneling, including its built-in app exclusions, is part of the inherited Tailscale foundation.
+
+See the [release notes](https://github.com/teddybaerd/scalerules/releases) for further information about published APKs.
+
+## Installation and updates
+
+1. Download and install the signed APK from [GitHub Releases](https://github.com/teddybaerd/scalerules/releases).
+2. Set up Tailscale or your own Headscale server.
+3. Configure an exit node, DNS, split tunneling and connection rules as needed.
+
+To update an existing permanently signed ScaleRules installation, install the new APK over the existing app. **Do not uninstall it first**, so your configuration is retained.
+
+Temporary CI debug APKs use different signing keys and are not a permanent update channel. Moving from such a test build to the signed release app may require a one-time uninstall and reconfiguration.
+
+## Security and development
+
+The current foundation is **Tailscale Android 1.104.4**. ScaleRules preserves the original Git history and license notices. Its Android application ID is `io.github.teddybaerd.scalerules`; the internal Kotlin/Java namespace is retained to simplify upstream updates.
+
+The [security and upstream monitor](https://github.com/teddybaerd/scalerules/issues/6) collects new bulletins and review candidates. Matching a package version to an advisory does not establish an exploitable Android vulnerability. VPN engine changes are reviewed and tested before adoption.
+
+- [Provenance and upstream updates](docs/UPSTREAM.md)
+- [Security monitoring and its limitations](docs/SECURITY-MONITORING.md)
+- [Permanent signing and key backup](docs/SIGNING.md)
+- [Upstream build instructions](docs/UPSTREAM_README.md)
+- [Build and test workflow](.github/workflows/foundation.yml)
+
+## Collaboration, license and attribution
+
+ScaleRules is maintained by **teddybaerd**. **OpenAI ChatGPT/Codex assisted with planning, implementation, debugging, testing and documentation.** The custom app icon was also created with assistance from OpenAI image generation.
+
+The original Tailscale authors retain their copyright and license notices. Tailscale Android is licensed under **BSD-3-Clause**; see [LICENSE](LICENSE).
+
+The idea of user-defined connection rules was inspired by Tailscale Auto Rules. Its code has not been incorporated; the ScaleRules rule engine was implemented for this project.
+
+ScaleRules is an independent project and is neither published nor endorsed by Tailscale Inc. The names Tailscale and Headscale identify compatibility.
+
+---
+
+<a id="deutsch"></a>
+
+# Deutsch
 
 ScaleRules ist ein unabhängiger Android-VPN-Client für **Tailscale und Headscale** mit selbst festgelegten automatischen Verbindungsregeln.
 
