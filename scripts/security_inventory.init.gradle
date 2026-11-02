@@ -1,0 +1,59 @@
+// Copyright (c) 2026 ScaleRules contributors
+// SPDX-License-Identifier: BSD-3-Clause
+// Resolve metadata only: no APK/native build, publishing or dependency changes.
+import groovy.json.JsonOutput
+import org.gradle.api.artifacts.component.ModuleComponentIdentifier
+
+gradle.projectsEvaluated {
+    rootProject.tasks.register('scalerulesSecurityInventory') {
+        doLast {
+            def packages = new TreeSet<String>()
+            def runtimeCount = 0
+            rootProject.allprojects.each { project ->
+                def runtime = project.configurations.findByName('releaseRuntimeClasspath')
+                if (runtime != null) {
+                    runtimeCount++
+                    runtime.incoming.resolutionResult.allDependencies.each { dep ->
+                        if (dep instanceof org.gradle.api.artifacts.result.UnresolvedDependencyResult) {
+                            throw new GradleException("Unresolved runtime dependency: ${dep.attempted}")
+                        }
+                    }
+                    runtime.incoming.resolutionResult.allComponents.each { component ->
+                        def id = component.id
+                        if (id instanceof ModuleComponentIdentifier) {
+                            packages.add("${id.group}:${id.module}:${id.version}".toString())
+                        }
+                    }
+                }
+                def classpath = project.buildscript.configurations.findByName('classpath')
+                if (classpath != null && classpath.canBeResolved) {
+                    classpath.incoming.resolutionResult.allDependencies.each { dep ->
+                        if (dep instanceof org.gradle.api.artifacts.result.UnresolvedDependencyResult) {
+                            throw new GradleException("Unresolved build dependency: ${dep.attempted}")
+                        }
+                    }
+                    classpath.incoming.resolutionResult.allComponents.each { component ->
+                        def id = component.id
+                        if (id instanceof ModuleComponentIdentifier) {
+                            packages.add("${id.group}:${id.module}:${id.version}".toString())
+                        }
+                    }
+                }
+            }
+            if (runtimeCount == 0 || packages.isEmpty()) {
+                throw new GradleException('No Android release dependency graph found')
+            }
+            def output = new File(System.getenv('SCALERULES_INVENTORY_OUTPUT'))
+            output.parentFile.mkdirs()
+            output.text = JsonOutput.prettyPrint(JsonOutput.toJson([
+                schema: 1,
+                scope: 'Android release runtime and Gradle buildscript classpaths',
+                packages: packages.collect { coordinate ->
+                    def parts = coordinate.split(':', 3)
+                    [ecosystem: 'Maven', name: "${parts[0]}:${parts[1]}", version: parts[2]]
+                }
+            ])) + '\n'
+            println("Security inventory: ${packages.size()} resolved Maven package versions")
+        }
+    }
+}

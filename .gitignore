@@ -64,3 +64,7 @@ tailscale.version
 *.p12
 *.pfx
 github-keystore-base64.txt
+
+# Local security-monitor reports and Python caches
+__pycache__/
+security-report/

@@ -1,0 +1,99 @@
+name: Security and upstream monitor
+
+on:
+  schedule:
+    - cron: '17 6 * * *'
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/security-monitor.yml'
+      - '.github/dependabot.yml'
+      - 'scripts/security_monitor.py'
+      - 'scripts/security_inventory.init.gradle'
+      - 'tests/test_security_monitor.py'
+      - 'go.mod'
+      - 'go.sum'
+      - 'go.toolchain.rev'
+      - 'android/**'
+      - 'docs/UPSTREAM.md'
+  pull_request:
+    paths:
+      - '.github/workflows/security-monitor.yml'
+      - '.github/dependabot.yml'
+      - 'scripts/security_monitor.py'
+      - 'scripts/security_inventory.init.gradle'
+      - 'tests/test_security_monitor.py'
+      - 'go.mod'
+      - 'go.sum'
+      - 'go.toolchain.rev'
+      - 'android/**'
+      - 'docs/UPSTREAM.md'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: security-monitor-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  monitor:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+      - name: Test monitor logic without network or write access
+        run: python3 -m unittest discover -s tests -v
+      - uses: actions/setup-java@3a4f6e1af504cf6a31855fa899c6aa5355ba6c12
+        with:
+          distribution: temurin
+          java-version: '21'
+      - name: Install pinned Android SDK components
+        shell: bash
+        run: |
+          set -euo pipefail
+          api=$(sed -n 's/^androidApiLevel=//p' android/gradle.properties)
+          tools=$(sed -n 's/^androidBuildToolsVersion=//p' android/gradle.properties)
+          "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "platforms;android-$api" "build-tools;$tools"
+      - name: Resolve Android runtime and build dependencies
+        working-directory: android
+        env:
+          SCALERULES_INVENTORY_OUTPUT: ${{ github.workspace }}/security-report/android-dependencies.json
+        run: ./gradlew --no-daemon -I ../scripts/security_inventory.init.gradle scalerulesSecurityInventory -PSCALERULES_VERSION=0.0.0-security
+      - name: Check official releases, bulletins and OSV
+        env:
+          GH_READ_TOKEN: ${{ github.token }}
+        run: python3 scripts/security_monitor.py --inventory security-report/android-dependencies.json --output security-report
+      - name: Upload report
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: security-report-${{ github.run_id }}
+          path: security-report/
+          if-no-files-found: warn
+          retention-days: 30
+
+  publish:
+    needs: monitor
+    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      issues: write
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: security-report-${{ github.run_id }}
+          path: security-report
+      - name: Update monitoring issue only after a complete successful scan
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SCALERULES_MAINTAINER: teddybaerd
+        run: python3 scripts/security_monitor.py --publish security-report/report.json
