@@ -84,6 +84,8 @@ class UpdateClientTest {
       archive.applicationInfo!!.flags = ApplicationInfo.FLAG_DEBUGGABLE
       rejected()
       archive.applicationInfo!!.flags = 0
+      file.writeBytes(file.readBytes().also { it[0] = (it[0].toInt() xor 1).toByte() })
+      rejected()
       file.appendText("modified")
       rejected()
     } finally {
