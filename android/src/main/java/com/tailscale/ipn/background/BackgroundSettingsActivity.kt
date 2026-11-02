@@ -84,6 +84,7 @@ class BackgroundSettingsActivity : ComponentActivity() {
                     if (exempt) R.string.sr_background_exempt else R.string.sr_background_optimized
                 )
             )
+            Text(stringResource(R.string.sr_background_unused_steps))
             Text(stringResource(R.string.sr_background_android_steps))
             Button(
                 onClick = {
@@ -138,11 +139,11 @@ fun BackgroundSetupPrompt(enabled: Boolean = true): Boolean {
   val prefs = remember {
     context.getSharedPreferences("scalerules_background_setup", Context.MODE_PRIVATE)
   }
-  var seen by remember { mutableStateOf(prefs.getBoolean("shown_v1", false)) }
+  var seen by remember { mutableStateOf(prefs.getBoolean("shown_v2_app_info", false)) }
   DisposableEffect(prefs) {
     val listener =
         android.content.SharedPreferences.OnSharedPreferenceChangeListener { _, key ->
-          if (key == "shown_v1") seen = prefs.getBoolean("shown_v1", false)
+          if (key == "shown_v2_app_info") seen = prefs.getBoolean("shown_v2_app_info", false)
         }
     prefs.registerOnSharedPreferenceChangeListener(listener)
     onDispose { prefs.unregisterOnSharedPreferenceChangeListener(listener) }
@@ -150,7 +151,7 @@ fun BackgroundSetupPrompt(enabled: Boolean = true): Boolean {
   var unavailable by remember { mutableStateOf(false) }
   val visible = enabled && !MDMSettings.isMDMConfigured && !seen
   fun dismiss() {
-    prefs.edit().putBoolean("shown_v1", true).apply()
+    prefs.edit().putBoolean("shown_v2_app_info", true).apply()
     seen = true
   }
   if (visible) {
@@ -160,8 +161,7 @@ fun BackgroundSetupPrompt(enabled: Boolean = true): Boolean {
         text = {
           Column(Modifier.verticalScroll(rememberScrollState())) {
             Text(stringResource(R.string.sr_background_explanation))
-            Text(stringResource(R.string.sr_background_android_steps))
-            if (isSamsung()) Text(stringResource(R.string.sr_background_samsung))
+            Text(stringResource(R.string.sr_background_unused_steps))
             Text(stringResource(R.string.sr_background_later_note))
             if (unavailable) Text(stringResource(R.string.sr_background_unavailable))
           }
@@ -172,14 +172,14 @@ fun BackgroundSetupPrompt(enabled: Boolean = true): Boolean {
                 if (
                     openSettings(
                         context,
-                        Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS),
+                        appSettings(context),
                     )
                 )
                     dismiss()
                 else unavailable = true
               }
           ) {
-            Text(stringResource(R.string.sr_background_battery_button))
+            Text(stringResource(R.string.sr_background_app_button))
           }
         },
         dismissButton = {
