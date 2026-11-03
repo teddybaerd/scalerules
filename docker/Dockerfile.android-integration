@@ -60,6 +60,7 @@ RUN yes | sdkmanager --licenses >/dev/null && \
         "ndk;27.2.12479018" \
         "platform-tools" \
         "platforms;android-34" \
+        "platforms;android-37" \
         "system-images;android-33;google_apis;x86_64"
 
 COPY scripts/run-android-integration-test-docker.sh /usr/local/bin/run-android-integration-test
