@@ -19,7 +19,12 @@ android {
   val androidApiLevel = providers.gradleProperty("androidApiLevel").get().toInt()
 
   ndkVersion = "23.1.7779620"
-  compileSdk = androidApiLevel
+  compileSdk {
+    version =
+        release(providers.gradleProperty("androidCompileSdk").get().toInt()) {
+          minorApiLevel = providers.gradleProperty("androidCompileSdkMinor").get().toInt()
+        }
+  }
 
   defaultConfig {
     applicationId = "io.github.teddybaerd.scalerules"
