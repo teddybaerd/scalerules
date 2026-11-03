@@ -63,6 +63,7 @@ class RulesService : Service() {
 
   override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
     if (intent?.action == ACTION_PAUSE) {
+      store.preferences.edit().putBoolean("resume_after_boot", false).apply()
       stopSelf()
       return START_NOT_STICKY
     }
@@ -72,6 +73,7 @@ class RulesService : Service() {
             ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) !=
                 PackageManager.PERMISSION_GRANTED
     ) {
+      if (intent?.action == RulesBootReceiver.ACTION_BOOT) RulesBootReceiver.remind(this)
       store.log(getString(R.string.sr_automation_no_permission))
       stopSelf()
       return START_NOT_STICKY
@@ -106,11 +108,14 @@ class RulesService : Service() {
         store.preferences.registerOnSharedPreferenceChangeListener(listener)
         registered = true
         active.value = true
+        store.preferences.edit().putBoolean("resume_after_boot", true).apply()
+        getSystemService(NotificationManager::class.java).cancel(7102)
         store.log(getString(R.string.sr_automation_started))
       }
       lastDecision = null
       schedule()
     } catch (e: RuntimeException) {
+      if (intent?.action == RulesBootReceiver.ACTION_BOOT) RulesBootReceiver.remind(this)
       store.log(getString(R.string.sr_automation_failed, e.javaClass.simpleName))
       stopSelf()
     }

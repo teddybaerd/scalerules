@@ -31,7 +31,7 @@
     <string name="acknowledgements">Danksagungen</string>
     <string name="privacy_policy">Datenschutzerklärung</string>
     <string name="terms_of_service">Nutzungsbedingungen</string>
-    <string name="about_view_footnotes">WireGuard ist eine eingetragene Marke von Jason A. Donenfeld.\n\n© Tailscale Inc. Alle Rechte vorbehalten.\nTailscale ist eine eingetragene Marke von Tailscale Inc.</string>
+    <string name="about_view_footnotes">© 2026 Markus / teddybaerd – ScaleRules.\n\nWireGuard ist eine eingetragene Marke von Jason A. Donenfeld.\n\n© Tailscale Inc. Alle Rechte vorbehalten.\nTailscale ist eine eingetragene Marke von Tailscale Inc.</string>
     <string name="managed_by">Verwaltet von</string>
     <string name="bug_report_title">Fehler melden</string>
     <string name="bug_report_instructions_prefix">"Um einen Fehler zu melden, "</string>
@@ -404,7 +404,7 @@
     <string name="su_title">App-Updates</string>
     <string name="su_settings_hint">GitHub-Versionen, Änderungsprotokoll und Installation</string>
     <string name="su_installed">Installiert: %1$s</string>
-    <string name="su_automatic">Beim Öffnen automatisch nach Updates suchen</string>
+    <string name="su_automatic">Automatisch suchen, auch im Hintergrund</string>
     <string name="su_source">Prüft GitHub höchstens einmal täglich. Für Obtainium kannst du diese Prüfung ausschalten. Download und Installation startest du selbst.</string>
     <string name="su_check">Nach Updates suchen</string>
     <string name="su_current">Du bist auf dem aktuellen Stand.</string>
@@ -455,4 +455,9 @@
     <string name="sr_tailscale_account">Bei Tailscale anmelden oder registrieren</string>
     <string name="sr_choose_account">Konto oder Server auswählen</string>
     <string name="sr_github_repository">ScaleRules auf GitHub</string>
+    <string name="su_notification_title">App-Update verfügbar</string>
+    <string name="su_notification_body">ScaleRules %1$s ist verfügbar. Tippe hier für Details und das Update.</string>
+    <string name="sr_boot_title">Regeln nach Geräteneustart starten</string>
+    <string name="sr_boot_resume">Tippe hier, um die Regelautomatik nach dem Neustart fortzusetzen.</string>
+    <string name="sr_boot_hint">Fortsetzen nur, wenn die Automatik vor dem Neustart aktiv war. Für Regeln mit WLAN-Namen nach der genauen Standortfreigabe in der App-Info Standort → Immer zulassen wählen. Andernfalls weist eine Benachrichtigung auf das manuelle Fortsetzen hin. Benachrichtigungen müssen erlaubt sein; Android kann den Start bis nach dem Entsperren verzögern. Nach Stopp erzwingen ist kein Autostart möglich.</string>
 </resources>
