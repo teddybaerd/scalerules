@@ -107,7 +107,7 @@
     <string name="auth_key_menu">Anmeldeschlüssel verwenden</string>
     <string name="auth_key_title">Konto mit Anmeldeschlüssel hinzufügen</string>
     <string name="auth_key_explanation">Gib einen gültigen Anmeldeschlüssel aus der Verwaltungskonsole ein.</string>
-    <string name="auth_key_placeholder">z. B. tskey-auth-mYta1ln3tCNTRL-s3cr3tauthk3yFr0madM1n</string>
+    <string name="auth_key_placeholder">Auth-Key hier eingeben</string>
     <string name="invalidAuthKey">Der eingegebene Anmeldeschlüssel hat nicht das richtige Format.</string>
     <string name="invalidAuthKeyTitle">Ungültiger Schlüssel</string>
     <string name="custom_control_url_title">Adresse des eigenen Koordinationsservers</string>
@@ -427,4 +427,32 @@
     <string name="su_back">Zurück</string>
     <string name="su_working">Prüfung läuft …</string>
     <string name="su_downloading">Download: %1$d%%</string>
+
+    <string name="sr_use_current_wifi">Aktuelles WLAN übernehmen</string>
+    <string name="sr_use_current_wifi_hint">Übernimmt den verbundenen WLAN-Namen in diesen Entwurf. Erst Speichern übernimmt die Regel.</string>
+    <string name="sr_current_wifi_none">Keine WLAN-Verbindung gefunden. Verbinde dich mit einem WLAN und versuche es erneut.</string>
+    <string name="sr_current_wifi_permission">Android benötigt die Berechtigung für den genauen Standort, um den WLAN-Namen zu lesen. Du kannst sie in den App-Einstellungen erteilen oder den Namen manuell eingeben.</string>
+    <string name="sr_current_wifi_location">Aktiviere die Android-Standortdienste und tippe anschließend erneut auf Aktuelles WLAN übernehmen.</string>
+    <string name="sr_current_wifi_unavailable">Android hat keinen WLAN-Namen bereitgestellt. Versuche es erneut oder gib ihn manuell ein.</string>
+    <string name="sr_current_wifi_settings">Einstellungen öffnen</string>
+
+    <string name="sr_background_title">Hintergrundbetrieb</string>
+    <string name="sr_background_explanation">Android kann Hintergrundaktivitäten einschränken, um Akku zu sparen. Erlaube ScaleRules eine uneingeschränkte Akkunutzung, damit die VPN-Verbindungsregeln auch bei ausgeschaltetem Bildschirm zuverlässig reagieren können. Das kann den Akkuverbrauch erhöhen.</string>
+    <string name="sr_background_android_steps">Wähle ScaleRules in der Akku-Optimierung aus und stelle Nicht optimieren ein. Prüfe in der App-Info außerdem Akku → Uneingeschränkt, sofern verfügbar. Die Bezeichnungen unterscheiden sich je nach Gerät.</string>
+    <string name="sr_background_samsung">Samsung: Entferne ScaleRules aus Apps im Standby und Apps im tiefen Standby. Füge es, falls verfügbar, unter Einstellungen → Akku → Grenzen der Hintergrundnutzung zu Apps, die nie automatisch in Standby versetzt werden hinzu. Verfügbarkeit und Bezeichnungen unterscheiden sich je nach One-UI-Version. Der Android-Status prüft diese Samsung-Listen nicht.</string>
+    <string name="sr_background_battery_button">Akku-Einstellungen öffnen</string>
+    <string name="sr_background_app_button">ScaleRules-App-Info öffnen</string>
+    <string name="sr_background_samsung_button">Samsung-Standby-Einstellungen öffnen</string>
+    <string name="sr_background_exempt">Android-Akku-Optimierung: ScaleRules ist ausgenommen. Prüfe zusätzliche Herstellerbeschränkungen separat.</string>
+    <string name="sr_background_optimized">Android-Akku-Optimierung: ScaleRules steht nicht auf der Ausnahmeliste.</string>
+    <string name="sr_background_limits">Akku-Einstellungen garantieren keinen unterbrechungsfreien Betrieb. Starte die Regelautomatik nach einem Neustart oder nach dem Beenden ihres Prozesses manuell wieder. Diese Ansicht ändert VPN, Regeln und Systemeinstellungen nicht automatisch.</string>
+    <string name="sr_background_unavailable">Diese Einstellungsseite konnte nicht geöffnet werden. Öffne bitte die Android-Einstellungen und wähle Apps → ScaleRules manuell aus.</string>
+    <string name="sr_background_later">Später</string>
+    <string name="sr_background_later_note">Du findest diese Hinweise später unter Einstellungen → Hintergrundbetrieb wieder.</string>
+    <string name="sr_background_settings_hint">Ungenutzte Apps, Akku-Optimierung und Standby</string>
+    <string name="sr_background_back">Zurück</string>
+    <string name="sr_background_unused_steps">Öffne die App-Info von ScaleRules und schalte Berechtigungen für ungenutzte Apps entfernen beziehungsweise App-Aktivität bei Nichtnutzung pausieren aus, sofern vorhanden. So setzt Android die Berechtigungen nach längerer Nichtnutzung nicht zurück. Prüfe für die Hintergrundregeln zusätzlich Akku → Uneingeschränkt. Die Bezeichnungen unterscheiden sich je nach Gerät.</string>
+    <string name="sr_tailscale_account">Bei Tailscale anmelden oder registrieren</string>
+    <string name="sr_choose_account">Konto oder Server auswählen</string>
+    <string name="sr_github_repository">ScaleRules auf GitHub</string>
 </resources>

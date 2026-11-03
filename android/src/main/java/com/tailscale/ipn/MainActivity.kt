@@ -54,6 +54,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.tailscale.ipn.mdm.MDMSettings
@@ -286,7 +287,15 @@ class MainActivity : ComponentActivity() {
       }
 
       AppTheme {
-        com.tailscale.ipn.updates.UpdatePrompt()
+        val backgroundRoute by navController.currentBackStackEntryAsState()
+        val backgroundPrompt =
+            com.tailscale.ipn.background.BackgroundSetupPrompt(
+                enabled =
+                    backgroundRoute?.destination?.route == "main" &&
+                        !isIntroScreenViewedSet() &&
+                        !AndroidTVUtil.isAndroidTV()
+            )
+        if (!backgroundPrompt) com.tailscale.ipn.updates.UpdatePrompt()
         Surface(color = MaterialTheme.colorScheme.inverseSurface) { // Background for the letterbox
           Surface(modifier = Modifier.universalFit()) { // Letterbox for AndroidTV
             NavHost(
@@ -323,6 +332,7 @@ class MainActivity : ComponentActivity() {
               val mainViewNav =
                   MainViewNavigation(
                       onNavigateToSettings = { navController.navigate("settings") },
+                      onNavigateToAccounts = { navController.navigate("userSwitcher") },
                       onNavigateToPeerDetails = {
                         navController.navigate("peerDetails/${it.StableID}")
                       },
@@ -362,7 +372,7 @@ class MainActivity : ComponentActivity() {
                   )
               val userSwitcherNav =
                   UserSwitcherNav(
-                      backToSettings = backTo("settings"),
+                      backToSettings = { navController.popBackStack() },
                       onNavigateHome = backTo("main"),
                       onNavigateCustomControl = {
                         navController.navigate("loginWithCustomControl")
