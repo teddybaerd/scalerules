@@ -21,6 +21,8 @@
 
 ScaleRules is an independent Android VPN client for **Tailscale and Headscale**, with automatic connection rules that you define yourself.
 
+Current stable release: **[0.2.7](https://github.com/teddybaerd/scalerules/releases/tag/v0.2.7)**.
+
 Signed APKs are available from [GitHub Releases](https://github.com/teddybaerd/scalerules/releases). Distribution is through GitHub, the built-in updater or Obtainium. Publication on the Google Play Store is not planned.
 
 ## Features
@@ -42,9 +44,19 @@ Under **Settings → Connection rules**, you define conditions and actions:
 - Warnings help identify conflicting rules and rules hidden by earlier rules.
 - A decision journal records recent automation actions.
 
-There is **no automatic learning feature**. Editing the rules pauses automation, which you must explicitly resume. You also need to restart automation after rebooting the device or terminating its automation process.
+There is **no automatic learning feature**. Editing the rules pauses automation, which you must explicitly resume. The optional **Start rules after reboot** setting restores previously active automation after a device restart. Manually paused automation remains paused. After the automation process is terminated, manual resumption may still be necessary.
 
 For SSID rules, Android requires precise location permission and enabled location services to provide the Wi-Fi name. An SSID alone does not establish that a Wi-Fi network is trustworthy.
+
+Use **Use current Wi-Fi** in an SSID rule to copy the connected Wi-Fi name into the draft. Manual entry remains available; a failed lookup preserves existing input.
+
+### Background operation and restart
+
+A dismissible setup hint opens ScaleRules app info, where you can disable permission removal for unused apps and check unrestricted battery usage. The guidance remains available under **Settings → Background operation**, including Android battery optimization status and Samsung standby instructions.
+
+To resume SSID rules after reboot, grant precise location and **Location → Allow all the time** in Android app permissions, enable **Start rules after reboot**, and start automation once. Without the required background location or VPN permission, a notification opens the rules screen for manual resumption. Notifications must be allowed. Normal boot handling may wait until unlock; force-stop and manufacturer battery restrictions can prevent startup. The VPN follows the current rules, so it can remain disconnected on your home Wi-Fi.
+
+Autostart was tested on Samsung Galaxy S10 and Tab S8; the manual-resume notification was also tested on S10 without background location.
 
 More details: [Connection rules](docs/RULES.md).
 
@@ -73,14 +85,24 @@ Under **Settings → App updates**, you can:
 - download the APK and install it through Android after verification;
 - postpone an update or skip a version.
 
-Automatic checks run at most once a day when opening or returning to the app. You can disable them, for example when using Obtainium. A manual check also shows previously skipped versions.
+Automatic checks include periodic background checks approximately every twelve hours, subject to Android scheduling and network availability, alongside the existing check when opening the app. A notification announces each newer stable version once, without a changelog; tapping it opens App updates with details. Notification permission and an enabled notification channel are required. Delivery for a future version remains to be verified in everyday use.
+
+You can disable automatic checks, for example when using Obtainium. A manual check also shows previously skipped versions. Downloads and installations only start after your action.
 
 Before handing the APK to Android, the app checks its checksum, size, package name, version and signing certificate. Android asks you to confirm installation. Future releases use the same permanent signing key so that updates retain your settings and rules.
 
 Details: [Updater and release requirements](docs/UPDATES.md).
 
+### Account setup and About
+
+Choose your sign-in method under **Settings → Accounts**: Tailscale sign-in/registration, another account, a custom server such as Headscale, or an auth key. These options are directly visible. Initial setup lets you choose an account or server before starting the default sign-in flow. **About ScaleRules** shows the custom icon, repository link and Markus / teddybaerd copyright alongside upstream attribution.
+
 ## Changes in previous builds
 
+- **0.2.7 (current):** background update notifications, optional rules autostart after reboot, own copyright in About, and Android/Compose dependency updates. Compile SDK 37.2, target SDK 36, minimum SDK 26.
+- **0.2.6 (test build):** stable Security Crypto 1.1.0; updating an existing installation retained accounts and settings.
+- **0.2.5:** directly accessible account options, explicit provider choice, ScaleRules icon and GitHub link in About.
+- **0.2.2–0.2.3:** current SSID capture, background-operation setup guidance and app-info shortcuts; replace the inherited auth-key example. 0.2.3 was published; 0.2.2 was used for testing.
 - **Early test builds:** Tailscale/Headscale foundation, user-defined connection rules with priorities, warnings and a decision journal.
 - **Revised interface:** English and German texts, plus clearly identifiable selection fields for network conditions and VPN actions.
 - **0.1.0:** first version signed with the permanent key used for subsequent updates.
@@ -95,7 +117,7 @@ See the [release notes](https://github.com/teddybaerd/scalerules/releases) for f
 ## Installation and updates
 
 1. Download and install the signed APK from [GitHub Releases](https://github.com/teddybaerd/scalerules/releases).
-2. Set up Tailscale or your own Headscale server.
+2. Choose Tailscale, your own Headscale server or auth-key login under **Settings → Accounts**.
 3. Configure an exit node, DNS, split tunneling and connection rules as needed.
 
 To update an existing permanently signed ScaleRules installation, install the new APK over the existing app. **Do not uninstall it first**, so your configuration is retained.
@@ -132,6 +154,8 @@ ScaleRules is an independent project and is neither published nor endorsed by Ta
 
 ScaleRules ist ein unabhängiger Android-VPN-Client für **Tailscale und Headscale** mit selbst festgelegten automatischen Verbindungsregeln.
 
+Aktuelle stabile Version: **[0.2.7](https://github.com/teddybaerd/scalerules/releases/tag/v0.2.7)**.
+
 Signierte APKs stehen unter [GitHub Releases](https://github.com/teddybaerd/scalerules/releases) bereit. Die Verteilung erfolgt über GitHub, den integrierten Updater oder Obtainium. Eine Veröffentlichung im Google Play Store ist nicht vorgesehen.
 
 ## Funktionen
@@ -153,9 +177,19 @@ Unter **Einstellungen → Verbindungsregeln** legst du Bedingungen und Aktionen 
 - Warnungen helfen, widersprüchliche oder durch frühere Regeln verdeckte Regeln zu erkennen.
 - Ein Entscheidungsprotokoll macht die letzten Automatik-Aktionen nachvollziehbar.
 
-Es gibt **keine automatische Lernfunktion**. Nach Änderungen an den Regeln ist die Automatik pausiert und muss bewusst wieder gestartet werden. Auch nach einem Geräteneustart oder dem Beenden des Automatik-Prozesses ist ein erneuter Start erforderlich.
+Es gibt **keine automatische Lernfunktion**. Nach Änderungen an den Regeln ist die Automatik pausiert und muss bewusst wieder gestartet werden. Mit der optionalen Einstellung **Regeln nach Geräteneustart starten** wird zuvor aktive Automatik nach dem Hochfahren fortgesetzt. Bewusst pausierte Automatik bleibt pausiert. Nach dem Beenden des Automatik-Prozesses kann ein manueller Neustart weiterhin erforderlich sein.
 
 Für SSID-Regeln benötigt Android die Berechtigung für den genauen Standort und aktivierte Standortdienste, um den WLAN-Namen bereitzustellen. Ein SSID-Name allein bestätigt nicht die Vertrauenswürdigkeit eines WLANs.
+
+Mit **Aktuelles WLAN übernehmen** lässt sich der verbundene WLAN-Name in einen SSID-Regelentwurf kopieren. Die manuelle Eingabe bleibt möglich; bei fehlgeschlagener Erkennung bleibt die vorhandene Eingabe erhalten.
+
+### Hintergrundbetrieb und Neustart
+
+Ein überspringbarer Einrichtungshinweis öffnet die ScaleRules-App-Info. Dort kannst du die Berechtigungsentfernung bei Nichtnutzung abschalten und die uneingeschränkte Akkunutzung prüfen. Unter **Einstellungen → Hintergrundbetrieb** bleiben die Hinweise erreichbar, einschließlich Android-Akku-Optimierungsstatus und Samsung-Standby-Anleitung.
+
+Für den Neustart von SSID-Regeln den genauen Standort und **Standort → Immer zulassen** in den Android-App-Berechtigungen freigeben, **Regeln nach Geräteneustart starten** aktivieren und die Automatik einmal starten. Fehlt die erforderliche Hintergrund-Standortfreigabe oder VPN-Berechtigung, öffnet eine Benachrichtigung die Regeln zum manuellen Fortsetzen. Benachrichtigungen müssen erlaubt sein. Die Neustartbehandlung kann bis zum Entsperren warten; Stopp erzwingen und Hersteller-Akkubeschränkungen können den Start verhindern. Das VPN folgt den aktuellen Regeln und kann im heimischen WLAN ausgeschaltet bleiben.
+
+Der Autostart wurde auf Samsung Galaxy S10 und Tab S8 getestet; der Hinweis zum manuellen Fortsetzen zusätzlich auf dem S10 ohne Hintergrund-Standortfreigabe.
 
 Weitere Details: [Verbindungsregeln](docs/RULES.md).
 
@@ -184,14 +218,24 @@ Unter **Einstellungen → App-Updates** kannst du:
 - die APK herunterladen und nach Prüfung über Android installieren;
 - ein Update auf später verschieben oder eine Version überspringen.
 
-Automatische Prüfungen erfolgen beim Öffnen bzw. Zurückkehren zur App höchstens einmal täglich. Sie sind abschaltbar, beispielsweise wenn du Obtainium bevorzugst. Eine manuelle Prüfung zeigt auch zuvor übersprungene Versionen wieder an.
+Automatische Prüfungen umfassen nun auch eine Hintergrundsuche ungefähr alle zwölf Stunden, abhängig von Androids Zeitplanung und der Netzwerkverfügbarkeit, zusätzlich zur bestehenden Prüfung beim Öffnen. Eine Benachrichtigung meldet jede neue stabile Version einmal, ohne Changelog; Antippen öffnet App-Updates mit den Details. Dafür müssen Benachrichtigungen und der zugehörige Kanal erlaubt sein. Die Zustellung für eine künftige Version ist im Alltag noch zu prüfen.
+
+Die automatische Suche ist abschaltbar, beispielsweise wenn du Obtainium bevorzugst. Eine manuelle Prüfung zeigt auch zuvor übersprungene Versionen wieder an. Download und Installation erfolgen erst auf deine Aktion.
 
 Vor der Übergabe an Android werden Prüfsumme, Dateigröße, Paketname, Version und Signierzertifikat geprüft. Android fordert deine Installationsbestätigung an. Künftige Releases verwenden denselben dauerhaften Signierschlüssel, sodass Einstellungen und Regeln beim Update erhalten bleiben.
 
 Details: [Update-Funktion und Release-Anforderungen](docs/UPDATES.md).
 
+### Kontoeinrichtung und Über-Ansicht
+
+Unter **Einstellungen → Konten** sind Tailscale-Anmeldung/Registrierung, weiteres Konto, eigener Server wie Headscale und Anmeldeschlüssel direkt sichtbar. Bei der Ersteinrichtung wählst du Konto oder Server bewusst aus, bevor der Standard-Anmeldeweg startet. **Über ScaleRules** zeigt das eigene Icon, den Repository-Link und den Copyright-Hinweis für Markus / teddybaerd neben den ursprünglichen Hinweisen.
+
 ## Änderungen der bisherigen Builds
 
+- **0.2.7 (aktuell):** Update-Benachrichtigungen im Hintergrund, optionaler Regelautostart nach Neustart, eigener Copyright-Hinweis unter Über sowie aktualisierte Android-/Compose-Abhängigkeiten. Compile SDK 37.2, Ziel-SDK 36, Mindest-SDK 26.
+- **0.2.6 (Test-Build):** stabile Security Crypto 1.1.0; Konten und Einstellungen blieben beim Update einer bestehenden Installation erhalten.
+- **0.2.5:** direkt erreichbare Kontooptionen, bewusste Serverauswahl, ScaleRules-Icon und GitHub-Link unter Über.
+- **0.2.2–0.2.3:** aktuelle SSID übernehmen, Einrichtungshinweise zum Hintergrundbetrieb und App-Info-Verknüpfungen; übernommenen Auth-Key-Beispielwert ersetzt. 0.2.3 wurde veröffentlicht, 0.2.2 als Test-Build genutzt.
 - **Erste Test-Builds:** Tailscale-/Headscale-Grundlage, selbst festgelegte Verbindungsregeln mit Priorität, Warnungen und Entscheidungsprotokoll.
 - **Überarbeitete Oberfläche:** deutsche und englische Texte sowie klar erkennbare Auswahlfelder für Netzwerkbedingungen und VPN-Aktionen.
 - **0.1.0:** erste Version mit dauerhaftem Signierschlüssel als Grundlage für nachfolgende Updates.
@@ -206,7 +250,7 @@ Die jeweiligen [Release-Hinweise](https://github.com/teddybaerd/scalerules/relea
 ## Installation und Updates
 
 1. Die signierte APK aus den [GitHub Releases](https://github.com/teddybaerd/scalerules/releases) herunterladen und installieren.
-2. Tailscale oder den eigenen Headscale-Server einrichten.
+2. Unter **Einstellungen → Konten** Tailscale, eigenen Headscale-Server oder Anmeldung per Anmeldeschlüssel auswählen.
 3. Bei Bedarf Exit Node, DNS, Split-Tunneling und Verbindungsregeln konfigurieren.
 
 Beim Update einer bereits dauerhaft signierten ScaleRules-Version die neue APK über die vorhandene App installieren. **Nicht vorher deinstallieren**, damit die Einrichtung erhalten bleibt.
