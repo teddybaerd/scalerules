@@ -522,4 +522,7 @@
     <string name="sr_background_settings_hint">Unused app restrictions, battery optimization and standby</string>
     <string name="sr_background_back">Back</string>
     <string name="sr_background_unused_steps">Open ScaleRules app info and turn off Remove permissions if app is unused or Pause app activity if unused, if available. This prevents Android from resetting permissions after extended inactivity. Separately check Battery → Unrestricted for background rules. Menu names vary by device.</string>
+    <string name="sr_tailscale_account">Tailscale: sign in or register</string>
+    <string name="sr_choose_account">Choose account or server</string>
+    <string name="sr_github_repository">ScaleRules on GitHub</string>
 </resources>

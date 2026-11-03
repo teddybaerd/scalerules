@@ -332,6 +332,7 @@ class MainActivity : ComponentActivity() {
               val mainViewNav =
                   MainViewNavigation(
                       onNavigateToSettings = { navController.navigate("settings") },
+                      onNavigateToAccounts = { navController.navigate("userSwitcher") },
                       onNavigateToPeerDetails = {
                         navController.navigate("peerDetails/${it.StableID}")
                       },
@@ -371,7 +372,7 @@ class MainActivity : ComponentActivity() {
                   )
               val userSwitcherNav =
                   UserSwitcherNav(
-                      backToSettings = backTo("settings"),
+                      backToSettings = { navController.popBackStack() },
                       onNavigateHome = backTo("main"),
                       onNavigateCustomControl = {
                         navController.navigate("loginWithCustomControl")
