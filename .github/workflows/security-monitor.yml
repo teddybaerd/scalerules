@@ -56,8 +56,9 @@ jobs:
         run: |
           set -euo pipefail
           api=$(sed -n 's/^androidCompileSdk=//p' android/gradle.properties)
+          minor=$(sed -n 's/^androidCompileSdkMinor=//p' android/gradle.properties)
           tools=$(sed -n 's/^androidBuildToolsVersion=//p' android/gradle.properties)
-          "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "platforms;android-$api" "build-tools;$tools"
+          "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "platforms;android-$api.$minor" "build-tools;$tools"
       - name: Resolve Android runtime and build dependencies
         working-directory: android
         env:
