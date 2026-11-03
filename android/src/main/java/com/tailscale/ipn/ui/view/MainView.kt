@@ -251,10 +251,10 @@ fun MainView(
                 isPrepared,
                 // If Tailscale is stopping, don't automatically restart; wait for user to take
                 // action (eg, if the user connected to another VPN).
-                state != Ipn.State.Stopping && user != null && !user.isEmpty(),
+                state != Ipn.State.Stopping && user?.isEmpty() == false,
                 user,
                 {
-                  if (user == null || user.isEmpty()) navigation.onNavigateToAccounts()
+                  if (user?.isEmpty() != false) navigation.onNavigateToAccounts()
                   else viewModel.toggleVpn(desiredState = !isOn)
                 },
                 { navigation.onNavigateToAccounts() },
