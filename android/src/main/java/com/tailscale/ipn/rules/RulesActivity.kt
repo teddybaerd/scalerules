@@ -77,6 +77,11 @@ class RulesActivity : ComponentActivity() {
     if (intent == null) startObserver() else vpnRequest.launch(intent)
   }
 
+  private fun pauseObserver(intent: Intent) {
+    RulesStore(this).preferences.edit().putBoolean("resume_after_boot", false).apply()
+    stopService(intent)
+  }
+
   private fun startObserver() {
     ContextCompat.startForegroundService(this, Intent(this, RulesService::class.java))
   }
@@ -102,9 +107,37 @@ class RulesActivity : ComponentActivity() {
     ) {
       Text(stringResource(R.string.sr_rules_title), style = MaterialTheme.typography.headlineMedium)
       Text(stringResource(R.string.sr_rules_intro))
+      var bootEnabled by remember {
+        mutableStateOf(store.preferences.getBoolean("start_on_boot", false))
+      }
+      Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
+        Switch(
+            checked = bootEnabled,
+            onCheckedChange = {
+              bootEnabled = it
+              store.preferences.edit().putBoolean("start_on_boot", it).apply()
+            },
+        )
+        Text(stringResource(R.string.sr_boot_title))
+      }
+      Text(stringResource(R.string.sr_boot_hint))
+      if (bootEnabled) {
+        TextButton(
+            onClick = {
+              startActivity(
+                  Intent(
+                      android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
+                      android.net.Uri.parse("package:$packageName"),
+                  )
+              )
+            }
+        ) {
+          Text(stringResource(R.string.sr_background_app_button))
+        }
+      }
       Button(
           onClick = {
-            if (running) stopService(Intent(this@RulesActivity, RulesService::class.java))
+            if (running) pauseObserver(Intent(this@RulesActivity, RulesService::class.java))
             else resumeRules()
           }
       ) {
@@ -167,7 +200,7 @@ class RulesActivity : ComponentActivity() {
               Switch(
                   checked = rule.enabled,
                   onCheckedChange = { enabled ->
-                    stopService(Intent(this@RulesActivity, RulesService::class.java))
+                    pauseObserver(Intent(this@RulesActivity, RulesService::class.java))
                     store.save(
                         rules.map { if (it.id == rule.id) it.copy(enabled = enabled) else it }
                     )
@@ -214,7 +247,7 @@ class RulesActivity : ComponentActivity() {
           confirmButton = {
             TextButton(
                 onClick = {
-                  stopService(Intent(this@RulesActivity, RulesService::class.java))
+                  pauseObserver(Intent(this@RulesActivity, RulesService::class.java))
                   store.save(rules.filterNot { it.id == rule.id })
                   deleting = null
                 }
@@ -234,7 +267,7 @@ class RulesActivity : ComponentActivity() {
             onDismiss = { editing = null },
             onSave = { updated ->
               // Pause before editing so permission/service types can be rechecked on resume.
-              stopService(Intent(this@RulesActivity, RulesService::class.java))
+              pauseObserver(Intent(this@RulesActivity, RulesService::class.java))
               store.save(
                   if (rules.any { it.id == updated.id })
                       rules.map { if (it.id == updated.id) updated else it }
@@ -248,7 +281,7 @@ class RulesActivity : ComponentActivity() {
   }
 
   private fun move(store: RulesStore, rules: List<ConnectionRule>, from: Int, to: Int) {
-    stopService(Intent(this, RulesService::class.java))
+    pauseObserver(Intent(this, RulesService::class.java))
     val updated = rules.toMutableList()
     updated.add(to, updated.removeAt(from))
     store.save(updated)

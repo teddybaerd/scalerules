@@ -38,7 +38,7 @@
     <string name="acknowledgements">Acknowledgements</string>
     <string name="privacy_policy">Privacy Policy</string>
     <string name="terms_of_service">Terms of Service</string>
-    <string name="about_view_footnotes">WireGuard is a registered trademark of Jason A. Donenfeld.\n\n© Tailscale Inc. All rights reserved.\nTailscale is a registered trademark of Tailscale Inc.</string>
+    <string name="about_view_footnotes">© 2026 Markus / teddybaerd – ScaleRules.\n\nWireGuard is a registered trademark of Jason A. Donenfeld.\n\n© Tailscale Inc. All rights reserved.\nTailscale is a registered trademark of Tailscale Inc.</string>
     <string name="managed_by">Managed by</string>
 
     <!-- Strings for the bug reporting screen -->
@@ -474,7 +474,7 @@
     <string name="su_title">App updates</string>
     <string name="su_settings_hint">GitHub releases, changelog and installation</string>
     <string name="su_installed">Installed: %1$s</string>
-    <string name="su_automatic">Check automatically when opening the app</string>
+    <string name="su_automatic">Check automatically, including in the background</string>
     <string name="su_source">Checks GitHub at most once a day. Disable this if you prefer Obtainium. Downloads and installation always require your action.</string>
     <string name="su_check">Check for updates</string>
     <string name="su_current">You are up to date.</string>
@@ -525,4 +525,9 @@
     <string name="sr_tailscale_account">Tailscale: sign in or register</string>
     <string name="sr_choose_account">Choose account or server</string>
     <string name="sr_github_repository">ScaleRules on GitHub</string>
+    <string name="su_notification_title">App update available</string>
+    <string name="su_notification_body">ScaleRules %1$s is available. Tap to view details and update.</string>
+    <string name="sr_boot_title">Start rules after reboot</string>
+    <string name="sr_boot_resume">Tap to resume rule automation after reboot.</string>
+    <string name="sr_boot_hint">Resume only if automation was active before reboot. For named Wi-Fi rules, allow Location → Allow all the time in app info after granting precise location. Otherwise a notification asks you to resume manually. Requires notification permission; Android may delay startup until after unlock. Force stop prevents automatic startup.</string>
 </resources>

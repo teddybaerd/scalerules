@@ -140,6 +140,7 @@ class MainActivity : ComponentActivity() {
   @SuppressLint("SourceLockedOrientationActivity")
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
+    com.tailscale.ipn.updates.UpdateWorker.schedule(this)
 
     pendingDeepLink = deepLinkUri(intent)
 

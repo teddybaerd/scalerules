@@ -57,6 +57,7 @@ class UpdatesViewModel(application: Application) : AndroidViewModel(application)
   fun automatic(enabled: Boolean) {
     automatic = enabled
     client.preferences.edit().putBoolean("automatic", enabled).apply()
+    UpdateWorker.schedule(getApplication())
   }
 
   fun check() {
