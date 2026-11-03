@@ -42,12 +42,12 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 25
     steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           persist-credentials: false
       - name: Test monitor logic without network or write access
         run: python3 -m unittest discover -s tests -v
-      - uses: actions/setup-java@3a4f6e1af504cf6a31855fa899c6aa5355ba6c12
+      - uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad
         with:
           distribution: temurin
           java-version: '21'
@@ -69,7 +69,7 @@ jobs:
         run: python3 scripts/security_monitor.py --inventory security-report/android-dependencies.json --output security-report
       - name: Upload report
         if: always()
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
         with:
           name: security-report-${{ github.run_id }}
           path: security-report/
@@ -85,10 +85,10 @@ jobs:
       contents: read
       issues: write
     steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           persist-credentials: false
-      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333
         with:
           name: security-report-${{ github.run_id }}
           path: security-report
