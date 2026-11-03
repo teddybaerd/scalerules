@@ -48,9 +48,10 @@ jobs:
           java-version: '21'
       - name: Install pinned Android SDK components
         run: |
-          api=$(sed -n 's/^androidApiLevel=//p' android/gradle.properties)
+          api=$(sed -n 's/^androidCompileSdk=//p' android/gradle.properties)
+          minor=$(sed -n 's/^androidCompileSdkMinor=//p' android/gradle.properties)
           tools=$(sed -n 's/^androidBuildToolsVersion=//p' android/gradle.properties)
-          "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "platforms;android-$api" "build-tools;$tools" "ndk;23.1.7779620"
+          "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "platforms;android-$api.$minor" "build-tools;$tools" "ndk;23.1.7779620"
           echo "NDK_ROOT=$ANDROID_HOME/ndk/23.1.7779620" >> "$GITHUB_ENV"
       - name: Build and test unsigned release
         env:
