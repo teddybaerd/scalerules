@@ -7,6 +7,14 @@
 
 # ScaleRules
 
+<p align="center">
+  <img src="metadata/en-US/images/phoneScreenshots/1.png" width="230" alt="Connection rules / Verbindungsregeln" />
+  <img src="metadata/en-US/images/phoneScreenshots/2.png" width="230" alt="In-app updates / In-App-Updates" />
+  <img src="metadata/en-US/images/phoneScreenshots/3.png" width="230" alt="Background operation / Hintergrundbetrieb" />
+</p>
+
+<p align="center"><sub>Screenshots show the German interface; the language follows your Android settings. / Die Screenshots zeigen die deutsche Oberfläche; die Sprache folgt den Android-Einstellungen.</sub></p>
+
 <a id="english"></a>
 
 # English
