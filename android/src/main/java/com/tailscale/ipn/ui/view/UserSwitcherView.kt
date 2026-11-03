@@ -5,21 +5,14 @@ package com.tailscale.ipn.ui.view
 
 import android.content.Intent
 import android.net.Uri
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -58,7 +51,6 @@ data class UserSwitcherNav(
 fun UserSwitcherView(nav: UserSwitcherNav, viewModel: UserSwitcherViewModel = viewModel()) {
   val users by viewModel.loginProfiles.collectAsState()
   val currentUser by viewModel.loggedInUser.collectAsState()
-  val showHeaderMenu by viewModel.showHeaderMenu.collectAsState()
   var showDeleteDialog by remember { mutableStateOf(false) }
   val context = LocalContext.current
   val netmapState by viewModel.netmap.collectAsState()
@@ -70,18 +62,6 @@ fun UserSwitcherView(nav: UserSwitcherNav, viewModel: UserSwitcherViewModel = vi
         Header(
             R.string.accounts,
             onBack = nav.backToSettings,
-            actions = {
-              Row {
-                FusMenu(
-                    viewModel = viewModel,
-                    onAuthKeyClick = nav.onNavigateToAuthKey,
-                    onCustomClick = nav.onNavigateCustomControl,
-                )
-                IconButton(onClick = { viewModel.showHeaderMenu.set(!showHeaderMenu) }) {
-                  Icon(Icons.Default.MoreVert, stringResource(R.string.sr_menu))
-                }
-              }
-            },
         )
       }
   ) { innerPadding ->
@@ -129,8 +109,8 @@ fun UserSwitcherView(nav: UserSwitcherNav, viewModel: UserSwitcherViewModel = vi
 
         item {
           Lists.SectionDivider()
-          Setting.Text(R.string.add_account) {
-            viewModel.addProfile {
+          Setting.Text(R.string.sr_tailscale_account) {
+            viewModel.addProfile(controlURL = "https://controlplane.tailscale.com") {
               if (it.isFailure) {
                 viewModel.errorDialog.set(ErrorDialogType.ADD_PROFILE_FAILED)
               }
@@ -138,7 +118,20 @@ fun UserSwitcherView(nav: UserSwitcherNav, viewModel: UserSwitcherViewModel = vi
           }
 
           Lists.ItemDivider()
-          Setting.Text(R.string.reauthenticate) { viewModel.login() }
+          Setting.Text(R.string.add_account) {
+            viewModel.addProfile(controlURL = "https://controlplane.tailscale.com") {
+              if (it.isFailure) viewModel.errorDialog.set(ErrorDialogType.ADD_PROFILE_FAILED)
+            }
+          }
+          Lists.ItemDivider()
+          Setting.Text(R.string.custom_control_menu, onClick = nav.onNavigateCustomControl)
+          Lists.ItemDivider()
+          Setting.Text(R.string.auth_key_menu, onClick = nav.onNavigateToAuthKey)
+
+          if (currentUser != null) {
+            Lists.ItemDivider()
+            Setting.Text(R.string.reauthenticate) { viewModel.login() }
+          }
 
           if (currentUser != null) {
             Lists.ItemDivider()
@@ -189,36 +182,6 @@ fun UserSwitcherView(nav: UserSwitcherNav, viewModel: UserSwitcherViewModel = vi
             Text(text = stringResource(R.string.cancel))
           }
         },
-    )
-  }
-}
-
-@Composable
-fun FusMenu(
-    onCustomClick: () -> Unit,
-    onAuthKeyClick: () -> Unit,
-    viewModel: UserSwitcherViewModel,
-) {
-  val expanded by viewModel.showHeaderMenu.collectAsState()
-
-  DropdownMenu(
-      expanded = expanded,
-      onDismissRequest = { viewModel.showHeaderMenu.set(false) },
-      modifier = Modifier.background(MaterialTheme.colorScheme.surfaceContainer),
-  ) {
-    MenuItem(
-        onClick = {
-          onCustomClick()
-          viewModel.showHeaderMenu.set(false)
-        },
-        text = stringResource(id = R.string.custom_control_menu),
-    )
-    MenuItem(
-        onClick = {
-          onAuthKeyClick()
-          viewModel.showHeaderMenu.set(false)
-        },
-        text = stringResource(id = R.string.auth_key_menu),
     )
   }
 }
