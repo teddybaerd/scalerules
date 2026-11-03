@@ -275,12 +275,12 @@ open class IpnViewModel : ViewModel() {
     }
   }
 
-  fun addProfile(completionHandler: (Result<String>) -> Unit) {
+  fun addProfile(controlURL: String? = null, completionHandler: (Result<String>) -> Unit) {
     Client(viewModelScope).addProfile {
       if (it.isSuccess) {
-        login()
+        if (controlURL != null) loginWithCustomControlURL(controlURL) else login()
+        startVPN()
       }
-      startVPN()
       completionHandler(it)
     }
   }

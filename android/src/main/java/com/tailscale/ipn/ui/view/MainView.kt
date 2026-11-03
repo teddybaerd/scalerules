@@ -121,6 +121,7 @@ import kotlinx.coroutines.flow.emptyFlow
 // Navigation actions for the MainView
 data class MainViewNavigation(
     val onNavigateToSettings: () -> Unit,
+    val onNavigateToAccounts: () -> Unit = {},
     val onNavigateToPeerDetails: (Tailcfg.Node) -> Unit,
     val onNavigateToExitNodes: () -> Unit,
     val onNavigateToHealth: () -> Unit,
@@ -250,10 +251,13 @@ fun MainView(
                 isPrepared,
                 // If Tailscale is stopping, don't automatically restart; wait for user to take
                 // action (eg, if the user connected to another VPN).
-                state != Ipn.State.Stopping,
+                state != Ipn.State.Stopping && user?.isEmpty() == false,
                 user,
-                { viewModel.toggleVpn(desiredState = !isOn) },
-                { viewModel.login() },
+                {
+                  if (user?.isEmpty() != false) navigation.onNavigateToAccounts()
+                  else viewModel.toggleVpn(desiredState = !isOn)
+                },
+                { navigation.onNavigateToAccounts() },
                 loginAtUrl,
                 netmap?.SelfNode,
                 { viewModel.showVPNPermissionLauncherIfUnauthorized() },
@@ -603,7 +607,7 @@ fun ConnectView(
           Spacer(modifier = Modifier.size(1.dp))
           PrimaryActionButton(onClick = loginAction) {
             Text(
-                text = stringResource(id = R.string.log_in),
+                text = stringResource(id = R.string.sr_choose_account),
                 fontSize = MaterialTheme.typography.titleMedium.fontSize,
             )
           }
