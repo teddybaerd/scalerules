@@ -1,8 +1,8 @@
 # Upstream provenance
 
 Repository: https://github.com/tailscale/tailscale-android
-Release: 1.104.4-t938213198-gb9d487fe6
-Commit: b9d487fe6d7203aeac889aeec2faccb9d32bb701
+Release: 1.104.5-t788384763-gd8673104f
+Commit: d8673104f600c05b8c20b64d0e70951ed670236a
 
 The imported release retains its original Git ancestry. Upstream workflows
 were replaced by a foundation workflow with explicit permissions.

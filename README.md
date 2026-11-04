@@ -95,7 +95,7 @@ Details: [Updater and release requirements](docs/UPDATES.md).
 
 ### Account setup and About
 
-Choose your sign-in method under **Settings → Accounts**: Tailscale sign-in/registration, another account, a custom server such as Headscale, or an auth key. These options are directly visible. Initial setup lets you choose an account or server before starting the default sign-in flow. **About ScaleRules** shows the custom icon, repository link and Markus / teddybaerd copyright alongside upstream attribution.
+Choose your sign-in method under **Settings → Accounts**: Tailscale sign-in/registration, another account, a custom server such as Headscale, or an auth key. These options are directly visible. Initial setup lets you choose an account or server before starting the default sign-in flow. **About ScaleRules** shows the custom icon, repository link and teddybaerd copyright alongside upstream attribution.
 
 ## Changes in previous builds
 
@@ -126,7 +126,7 @@ Temporary CI debug APKs use different signing keys and are not a permanent updat
 
 ## Security and development
 
-The current foundation is **Tailscale Android 1.104.4**. ScaleRules preserves the original Git history and license notices. Its Android application ID is `io.github.teddybaerd.scalerules`; the internal Kotlin/Java namespace is retained to simplify upstream updates.
+The current foundation is **Tailscale Android 1.104.5**. ScaleRules preserves the original Git history and license notices. Its Android application ID is `io.github.teddybaerd.scalerules`; the internal Kotlin/Java namespace is retained to simplify upstream updates.
 
 The [security and upstream monitor](https://github.com/teddybaerd/scalerules/issues/6) collects new bulletins and review candidates. Matching a package version to an advisory does not establish an exploitable Android vulnerability. VPN engine changes are reviewed and tested before adoption.
 
@@ -228,7 +228,7 @@ Details: [Update-Funktion und Release-Anforderungen](docs/UPDATES.md).
 
 ### Kontoeinrichtung und Über-Ansicht
 
-Unter **Einstellungen → Konten** sind Tailscale-Anmeldung/Registrierung, weiteres Konto, eigener Server wie Headscale und Anmeldeschlüssel direkt sichtbar. Bei der Ersteinrichtung wählst du Konto oder Server bewusst aus, bevor der Standard-Anmeldeweg startet. **Über ScaleRules** zeigt das eigene Icon, den Repository-Link und den Copyright-Hinweis für Markus / teddybaerd neben den ursprünglichen Hinweisen.
+Unter **Einstellungen → Konten** sind Tailscale-Anmeldung/Registrierung, weiteres Konto, eigener Server wie Headscale und Anmeldeschlüssel direkt sichtbar. Bei der Ersteinrichtung wählst du Konto oder Server bewusst aus, bevor der Standard-Anmeldeweg startet. **Über ScaleRules** zeigt das eigene Icon, den Repository-Link und den Copyright-Hinweis für teddybaerd neben den ursprünglichen Hinweisen.
 
 ## Änderungen der bisherigen Builds
 
@@ -259,7 +259,7 @@ Temporäre CI-Debug-APKs verwenden andere Signierschlüssel und sind kein dauerh
 
 ## Sicherheit und Weiterentwicklung
 
-Die aktuelle Grundlage ist **Tailscale Android 1.104.4**. ScaleRules behält die ursprüngliche Git-Historie und die Lizenzhinweise bei. Die Android-Anwendungs-ID lautet `io.github.teddybaerd.scalerules`; der interne Kotlin-/Java-Namensraum bleibt zur einfacheren Übernahme von Upstream-Änderungen erhalten.
+Die aktuelle Grundlage ist **Tailscale Android 1.104.5**. ScaleRules behält die ursprüngliche Git-Historie und die Lizenzhinweise bei. Die Android-Anwendungs-ID lautet `io.github.teddybaerd.scalerules`; der interne Kotlin-/Java-Namensraum bleibt zur einfacheren Übernahme von Upstream-Änderungen erhalten.
 
 Der [Sicherheits- und Upstream-Monitor](https://github.com/teddybaerd/scalerules/issues/6) sammelt neue Meldungen und Prüfkandidaten. Paketversions-Treffer sind kein Nachweis einer ausnutzbaren Android-Schwachstelle. Änderungen am VPN-Kern werden geprüft und getestet übernommen.
 
