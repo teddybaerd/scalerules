@@ -81,7 +81,7 @@ class ExitNodeFailoverTest {
     val confirmation = FailoverConfirmation({ ++probes; probes == 1 }, { delay(it) })
     assertFalse(confirmation.primary(config))
     assertEquals(2, probes)
-    assertEquals(120000, testScheduler.currentTime)
+    assertEquals(120000L, testScheduler.currentTime)
   }
 
   @Test fun cancellationDuringNetworkOrAccountChangePreventsFurtherProbes() = runTest {

@@ -60,6 +60,18 @@ Autostart was tested on Samsung Galaxy S10 and Tab S8; the manual-resume notific
 
 More details: [Connection rules](docs/RULES.md).
 
+### Experimental exit-node failover (next test build)
+
+Connection rules can optionally prefer one exit node and switch to a verified backup
+when the preferred node is reported offline. Automatic delayed return is optional.
+The monitor uses existing peer status events, with active probes only during an
+incident, and works only while rules and VPN are running. Configuration belongs to
+the current account; manual selection of a different node suspends failover.
+
+This is not an internet/DNS health check. DNS must remain available when the preferred
+site fails. Android background restrictions may delay detection and switching.
+See [behavior and device test checklist](docs/RULES.md#experimental-exit-node-failover).
+
 ### Split tunneling and default exclusions
 
 Under **Settings → Split tunneling**, you can choose which apps use or bypass the VPN.
@@ -192,6 +204,19 @@ Für den Neustart von SSID-Regeln den genauen Standort und **Standort → Immer 
 Der Autostart wurde auf Samsung Galaxy S10 und Tab S8 getestet; der Hinweis zum manuellen Fortsetzen zusätzlich auf dem S10 ohne Hintergrund-Standortfreigabe.
 
 Weitere Details: [Verbindungsregeln](docs/RULES.md).
+
+### Experimentelles Exit-Node-Failover (nächster Test-Build)
+
+Die Verbindungsregeln können optional einen Exit Node bevorzugen und bei gemeldetem
+Ausfall zu einem geprüften Ersatz wechseln. Die verzögerte automatische Rückkehr ist
+abschaltbar. Die Überwachung nutzt vorhandene Statusmeldungen und prüft nur bei einem
+Vorfall aktiv, solange Regelautomatik und VPN laufen. Die Konfiguration gehört zum
+aktuellen Konto; die manuelle Auswahl eines anderen Knotens setzt Failover aus.
+
+Dies prüft weder Internetweiterleitung noch DNS. Die Namensauflösung muss auch beim
+Ausfall des bevorzugten Standorts funktionieren. Android-Hintergrundbeschränkungen
+können Erkennung und Wechsel verzögern.
+[Verhalten und Gerätetest-Checkliste](docs/RULES.md#experimental-exit-node-failover).
 
 ### Split-Tunneling und voreingestellte Ausnahmen
 
