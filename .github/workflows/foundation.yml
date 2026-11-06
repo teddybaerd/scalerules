@@ -45,6 +45,8 @@ jobs:
         run: python3 scripts/check_translations.py
       - name: Build debug APK and run unit tests
         run: make apk
+      - name: Emit Kotlin formatting diff
+        run: cd android && ./gradlew ktfmtFormat && git diff --exit-code -- '*.kt'
       - name: Build unsigned release APK
         run: cd android && ./gradlew --no-daemon assembleRelease -PSCALERULES_VERSION=0.0.0-ci
       - name: Upload unsigned signing-test fixture
