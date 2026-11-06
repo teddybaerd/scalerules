@@ -21,7 +21,7 @@
 
 ScaleRules is an independent Android VPN client for **Tailscale and Headscale**, with automatic connection rules that you define yourself.
 
-Current stable release: **[0.2.7](https://github.com/teddybaerd/scalerules/releases/tag/v0.2.7)**.
+Current stable release: **[0.2.8](https://github.com/teddybaerd/scalerules/releases/tag/v0.2.8)**.
 
 Signed APKs are available from [GitHub Releases](https://github.com/teddybaerd/scalerules/releases). Distribution is through GitHub, the built-in updater or Obtainium. Publication on the Google Play Store is not planned.
 
@@ -111,7 +111,8 @@ Choose your sign-in method under **Settings → Accounts**: Tailscale sign-in/re
 
 ## Changes in previous builds
 
-- **0.2.7 (current):** background update notifications, optional rules autostart after reboot, own copyright in About, and Android/Compose dependency updates. Compile SDK 37.2, target SDK 36, minimum SDK 26.
+- **0.2.8 (current):** Tailscale Android 1.104.5, reviewed security/dependency maintenance, and nickname-only ScaleRules attribution.
+- **0.2.7:** background update notifications, optional rules autostart after reboot, own copyright in About, and Android/Compose dependency updates. Compile SDK 37.2, target SDK 36, minimum SDK 26.
 - **0.2.6 (test build):** stable Security Crypto 1.1.0; updating an existing installation retained accounts and settings.
 - **0.2.5:** directly accessible account options, explicit provider choice, ScaleRules icon and GitHub link in About.
 - **0.2.2–0.2.3:** current SSID capture, background-operation setup guidance and app-info shortcuts; replace the inherited auth-key example. 0.2.3 was published; 0.2.2 was used for testing.
@@ -166,7 +167,7 @@ ScaleRules is an independent project and is neither published nor endorsed by Ta
 
 ScaleRules ist ein unabhängiger Android-VPN-Client für **Tailscale und Headscale** mit selbst festgelegten automatischen Verbindungsregeln.
 
-Aktuelle stabile Version: **[0.2.7](https://github.com/teddybaerd/scalerules/releases/tag/v0.2.7)**.
+Aktuelle stabile Version: **[0.2.8](https://github.com/teddybaerd/scalerules/releases/tag/v0.2.8)**.
 
 Signierte APKs stehen unter [GitHub Releases](https://github.com/teddybaerd/scalerules/releases) bereit. Die Verteilung erfolgt über GitHub, den integrierten Updater oder Obtainium. Eine Veröffentlichung im Google Play Store ist nicht vorgesehen.
 
@@ -257,7 +258,8 @@ Unter **Einstellungen → Konten** sind Tailscale-Anmeldung/Registrierung, weite
 
 ## Änderungen der bisherigen Builds
 
-- **0.2.7 (aktuell):** Update-Benachrichtigungen im Hintergrund, optionaler Regelautostart nach Neustart, eigener Copyright-Hinweis unter Über sowie aktualisierte Android-/Compose-Abhängigkeiten. Compile SDK 37.2, Ziel-SDK 36, Mindest-SDK 26.
+- **0.2.8 (aktuell):** Tailscale Android 1.104.5, geprüfte Sicherheits-/Abhängigkeitspflege und ScaleRules-Copyright nur mit GitHub-Nick.
+- **0.2.7:** Update-Benachrichtigungen im Hintergrund, optionaler Regelautostart nach Neustart, eigener Copyright-Hinweis unter Über sowie aktualisierte Android-/Compose-Abhängigkeiten. Compile SDK 37.2, Ziel-SDK 36, Mindest-SDK 26.
 - **0.2.6 (Test-Build):** stabile Security Crypto 1.1.0; Konten und Einstellungen blieben beim Update einer bestehenden Installation erhalten.
 - **0.2.5:** direkt erreichbare Kontooptionen, bewusste Serverauswahl, ScaleRules-Icon und GitHub-Link unter Über.
 - **0.2.2–0.2.3:** aktuelle SSID übernehmen, Einrichtungshinweise zum Hintergrundbetrieb und App-Info-Verknüpfungen; übernommenen Auth-Key-Beispielwert ersetzt. 0.2.3 wurde veröffentlicht, 0.2.2 als Test-Build genutzt.

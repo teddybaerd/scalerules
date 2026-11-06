@@ -14,19 +14,6 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  formatter-preview:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
-        with:
-          persist-credentials: false
-      - uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad
-        with:
-          distribution: temurin
-          java-version: '21'
-      - name: Emit Kotlin formatting diff
-        run: cd android && ./gradlew ktfmtFormat -PSCALERULES_VERSION=0.0.0-ci && git diff --exit-code -- '*.kt'
-
   build:
     runs-on: ubuntu-latest
     timeout-minutes: 60

@@ -17,12 +17,23 @@ data class ExitNodeFailoverConfig(
     val returnSeconds: Int = 120,
 ) {
   val valid: Boolean
-    get() = enabled && controlURL.isNotBlank() && selfID.isNotBlank() &&
-        primaryID.isNotBlank() && fallbackID.isNotBlank() && primaryID != fallbackID &&
-        failureCount in 2..5 && graceSeconds in 15..120 && returnSeconds in 60..600
+    get() =
+        enabled &&
+            controlURL.isNotBlank() &&
+            selfID.isNotBlank() &&
+            primaryID.isNotBlank() &&
+            fallbackID.isNotBlank() &&
+            primaryID != fallbackID &&
+            failureCount in 2..5 &&
+            graceSeconds in 15..120 &&
+            returnSeconds in 60..600
 }
 
-enum class FailoverAction { NONE, CHECK_FALLBACK, CHECK_PRIMARY }
+enum class FailoverAction {
+  NONE,
+  CHECK_FALLBACK,
+  CHECK_PRIMARY,
+}
 
 /** Unknown status never means offline. Only act on the configured pair in its own profile. */
 object ExitNodeFailoverPolicy {

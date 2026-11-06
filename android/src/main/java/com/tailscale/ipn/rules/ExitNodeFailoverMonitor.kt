@@ -15,8 +15,8 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
@@ -42,8 +42,16 @@ class ExitNodeFailoverMonitor(
       val running: Boolean,
   ) {
     val action: FailoverAction
-      get() = ExitNodeFailoverPolicy.action(config, controlURL, selfID, running,
-          selectedID, primaryOnline, fallbackOnline)
+      get() =
+          ExitNodeFailoverPolicy.action(
+              config,
+              controlURL,
+              selfID,
+              running,
+              selectedID,
+              primaryOnline,
+              fallbackOnline,
+          )
   }
 
   fun refresh(available: Boolean) {
@@ -56,42 +64,53 @@ class ExitNodeFailoverMonitor(
     val map = Notifier.netmap.value
     val prefs = Notifier.prefs.value
     val peers = map?.Peers.orEmpty().filter { it.isExitNode }
-    return Snapshot(cfg, prefs?.ControlURL, map?.SelfNode?.StableID,
+    return Snapshot(
+        cfg,
+        prefs?.ControlURL,
+        map?.SelfNode?.StableID,
         prefs?.activeExitNodeID,
         peers.find { it.StableID == cfg.primaryID }?.Online,
         peers.find { it.StableID == cfg.fallbackID }?.Online,
-        ready.value && prefs?.WantRunning == true && Notifier.state.value == Ipn.State.Running &&
-            App.get().getAppScopedViewModel().vpnActive.value)
+        ready.value &&
+            prefs?.WantRunning == true &&
+            Notifier.state.value == Ipn.State.Running &&
+            App.get().getAppScopedViewModel().vpnActive.value,
+    )
   }
 
   fun start() {
     if (job != null) return
     job = scope.launch {
       val engine = combine(Notifier.netmap, Notifier.prefs, Notifier.state) { _, _, _ -> Unit }
-      combine(engine, App.get().getAppScopedViewModel().vpnActive, config, ready) {
-          _, _, _, _ -> snapshot()
-      }.distinctUntilChanged().collectLatest { initial ->
-        if (initial.action == FailoverAction.NONE) return@collectLatest
-        delay(initial.config.graceSeconds * 1000L)
-        while (currentCoroutineContext().isActive && snapshot() == initial) {
-          val confirmation = FailoverConfirmation(
-              probe = { id -> peer(id)?.let { probe(it) } ?: false },
-              wait = { delay(it) },
-          )
-          val targetID = when (initial.action) {
-            FailoverAction.CHECK_FALLBACK ->
-                if (confirmation.fallback(initial.config)) initial.config.fallbackID else null
-            FailoverAction.CHECK_PRIMARY ->
-                if (confirmation.primary(initial.config)) initial.config.primaryID else null
-            FailoverAction.NONE -> null
+      combine(engine, App.get().getAppScopedViewModel().vpnActive, config, ready) { _, _, _, _ ->
+            snapshot()
           }
-          if (targetID != null && snapshot() == initial) {
-            peer(targetID)?.let { switchTo(it, initial) }
+          .distinctUntilChanged()
+          .collectLatest { initial ->
+            if (initial.action == FailoverAction.NONE) return@collectLatest
+            delay(initial.config.graceSeconds * 1000L)
+            while (currentCoroutineContext().isActive && snapshot() == initial) {
+              val confirmation =
+                  FailoverConfirmation(
+                      probe = { id -> peer(id)?.let { probe(it) } ?: false },
+                      wait = { delay(it) },
+                  )
+              val targetID =
+                  when (initial.action) {
+                    FailoverAction.CHECK_FALLBACK ->
+                        if (confirmation.fallback(initial.config)) initial.config.fallbackID
+                        else null
+                    FailoverAction.CHECK_PRIMARY ->
+                        if (confirmation.primary(initial.config)) initial.config.primaryID else null
+                    FailoverAction.NONE -> null
+                  }
+              if (targetID != null && snapshot() == initial) {
+                peer(targetID)?.let { switchTo(it, initial) }
+              }
+              // Retry only while an incident remains unresolved, never in the healthy steady state.
+              delay(60000)
+            }
           }
-          // Retry only while an incident remains unresolved, never in the healthy steady state.
-          delay(60000)
-        }
-      }
     }
   }
 
@@ -101,8 +120,7 @@ class ExitNodeFailoverMonitor(
   private suspend fun probe(peer: Tailcfg.Node): Boolean =
       suspendCancellableCoroutine { continuation ->
         Client(scope).ping(peer) { result ->
-          if (continuation.isActive)
-              continuation.resume(result.getOrNull()?.Err?.isEmpty() == true)
+          if (continuation.isActive) continuation.resume(result.getOrNull()?.Err?.isEmpty() == true)
         }
       }
 
@@ -113,10 +131,12 @@ class ExitNodeFailoverMonitor(
     Client(scope).editPrefs(prefs) { result ->
       // The resulting preference event cancels the confirmation collector. Keep the
       // acknowledgement in the service scope so successful switches are still journaled.
-      store.log(context.getString(
-          if (result.isSuccess) R.string.sr_failover_switched else R.string.sr_failover_failed,
-          peer.displayName,
-      ))
+      store.log(
+          context.getString(
+              if (result.isSuccess) R.string.sr_failover_switched else R.string.sr_failover_failed,
+              peer.displayName,
+          )
+      )
     }
   }
 

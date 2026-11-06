@@ -2,21 +2,25 @@
 // SPDX-License-Identifier: BSD-3-Clause
 package com.tailscale.ipn.rules
 
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import org.junit.Assert.*
 import org.junit.Test
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class ExitNodeFailoverTest {
-  private val config = ExitNodeFailoverConfig(
-      enabled = true, controlURL = "https://headscale.example", selfID = "phone",
-      primaryID = "home", fallbackID = "vps",
-  )
+  private val config =
+      ExitNodeFailoverConfig(
+          enabled = true,
+          controlURL = "https://headscale.example",
+          selfID = "phone",
+          primaryID = "home",
+          fallbackID = "vps",
+      )
 
   private fun action(
       cfg: ExitNodeFailoverConfig = config,
@@ -28,13 +32,18 @@ class ExitNodeFailoverTest {
       fallback: Boolean? = true,
   ) = ExitNodeFailoverPolicy.action(cfg, url, self, running, selected, primary, fallback)
 
-  @Test fun onlyKnownOfflinePrimaryAndOnlineBackupTriggerFailover() {
+  @Test
+  fun onlyKnownOfflinePrimaryAndOnlineBackupTriggerFailover() {
     assertEquals(FailoverAction.CHECK_FALLBACK, action())
     for (primary in listOf(true, null)) assertEquals(FailoverAction.NONE, action(primary = primary))
-    for (fallback in listOf(false, null)) assertEquals(FailoverAction.NONE, action(fallback = fallback))
+    for (fallback in listOf(false, null)) assertEquals(
+        FailoverAction.NONE,
+        action(fallback = fallback),
+    )
   }
 
-  @Test fun accountSwitchPausedVpnAndManualSelectionsPreventChanges() {
+  @Test
+  fun accountSwitchPausedVpnAndManualSelectionsPreventChanges() {
     assertEquals(FailoverAction.NONE, action(url = "https://another.example"))
     assertEquals(FailoverAction.NONE, action(self = "another-phone"))
     assertEquals(FailoverAction.NONE, action(running = false))
@@ -43,15 +52,19 @@ class ExitNodeFailoverTest {
     assertEquals(FailoverAction.NONE, action(cfg = config.copy(enabled = false)))
   }
 
-  @Test fun returnIsOptionalAndNeedsAnExplicitOnlineSignal() {
+  @Test
+  fun returnIsOptionalAndNeedsAnExplicitOnlineSignal() {
     assertEquals(FailoverAction.CHECK_PRIMARY, action(selected = "vps", primary = true))
     assertEquals(FailoverAction.NONE, action(selected = "vps", primary = null))
     assertEquals(FailoverAction.NONE, action(selected = "vps", primary = false))
-    assertEquals(FailoverAction.NONE,
-        action(cfg = config.copy(autoReturn = false), selected = "vps", primary = true))
+    assertEquals(
+        FailoverAction.NONE,
+        action(cfg = config.copy(autoReturn = false), selected = "vps", primary = true),
+    )
   }
 
-  @Test fun invalidAndLegacyConfigurationsAreDisabled() {
+  @Test
+  fun invalidAndLegacyConfigurationsAreDisabled() {
     assertFalse(ExitNodeFailoverConfig().valid)
     assertFalse(config.copy(fallbackID = "home").valid)
     assertFalse(config.copy(selfID = "").valid)
@@ -60,33 +73,65 @@ class ExitNodeFailoverTest {
     assertFalse(config.copy(graceSeconds = -1).valid)
   }
 
-  @Test fun confirmedFailureMustAlsoHaveAReachableBackup() = runTest {
+  @Test
+  fun confirmedFailureMustAlsoHaveAReachableBackup() = runTest {
     val calls = mutableListOf<String>()
-    val confirmation = FailoverConfirmation({ id -> calls += id; id == "vps" }, { delay(it) })
+    val confirmation =
+        FailoverConfirmation(
+            { id ->
+              calls += id
+              id == "vps"
+            },
+            { delay(it) },
+        )
     assertTrue(confirmation.fallback(config))
     assertEquals(listOf("home", "home", "home", "vps"), calls)
     val unreachable = FailoverConfirmation({ false }, { delay(it) })
     assertFalse(unreachable.fallback(config))
   }
 
-  @Test fun successfulPrimaryProbeCancelsFailoverBurst() = runTest {
+  @Test
+  fun successfulPrimaryProbeCancelsFailoverBurst() = runTest {
     val calls = mutableListOf<String>()
-    val confirmation = FailoverConfirmation({ id -> calls += id; true }, { delay(it) })
+    val confirmation =
+        FailoverConfirmation(
+            { id ->
+              calls += id
+              true
+            },
+            { delay(it) },
+        )
     assertFalse(confirmation.fallback(config))
     assertEquals(listOf("home"), calls)
   }
 
-  @Test fun returnWaitsAndRequiresTwoSuccessfulProbes() = runTest {
+  @Test
+  fun returnWaitsAndRequiresTwoSuccessfulProbes() = runTest {
     var probes = 0
-    val confirmation = FailoverConfirmation({ ++probes; probes == 1 }, { delay(it) })
+    val confirmation =
+        FailoverConfirmation(
+            {
+              ++probes
+              probes == 1
+            },
+            { delay(it) },
+        )
     assertFalse(confirmation.primary(config))
     assertEquals(2, probes)
     assertEquals(120000L, testScheduler.currentTime)
   }
 
-  @Test fun cancellationDuringNetworkOrAccountChangePreventsFurtherProbes() = runTest {
+  @Test
+  fun cancellationDuringNetworkOrAccountChangePreventsFurtherProbes() = runTest {
     val calls = mutableListOf<String>()
-    val confirmation = FailoverConfirmation({ id -> calls += id; false }, { delay(it) })
+    val confirmation =
+        FailoverConfirmation(
+            { id ->
+              calls += id
+              false
+            },
+            { delay(it) },
+        )
     var switched = false
     val task = launch { switched = confirmation.fallback(config) }
     runCurrent()
@@ -97,9 +142,17 @@ class ExitNodeFailoverTest {
     assertFalse(switched)
   }
 
-  @Test fun cancellationDuringReturnDelayPreventsSecondProbe() = runTest {
+  @Test
+  fun cancellationDuringReturnDelayPreventsSecondProbe() = runTest {
     var probes = 0
-    val confirmation = FailoverConfirmation({ ++probes; true }, { delay(it) })
+    val confirmation =
+        FailoverConfirmation(
+            {
+              ++probes
+              true
+            },
+            { delay(it) },
+        )
     val task = launch { confirmation.primary(config) }
     runCurrent()
     task.cancel()

@@ -13,10 +13,10 @@ class RulesStore(context: Context) {
   val preferences = context.getSharedPreferences("scalerules_manual_rules_v1", Context.MODE_PRIVATE)
   private val json = Json { ignoreUnknownKeys = true }
 
-  fun failover(): ExitNodeFailoverConfig =
-      runCatching {
-        json.decodeFromString<ExitNodeFailoverConfig>(preferences.getString("failover", "{}")!!)
-      }.getOrDefault(ExitNodeFailoverConfig())
+  fun failover(): ExitNodeFailoverConfig = runCatching {
+    json.decodeFromString<ExitNodeFailoverConfig>(preferences.getString("failover", "{}")!!)
+  }
+      .getOrDefault(ExitNodeFailoverConfig())
 
   fun saveFailover(config: ExitNodeFailoverConfig) {
     preferences.edit().putString("failover", json.encodeToString(config)).apply()

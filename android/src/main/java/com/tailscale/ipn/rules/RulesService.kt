@@ -182,7 +182,9 @@ class RulesService : Service() {
     if (!registered) return
     val context = context()
     val decision = RuleEngine.evaluate(store.rules(), context)
-    failover.refresh(context.kind != ConnectionKind.OFFLINE && decision.action != RuleAction.DISCONNECT)
+    failover.refresh(
+        context.kind != ConnectionKind.OFFLINE && decision.action != RuleAction.DISCONNECT
+    )
     val signature = context to decision
     if (signature == lastDecision) return
     lastDecision = signature
