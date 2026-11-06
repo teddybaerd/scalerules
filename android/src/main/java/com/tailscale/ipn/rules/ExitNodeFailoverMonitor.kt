@@ -106,19 +106,18 @@ class ExitNodeFailoverMonitor(
         }
       }
 
-  private suspend fun switchTo(peer: Tailcfg.Node, initial: Snapshot) {
+  private fun switchTo(peer: Tailcfg.Node, initial: Snapshot) {
     if (snapshot() != initial) return
-    val result = suspendCancellableCoroutine<Result<Ipn.Prefs>> { continuation ->
-      val prefs = Ipn.MaskedPrefs()
-      prefs.ExitNodeID = peer.StableID
-      Client(scope).editPrefs(prefs) { result ->
-        if (continuation.isActive) continuation.resume(result)
-      }
+    val prefs = Ipn.MaskedPrefs()
+    prefs.ExitNodeID = peer.StableID
+    Client(scope).editPrefs(prefs) { result ->
+      // The resulting preference event cancels the confirmation collector. Keep the
+      // acknowledgement in the service scope so successful switches are still journaled.
+      store.log(context.getString(
+          if (result.isSuccess) R.string.sr_failover_switched else R.string.sr_failover_failed,
+          peer.displayName,
+      ))
     }
-    store.log(context.getString(
-        if (result.isSuccess) R.string.sr_failover_switched else R.string.sr_failover_failed,
-        peer.displayName,
-    ))
   }
 
   fun stop() {
