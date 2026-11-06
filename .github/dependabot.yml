@@ -19,6 +19,10 @@ updates:
       time: '06:00'
       timezone: Europe/Berlin
     open-pull-requests-limit: 3
+    ignore:
+      # Vico 2/3 require migrating PingView from the 1.x chart API (reviewed in PR #22).
+      - dependency-name: 'com.patrykandpatrick.vico:*'
+        update-types: [version-update:semver-major]
     groups:
       android-minor-patch:
         patterns: ['*']

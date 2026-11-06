@@ -28,6 +28,10 @@ import com.tailscale.ipn.App
 import com.tailscale.ipn.NetworkCandidate
 import com.tailscale.ipn.R
 import com.tailscale.ipn.pickPreferredNetwork
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
@@ -36,11 +40,13 @@ class RulesService : Service() {
   private val handler = Handler(Looper.getMainLooper())
   private lateinit var store: RulesStore
   private lateinit var connectivity: ConnectivityManager
+  private val failoverScope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
+  private lateinit var failover: ExitNodeFailoverMonitor
   private var registered = false
   private var lastDecision: Pair<ConnectionContext, RuleDecision>? = null
   private val evaluateTask = Runnable { evaluate() }
   private val listener = SharedPreferences.OnSharedPreferenceChangeListener { _, key ->
-    if (key == "rules") {
+    if (key == "rules" || key == "failover") {
       lastDecision = null
       schedule()
     }
@@ -59,6 +65,7 @@ class RulesService : Service() {
     super.onCreate()
     store = RulesStore(this)
     connectivity = getSystemService(ConnectivityManager::class.java)
+    failover = ExitNodeFailoverMonitor(this, store, failoverScope)
   }
 
   override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
@@ -108,6 +115,7 @@ class RulesService : Service() {
         store.preferences.registerOnSharedPreferenceChangeListener(listener)
         registered = true
         active.value = true
+        failover.start()
         store.preferences.edit().putBoolean("resume_after_boot", true).apply()
         getSystemService(NotificationManager::class.java).cancel(7102)
         store.log(getString(R.string.sr_automation_started))
@@ -125,6 +133,8 @@ class RulesService : Service() {
 
   private fun schedule() {
     handler.post {
+      // Cancel pending probes immediately on network/rule changes, before the debounce.
+      failover.refresh(false)
       handler.removeCallbacks(evaluateTask)
       handler.postDelayed(evaluateTask, 2000)
     }
@@ -172,6 +182,9 @@ class RulesService : Service() {
     if (!registered) return
     val context = context()
     val decision = RuleEngine.evaluate(store.rules(), context)
+    failover.refresh(
+        context.kind != ConnectionKind.OFFLINE && decision.action != RuleAction.DISCONNECT
+    )
     val signature = context to decision
     if (signature == lastDecision) return
     lastDecision = signature
@@ -248,6 +261,8 @@ class RulesService : Service() {
       store.preferences.unregisterOnSharedPreferenceChangeListener(listener)
       store.log(getString(R.string.sr_automation_stopped))
     }
+    failover.stop()
+    failoverScope.cancel()
     registered = false
     active.value = false
     handler.removeCallbacksAndMessages(null)

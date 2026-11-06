@@ -77,3 +77,59 @@ for OEM settings links and foreground/background operation after configuration.
 
 References: https://developer.android.com/training/monitoring-device-state/doze-standby
 and https://developer.samsung.com/mobile/app-management.html.
+
+
+## Experimental exit-node failover
+
+In Settings > Connection rules, choose a preferred and backup exit node from the
+current account, then enable failover and resume automation. Select the preferred
+node once in the normal exit-node picker. Defaults: 30-second grace period,
+three failed probes, automatic return with a 120-second confirmation delay.
+Changing failover settings pauses the rule service just like editing rules.
+
+The monitor consumes the VPN engine's existing peer-online events. Healthy steady
+state adds no polling timer, probes, wake lock or new permissions. An explicit
+offline preferred node plus an online backup starts a bounded confirmation burst:
+after the grace period, the preferred node must fail every probe (3 seconds apart),
+and the backup must answer a Tailscale disco ping before selection changes. A
+successful primary probe aborts that burst. Unresolved incidents retry after
+60 seconds. For automatic return, the preferred node must be reported online and
+answer before and after the configured return delay. Status changes cancel and
+restart the confirmation; unrelated peer changes do not reset it. This is two
+reachability samples, not continuous reachability verification.
+
+The monitor runs only while rule automation, the VPN and its engine are active,
+a non-VPN internet-capable network is available, and the selected exit node is
+one of the configured pair. A matching disconnect rule suppresses it. VPN stops,
+network changes, account changes and automation pause cancel pending decisions.
+The pair is bound to the control URL and local node's stable ID. Choosing a third
+exit node or disabling exit-node use suspends failover. Automatic switching edits
+only ExitNodeID and records successes/errors in the existing decision journal.
+
+If neither node is available, the monitor leaves the selection and VPN enabled;
+it never falls back to unencrypted internet. Existing split-tunnel exclusions still
+apply. Forwarding failures where a node remains reported online are not detected.
+Online status reflects the control connection and can be delayed. Disco reachability
+is not a guarantee that DNS or internet forwarding works. Configure DNS so it also
+works if the preferred site is unavailable; this feature does not change DNS.
+Existing sessions may break when the public exit IP changes. Android Doze and OEM
+restrictions can delay timers/status delivery; no exact switch deadline or measured
+battery saving is promised. No home-server API key or public ping endpoint is needed.
+
+### Device acceptance checks before stable release
+
+- Install the permanently signed candidate over the current app; retain account,
+  rules, split tunneling and autostart settings. Verify failover defaults off.
+- Choose home/VPS, enable, select home, and resume rules. Stop Tailscale on home
+  while the phone uses mobile data; verify confirmed switch and journal entry.
+- Restart home; verify delayed automatic return. Repeat with automatic return off.
+- Stop both nodes; verify no VPN disconnection or selection of an unrelated node.
+- Test a brief outage, rapid Wi-Fi/mobile handoff, screen off, and manual VPN stop
+  during confirmation. No delayed switch should occur after pause or disconnect.
+- Switch account or select a third node/disable exit use during confirmation;
+  verify no stale switch. Test a primary that still answers despite offline status.
+- With the home internet connection down, verify name resolution via the VPS.
+  Confirm that unreachable home-only services stay unreachable as expected.
+- Test primary online with forwarding disabled: document that this first version
+  does not detect that failure. Observe screen-off behavior and battery use on
+  Samsung S10/Tab S8/S24 before deciding whether more probing is justified.

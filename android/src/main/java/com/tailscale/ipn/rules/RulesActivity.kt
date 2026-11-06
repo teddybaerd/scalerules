@@ -151,6 +151,10 @@ class RulesActivity : ComponentActivity() {
           else stringResource(R.string.sr_rules_paused),
           style = MaterialTheme.typography.titleMedium,
       )
+      ExitNodeFailoverSettings(store.failover()) { config ->
+        pauseObserver(Intent(this@RulesActivity, RulesService::class.java))
+        store.saveFailover(config)
+      }
       Text(stringResource(R.string.sr_rules_permissions))
       TextButton(
           onClick = {
