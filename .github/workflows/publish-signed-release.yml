@@ -1,0 +1,155 @@
+name: Publish signed release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Stable version, e.g. 0.2.9
+        required: true
+        type: string
+      signed_run_id:
+        description: Successful Signed APK workflow run ID
+        required: true
+        type: string
+      source_commit:
+        description: Full source commit SHA from the signed build
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: publish-signed-release
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      actions: read
+      contents: write
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+      RELEASE_VERSION: ${{ inputs.version }}
+      SIGNED_RUN_ID: ${{ inputs.signed_run_id }}
+      SOURCE_COMMIT: ${{ inputs.source_commit }}
+      EXPECTED_CERT: 5da756ba31c15e633d7b4bc259fbdb2a912b74c2af6e2f79f3efa2847bb61d37
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - name: Validate source and download signed artifact
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import os, re
+          from pathlib import Path
+          assert re.fullmatch(r'[0-9]+\.[0-9]+\.[0-9]+', os.environ['RELEASE_VERSION'])
+          assert re.fullmatch(r'[0-9]+', os.environ['SIGNED_RUN_ID'])
+          assert re.fullmatch(r'[0-9a-f]{40}', os.environ['SOURCE_COMMIT'])
+          assert Path('docs/releases/' + os.environ['RELEASE_VERSION'] + '.md').is_file()
+          PY
+          gh api "repos/$GH_REPO/actions/runs/$SIGNED_RUN_ID" > run.json
+          gh api "repos/$GH_REPO/actions/runs/$SIGNED_RUN_ID/artifacts?per_page=100" > artifacts.json
+          python3 - <<'PY'
+          import json, os
+          from pathlib import Path
+          run = json.loads(Path('run.json').read_text())
+          assert run['status'] == 'completed' and run['conclusion'] == 'success'
+          assert run['path'] == '.github/workflows/signed-apk.yml'
+          assert run['event'] == 'workflow_dispatch' and run['head_branch'] == 'main'
+          assert run['head_sha'] == os.environ['SOURCE_COMMIT']
+          assert run['repository']['full_name'] == os.environ['GH_REPO']
+          artifacts = json.loads(Path('artifacts.json').read_text())['artifacts']
+          candidates = [a for a in artifacts if a['name'] == 'scalerules-' + os.environ['RELEASE_VERSION'] + '-signed' and not a['expired']]
+          assert len(candidates) == 1
+          artifact = candidates[0]
+          Path('artifact.json').write_text(json.dumps(artifact))
+          Path('artifact-id').write_text(str(int(artifact['id'])))
+          PY
+          artifact_id=$(cat artifact-id)
+          gh api "repos/$GH_REPO/actions/artifacts/$artifact_id/zip" > signed.zip
+      - name: Verify artifact contents and checksums
+        run: |
+          python3 - <<'PY'
+          import hashlib, json, os, zipfile
+          from pathlib import Path
+          digest = lambda p: hashlib.sha256(p.read_bytes()).hexdigest()
+          artifact = json.loads(Path('artifact.json').read_text())
+          assert artifact['digest'] == 'sha256:' + digest(Path('signed.zip'))
+          version = os.environ['RELEASE_VERSION']
+          apk_name = 'scalerules-' + version + '.apk'
+          expected = {apk_name, 'SHA256SUMS', 'build-info.json', 'signing-certificate-sha256.txt'}
+          destination = Path('verified'); destination.mkdir()
+          with zipfile.ZipFile('signed.zip') as archive:
+              assert len(archive.infolist()) == 4 and set(archive.namelist()) == expected
+              for item in archive.infolist():
+                  assert 0 < item.file_size <= (150 * 1024 * 1024 if item.filename == apk_name else 65536)
+                  (destination / item.filename).write_bytes(archive.read(item))
+          info = json.loads((destination / 'build-info.json').read_text())
+          assert info['version'] == version and info['source_commit'] == os.environ['SOURCE_COMMIT']
+          assert info['package'] == 'io.github.teddybaerd.scalerules'
+          assert info['certificate_sha256'] == os.environ['EXPECTED_CERT']
+          assert (destination / 'signing-certificate-sha256.txt').read_text().strip() == os.environ['EXPECTED_CERT']
+          assert info['apk_sha256'] == digest(destination / apk_name)
+          assert (destination / 'SHA256SUMS').read_text().split() == [info['apk_sha256'], apk_name]
+          PY
+      - name: Verify Android signature and package metadata
+        shell: bash
+        run: |
+          set -euo pipefail
+          "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" 'build-tools;36.0.0'
+          tools="$ANDROID_HOME/build-tools/36.0.0"
+          "$tools/apksigner" verify --verbose --print-certs "verified/scalerules-$RELEASE_VERSION.apk" > signature.txt
+          "$tools/aapt" dump badging "verified/scalerules-$RELEASE_VERSION.apk" > badging.txt
+          python3 - <<'PY'
+          import os, re
+          from pathlib import Path
+          signature = Path('signature.txt').read_text()
+          certs = re.findall(r'^Signer #\d+ certificate SHA-256 digest: ([0-9a-fA-F]+)$', signature, re.M)
+          assert [c.lower() for c in certs] == [os.environ['EXPECTED_CERT']]
+          badging = Path('badging.txt').read_text()
+          assert "package: name='io.github.teddybaerd.scalerules'" in badging
+          assert "versionName='" + os.environ['RELEASE_VERSION'] + "'" in badging.splitlines()[0]
+          assert 'application-debuggable' not in badging
+          PY
+      - name: Upload draft and verify every release asset before publishing
+        shell: bash
+        run: |
+          set -euo pipefail
+          tag="v$RELEASE_VERSION"
+          # Refuse to overwrite any existing release or tag.
+          gh api "repos/$GH_REPO/releases?per_page=100" > releases.json
+          gh api "repos/$GH_REPO/git/matching-refs/tags/$tag" > tags.json
+          python3 - <<'PY'
+          import json, os
+          from pathlib import Path
+          tag = 'v' + os.environ['RELEASE_VERSION']
+          assert not any(r['tag_name'] == tag for r in json.loads(Path('releases.json').read_text()))
+          assert not any(r['ref'] == 'refs/tags/' + tag for r in json.loads(Path('tags.json').read_text()))
+          PY
+          gh release create "$tag" verified/* --draft --target "$SOURCE_COMMIT" --title "ScaleRules $RELEASE_VERSION" --notes-file "docs/releases/$RELEASE_VERSION.md"
+          gh api "repos/$GH_REPO/releases?per_page=100" > draft-releases.json
+          python3 - <<'PY'
+          import hashlib, json, os
+          from pathlib import Path
+          matches = [r for r in json.loads(Path('draft-releases.json').read_text()) if r['tag_name'] == 'v' + os.environ['RELEASE_VERSION']]
+          assert len(matches) == 1
+          release = matches[0]
+          assert release['draft'] and not release['prerelease']
+          assert release['target_commitish'] == os.environ['SOURCE_COMMIT']
+          assets = {a['name']: a for a in release['assets']}
+          files = {p.name: p for p in Path('verified').iterdir()}
+          assert set(assets) == set(files)
+          for name, file in files.items():
+              asset = assets[name]
+              assert asset['state'] == 'uploaded' and asset['size'] == file.stat().st_size
+              assert asset['digest'] == 'sha256:' + hashlib.sha256(file.read_bytes()).hexdigest()
+          PY
+          gh release edit "$tag" --draft=false --latest
+          gh release view "$tag" --json url,isDraft,isPrerelease,tagName
