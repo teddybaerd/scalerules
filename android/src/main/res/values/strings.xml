@@ -546,4 +546,8 @@
     <string name="sr_failover_safety">Requires both nodes in the same account. Online status is not an internet or DNS health check. Keeps the VPN enabled if both nodes fail. Selecting another node or disabling exit-node use suspends failover. DNS must also work without the preferred location.</string>
     <string name="sr_failover_switched">Exit-node failover: switched to %1$s.</string>
     <string name="sr_failover_failed">Exit-node failover: could not switch to %1$s; will retry.</string>
+    <string name="sr_failover_diagnostic">Exit-node failover status: %1$s</string>
+    <string name="sr_failover_probe_ok">Exit-node failover: %1$s answers the reachability probe.</string>
+    <string name="sr_failover_probe_failed">Exit-node failover: no reachability confirmation from %1$s.</string>
 </resources>
+

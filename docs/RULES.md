@@ -133,3 +133,13 @@ battery saving is promised. No home-server API key or public ping endpoint is ne
 - Test primary online with forwarding disabled: document that this first version
   does not detect that failure. Observe screen-off behavior and battery use on
   Samsung S10/Tab S8/S24 before deciding whether more probing is justified.
+
+
+Failover diagnostics in the decision journal show the configuration/profile match,
+network readiness, VPN/engine state, active-node role and each configured peer's
+online/exit-route flags (`null` means unknown). Status entries are emitted only
+when that snapshot changes. Probe results are journaled only during an incident;
+no URLs, node IDs, keys or raw backend errors are recorded. An offline primary
+remains monitored even if its exit routes have been withdrawn. The destination
+must still offer exit routes when switching. Capability-only network updates do
+not reset a running grace period; network arrival/loss and rule edits still do.

@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: BSD-3-Clause
 package com.tailscale.ipn.rules
 
+import com.tailscale.ipn.ui.model.Tailcfg
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -31,6 +32,28 @@ class ExitNodeFailoverTest {
       primary: Boolean? = false,
       fallback: Boolean? = true,
   ) = ExitNodeFailoverPolicy.action(cfg, url, self, running, selected, primary, fallback)
+
+  @Test
+  fun offlinePrimaryRemainsMonitoredAfterRouteWithdrawal() {
+    val primary = Tailcfg.Node(StableID = "home", Online = false, AllowedIPs = emptyList())
+    val backup =
+        Tailcfg.Node(
+            StableID = "vps",
+            Online = true,
+            AllowedIPs = listOf("0.0.0.0/0", "::/0"),
+        )
+    val peers = listOf(primary, backup)
+    assertFalse(primary.isExitNode)
+    assertEquals(primary, findFailoverPeer(peers, "home"))
+    assertEquals(
+        FailoverAction.CHECK_FALLBACK,
+        action(
+            primary = findFailoverPeer(peers, "home")?.Online,
+            fallback = findFailoverPeer(peers, "vps")?.Online,
+        ),
+    )
+    assertNull(findFailoverPeer(peers, "removed"))
+  }
 
   @Test
   fun onlyKnownOfflinePrimaryAndOnlineBackupTriggerFailover() {

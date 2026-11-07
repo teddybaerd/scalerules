@@ -40,6 +40,8 @@ class ExitNodeFailoverMonitor(
       val primaryOnline: Boolean?,
       val fallbackOnline: Boolean?,
       val running: Boolean,
+      val diagnostic: String,
+      val fallbackEligible: Boolean,
   ) {
     val action: FailoverAction
       get() =
@@ -63,18 +65,33 @@ class ExitNodeFailoverMonitor(
     val cfg = config.value
     val map = Notifier.netmap.value
     val prefs = Notifier.prefs.value
-    val peers = map?.Peers.orEmpty().filter { it.isExitNode }
+    // An offline peer can lose its advertised routes. Keep its online state visible.
+    val peers = map?.Peers.orEmpty()
+    val primary = findFailoverPeer(peers, cfg.primaryID)
+    val fallback = findFailoverPeer(peers, cfg.fallbackID)
+    val vpnActive = App.get().getAppScopedViewModel().vpnActive.value
+    val engine = Notifier.state.value
+    val profileMatches =
+        cfg.controlURL == prefs?.ControlURL && cfg.selfID == map?.SelfNode?.StableID
+    val diagnostic =
+        "enabled=${cfg.enabled}, valid=${cfg.valid}, profile=$profileMatches, ready=${ready.value}, " +
+            "vpn=$vpnActive, engine=$engine, want=${prefs?.WantRunning}, " +
+            "selected=${prefs?.activeExitNodeID == cfg.primaryID}/${prefs?.activeExitNodeID == cfg.fallbackID}, " +
+            "primary=${primary?.Online}/${primary?.isExitNode}, " +
+            "backup=${fallback?.Online}/${fallback?.isExitNode}"
     return Snapshot(
         cfg,
         prefs?.ControlURL,
         map?.SelfNode?.StableID,
         prefs?.activeExitNodeID,
-        peers.find { it.StableID == cfg.primaryID }?.Online,
-        peers.find { it.StableID == cfg.fallbackID }?.Online,
+        primary?.Online,
+        fallback?.Online,
         ready.value &&
             prefs?.WantRunning == true &&
             Notifier.state.value == Ipn.State.Running &&
-            App.get().getAppScopedViewModel().vpnActive.value,
+            vpnActive,
+        diagnostic,
+        fallback?.isExitNode == true,
     )
   }
 
@@ -87,6 +104,11 @@ class ExitNodeFailoverMonitor(
           }
           .distinctUntilChanged()
           .collectLatest { initial ->
+            if (initial.config.primaryID.isNotBlank()) {
+              store.log(context.getString(R.string.sr_failover_diagnostic, initial.diagnostic))
+            }
+            if (initial.action == FailoverAction.CHECK_FALLBACK && !initial.fallbackEligible)
+                return@collectLatest
             if (initial.action == FailoverAction.NONE) return@collectLatest
             delay(initial.config.graceSeconds * 1000L)
             while (currentCoroutineContext().isActive && snapshot() == initial) {
@@ -105,7 +127,8 @@ class ExitNodeFailoverMonitor(
                     FailoverAction.NONE -> null
                   }
               if (targetID != null && snapshot() == initial) {
-                peer(targetID)?.let { switchTo(it, initial) }
+                // The destination must still offer exit routes when the switch is issued.
+                peer(targetID)?.takeIf { it.isExitNode }?.let { switchTo(it, initial) }
               }
               // Retry only while an incident remains unresolved, never in the healthy steady state.
               delay(60000)
@@ -115,12 +138,22 @@ class ExitNodeFailoverMonitor(
   }
 
   private fun peer(id: String): Tailcfg.Node? =
-      Notifier.netmap.value?.Peers?.find { it.StableID == id && it.isExitNode }
+      findFailoverPeer(Notifier.netmap.value?.Peers.orEmpty(), id)
 
   private suspend fun probe(peer: Tailcfg.Node): Boolean =
       suspendCancellableCoroutine { continuation ->
         Client(scope).ping(peer) { result ->
-          if (continuation.isActive) continuation.resume(result.getOrNull()?.Err?.isEmpty() == true)
+          if (continuation.isActive) {
+            val reachable = result.getOrNull()?.Err?.isEmpty() == true
+            store.log(
+                context.getString(
+                    if (reachable) R.string.sr_failover_probe_ok
+                    else R.string.sr_failover_probe_failed,
+                    peer.displayName,
+                )
+            )
+            continuation.resume(reachable)
+          }
         }
       }
 
@@ -145,4 +178,9 @@ class ExitNodeFailoverMonitor(
     job?.cancel()
     job = null
   }
+}
+
+/** Monitoring an offline node must not depend on its current route advertisement. */
+internal fun findFailoverPeer(peers: List<Tailcfg.Node>, id: String): Tailcfg.Node? = peers.find {
+  it.StableID == id
 }
