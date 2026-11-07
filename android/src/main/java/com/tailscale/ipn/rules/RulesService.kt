@@ -58,7 +58,7 @@ class RulesService : Service() {
         override fun onLost(network: Network) = schedule()
 
         override fun onCapabilitiesChanged(network: Network, capabilities: NetworkCapabilities) =
-            schedule()
+            schedule(invalidateFailover = false)
       }
 
   override fun onCreate() {
@@ -131,10 +131,11 @@ class RulesService : Service() {
     return START_NOT_STICKY
   }
 
-  private fun schedule() {
+  private fun schedule(invalidateFailover: Boolean = true) {
     handler.post {
-      // Cancel pending probes immediately on network/rule changes, before the debounce.
-      failover.refresh(false)
+      // Network loss/arrival and rule edits cancel confirmations immediately. Capability
+      // refreshes on the same network must not endlessly restart the failover grace period.
+      if (invalidateFailover) failover.refresh(false)
       handler.removeCallbacks(evaluateTask)
       handler.postDelayed(evaluateTask, 2000)
     }

@@ -476,4 +476,8 @@
     <string name="sr_failover_safety">Beide Knoten müssen zum selben Konto gehören. Online-Status prüft weder Internet noch DNS. Bei Ausfall beider Knoten bleibt der VPN aktiviert. Die Auswahl eines anderen Knotens oder das Abschalten der Exit-Node-Nutzung setzt Failover aus. DNS muss auch ohne den bevorzugten Standort funktionieren.</string>
     <string name="sr_failover_switched">Exit-Node-Failover: zu %1$s gewechselt.</string>
     <string name="sr_failover_failed">Exit-Node-Failover: Wechsel zu %1$s fehlgeschlagen; erneuter Versuch folgt.</string>
+    <string name="sr_failover_diagnostic">Exit-Node-Failover-Status: %1$s</string>
+    <string name="sr_failover_probe_ok">Exit-Node-Failover: %1$s beantwortet die Erreichbarkeitsprüfung.</string>
+    <string name="sr_failover_probe_failed">Exit-Node-Failover: keine Erreichbarkeitsbestätigung von %1$s.</string>
 </resources>
+
