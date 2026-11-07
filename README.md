@@ -44,7 +44,7 @@ Under **Settings → Connection rules**, you define conditions and actions:
 - Warnings help identify conflicting rules and rules hidden by earlier rules.
 - A decision journal records recent automation actions.
 
-There is **no automatic learning feature**. Editing the rules pauses automation, which you must explicitly resume. The optional **Start rules after reboot** setting restores previously active automation after a device restart. Manually paused automation remains paused. After the automation process is terminated, manual resumption may still be necessary.
+There is **no automatic learning feature**. Editing the rules pauses automation, which you must explicitly resume. The optional **Start rules after reboot** setting restores previously active automation after a device restart. Manually paused automation remains paused. App updates automatically resume previously active automation with the saved settings, independently of the reboot option. Current connection rules are evaluated again. After other process termination, manual resumption may still be necessary.
 
 For SSID rules, Android requires precise location permission and enabled location services to provide the Wi-Fi name. An SSID alone does not establish that a Wi-Fi network is trustworthy.
 
@@ -111,7 +111,8 @@ Choose your sign-in method under **Settings → Accounts**: Tailscale sign-in/re
 
 ## Changes in previous builds
 
-- **0.2.8 (current):** Tailscale Android 1.104.5, reviewed security/dependency maintenance, and nickname-only ScaleRules attribution.
+- **0.2.9:** optional preferred/backup exit-node failover with confirmed switching and delayed return; automatic recovery of active rule automation after app updates, with permission-aware recovery notifications.
+- **0.2.8:** Tailscale Android 1.104.5, reviewed security/dependency maintenance, and nickname-only ScaleRules attribution.
 - **0.2.7:** background update notifications, optional rules autostart after reboot, own copyright in About, and Android/Compose dependency updates. Compile SDK 37.2, target SDK 36, minimum SDK 26.
 - **0.2.6 (test build):** stable Security Crypto 1.1.0; updating an existing installation retained accounts and settings.
 - **0.2.5:** directly accessible account options, explicit provider choice, ScaleRules icon and GitHub link in About.

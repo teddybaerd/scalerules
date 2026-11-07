@@ -51,7 +51,10 @@
         android:enableOnBackInvokedCallback="true"
         android:theme="@style/Theme.App.SplashScreen">
         <receiver android:name="com.tailscale.ipn.rules.RulesBootReceiver" android:exported="false">
-            <intent-filter><action android:name="android.intent.action.BOOT_COMPLETED" /></intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
+            </intent-filter>
         </receiver>
         <activity android:name="com.tailscale.ipn.background.BackgroundSettingsActivity" android:exported="false" />
         <activity android:name="com.tailscale.ipn.updates.UpdatesActivity" android:exported="false" android:launchMode="singleTask" />

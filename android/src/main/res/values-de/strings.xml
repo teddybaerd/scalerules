@@ -479,5 +479,8 @@
     <string name="sr_failover_diagnostic">Exit-Node-Failover-Status: %1$s</string>
     <string name="sr_failover_probe_ok">Exit-Node-Failover: %1$s beantwortet die Erreichbarkeitsprüfung.</string>
     <string name="sr_failover_probe_failed">Exit-Node-Failover: keine Erreichbarkeitsbestätigung von %1$s.</string>
+    <string name="sr_update_resume_title">Regeln nach App-Update fortsetzen</string>
+    <string name="sr_update_resume">Tippe hier, um die Regelautomatik nach dem App-Update fortzusetzen.</string>
+    <string name="sr_automation_resumed_update">Automatik nach App-Update fortgesetzt</string>
 </resources>
 
