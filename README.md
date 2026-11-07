@@ -111,7 +111,8 @@ Choose your sign-in method under **Settings → Accounts**: Tailscale sign-in/re
 
 ## Changes in previous builds
 
-- **0.2.8 (current):** Tailscale Android 1.104.5, reviewed security/dependency maintenance, and nickname-only ScaleRules attribution.
+- **0.2.9:** optional preferred/backup exit-node failover with confirmed switching and delayed return; automatic recovery of active rule automation after app updates, with permission-aware recovery notifications.
+- **0.2.8:** Tailscale Android 1.104.5, reviewed security/dependency maintenance, and nickname-only ScaleRules attribution.
 - **0.2.7:** background update notifications, optional rules autostart after reboot, own copyright in About, and Android/Compose dependency updates. Compile SDK 37.2, target SDK 36, minimum SDK 26.
 - **0.2.6 (test build):** stable Security Crypto 1.1.0; updating an existing installation retained accounts and settings.
 - **0.2.5:** directly accessible account options, explicit provider choice, ScaleRules icon and GitHub link in About.
