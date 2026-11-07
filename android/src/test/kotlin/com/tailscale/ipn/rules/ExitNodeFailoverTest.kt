@@ -36,16 +36,22 @@ class ExitNodeFailoverTest {
   @Test
   fun offlinePrimaryRemainsMonitoredAfterRouteWithdrawal() {
     val primary = Tailcfg.Node(StableID = "home", Online = false, AllowedIPs = emptyList())
-    val backup = Tailcfg.Node(
-        StableID = "vps", Online = true, AllowedIPs = listOf("0.0.0.0/0", "::/0"),
-    )
+    val backup =
+        Tailcfg.Node(
+            StableID = "vps",
+            Online = true,
+            AllowedIPs = listOf("0.0.0.0/0", "::/0"),
+        )
     val peers = listOf(primary, backup)
     assertFalse(primary.isExitNode)
     assertEquals(primary, findFailoverPeer(peers, "home"))
-    assertEquals(FailoverAction.CHECK_FALLBACK, action(
-        primary = findFailoverPeer(peers, "home")?.Online,
-        fallback = findFailoverPeer(peers, "vps")?.Online,
-    ))
+    assertEquals(
+        FailoverAction.CHECK_FALLBACK,
+        action(
+            primary = findFailoverPeer(peers, "home")?.Online,
+            fallback = findFailoverPeer(peers, "vps")?.Online,
+        ),
+    )
     assertNull(findFailoverPeer(peers, "removed"))
   }
 

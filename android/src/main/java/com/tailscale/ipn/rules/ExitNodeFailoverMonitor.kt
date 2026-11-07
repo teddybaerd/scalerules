@@ -71,7 +71,8 @@ class ExitNodeFailoverMonitor(
     val fallback = findFailoverPeer(peers, cfg.fallbackID)
     val vpnActive = App.get().getAppScopedViewModel().vpnActive.value
     val engine = Notifier.state.value
-    val profileMatches = cfg.controlURL == prefs?.ControlURL && cfg.selfID == map?.SelfNode?.StableID
+    val profileMatches =
+        cfg.controlURL == prefs?.ControlURL && cfg.selfID == map?.SelfNode?.StableID
     val diagnostic =
         "enabled=${cfg.enabled}, valid=${cfg.valid}, profile=$profileMatches, ready=${ready.value}, " +
             "vpn=$vpnActive, engine=$engine, want=${prefs?.WantRunning}, " +
@@ -144,10 +145,13 @@ class ExitNodeFailoverMonitor(
         Client(scope).ping(peer) { result ->
           if (continuation.isActive) {
             val reachable = result.getOrNull()?.Err?.isEmpty() == true
-            store.log(context.getString(
-                if (reachable) R.string.sr_failover_probe_ok else R.string.sr_failover_probe_failed,
-                peer.displayName,
-            ))
+            store.log(
+                context.getString(
+                    if (reachable) R.string.sr_failover_probe_ok
+                    else R.string.sr_failover_probe_failed,
+                    peer.displayName,
+                )
+            )
             continuation.resume(reachable)
           }
         }
@@ -177,5 +181,6 @@ class ExitNodeFailoverMonitor(
 }
 
 /** Monitoring an offline node must not depend on its current route advertisement. */
-internal fun findFailoverPeer(peers: List<Tailcfg.Node>, id: String): Tailcfg.Node? =
-    peers.find { it.StableID == id }
+internal fun findFailoverPeer(peers: List<Tailcfg.Node>, id: String): Tailcfg.Node? = peers.find {
+  it.StableID == id
+}
