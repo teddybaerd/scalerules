@@ -104,7 +104,7 @@ class ExitNodeFailoverMonitor(
           }
           .distinctUntilChanged()
           .collectLatest { initial ->
-            if (initial.config.enabled) {
+            if (initial.config.primaryID.isNotBlank()) {
               store.log(context.getString(R.string.sr_failover_diagnostic, initial.diagnostic))
             }
             if (initial.action == FailoverAction.CHECK_FALLBACK && !initial.fallbackEligible)
