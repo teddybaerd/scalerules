@@ -44,7 +44,7 @@ Under **Settings → Connection rules**, you define conditions and actions:
 - Warnings help identify conflicting rules and rules hidden by earlier rules.
 - A decision journal records recent automation actions.
 
-There is **no automatic learning feature**. Editing the rules pauses automation, which you must explicitly resume. The optional **Start rules after reboot** setting restores previously active automation after a device restart. Manually paused automation remains paused. After the automation process is terminated, manual resumption may still be necessary.
+There is **no automatic learning feature**. Editing the rules pauses automation, which you must explicitly resume. The optional **Start rules after reboot** setting restores previously active automation after a device restart. Manually paused automation remains paused. App updates automatically resume previously active automation with the saved settings, independently of the reboot option. Current connection rules are evaluated again. After other process termination, manual resumption may still be necessary.
 
 For SSID rules, Android requires precise location permission and enabled location services to provide the Wi-Fi name. An SSID alone does not establish that a Wi-Fi network is trustworthy.
 

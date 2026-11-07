@@ -549,5 +549,8 @@
     <string name="sr_failover_diagnostic">Exit-node failover status: %1$s</string>
     <string name="sr_failover_probe_ok">Exit-node failover: %1$s answers the reachability probe.</string>
     <string name="sr_failover_probe_failed">Exit-node failover: no reachability confirmation from %1$s.</string>
+    <string name="sr_update_resume_title">Resume rules after update</string>
+    <string name="sr_update_resume">Tap to resume rule automation after the app update.</string>
+    <string name="sr_automation_resumed_update">Automation resumed after app update</string>
 </resources>
 

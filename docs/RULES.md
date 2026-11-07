@@ -27,7 +27,7 @@ Exit node, DNS and app exclusions are not modified.
 
 ## Test milestone limitations
 
-- Automation must be resumed explicitly after reboot, process termination or force-stop.
+- Reboot recovery is optional; other process termination or force-stop may require manual resumption.
 - No import/export, Bluetooth, time, battery, or combined conditions in this first version.
 - No automated learning and no remote rules.
 - SSID names alone do not authenticate a Wi-Fi access point.
@@ -143,3 +143,31 @@ no URLs, node IDs, keys or raw backend errors are recorded. An offline primary
 remains monitored even if its exit routes have been withdrawn. The destination
 must still offer exit routes when switching. Capability-only network updates do
 not reset a running grace period; network arrival/loss and rule edits still do.
+
+## Recovery after app updates
+
+Installing an update resumes previously active rule automation in the background,
+independently of the optional reboot setting. Manually paused automation stays
+paused, including when configuration edits paused it. The existing persisted active
+flag is reused, so upgrades from earlier versions retain the intended state.
+Account, rules, exit-node selection, failover, DNS and exclusions are not rewritten.
+The resumed service evaluates current network conditions and saved rules; it does
+not blindly reconnect on a network whose rule says disconnect. A keep-state rule
+or no matching rule does not request a new VPN connection.
+
+The package-replaced receiver uses the existing permission checks and foreground
+service path. SSID rules need background location permission for automatic startup;
+VPN approval is also required. If startup is blocked, an update-specific notification
+opens the rules screen for manual recovery. Notifications must be allowed. Successful
+update recovery is recorded in the decision journal. Android/OEM restrictions still
+apply; this is not a guarantee after force-stop.
+
+Validation: install a signed update without opening the app, with automation active
+and paused, with reboot recovery disabled, and with missing background permissions.
+Check recovery while the display is off, retained settings, current disconnect rules,
+and the update-specific journal/notification text.
+
+Device testing of 0.2.9-rc.2 confirmed preferred-to-backup switching, website access
+through the backup, delayed return, and both switches while the display was locked.
+Earlier delayed peer status and a transient DNS warning were observed; their causes
+have not been established and this does not prove internet-forwarding detection.
