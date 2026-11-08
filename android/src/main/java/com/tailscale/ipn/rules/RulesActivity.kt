@@ -234,9 +234,7 @@ open class RulesActivity : ComponentActivity() {
                       onCheckedChange = { enabled ->
                         pauseObserver(Intent(this@RulesActivity, RulesService::class.java))
                         store.save(
-                            rules.map {
-                              if (it.id == rule.id) it.copy(enabled = enabled) else it
-                            }
+                            rules.map { if (it.id == rule.id) it.copy(enabled = enabled) else it }
                         )
                       },
                   )
