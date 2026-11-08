@@ -534,11 +534,11 @@
     <string name="sr_failover_hint">Use up to three exit nodes in priority order: primary, optional secondary, final backup. Changes pause shared rule automation; resume it above. Select the primary once in the exit-node picker.</string>
     <string name="sr_failover_login">Connect to your account to choose exit nodes.</string>
     <string name="sr_failover_other_profile">The saved failover belongs to another account and is inactive here.</string>
-    <string name="sr_failover_primary">Preferred exit node</string>
-    <string name="sr_failover_fallback">Backup exit node</string>
+    <string name="sr_failover_primary">Primary exit node (priority 1)</string>
+    <string name="sr_failover_fallback">Final backup exit node</string>
     <string name="sr_failover_choose">Choose a node</string>
     <string name="sr_failover_enable">Enable failover while rules are running</string>
-    <string name="sr_failover_auto_return">Automatically return to preferred node</string>
+    <string name="sr_failover_auto_return">Automatically return to a higher-priority node</string>
     <string name="sr_failover_failures">Failed probes before switching</string>
     <string name="sr_failover_grace">Grace period after a status or network change</string>
     <string name="sr_failover_return_delay">Return confirmation delay</string>
@@ -552,7 +552,7 @@
     <string name="sr_update_resume_title">Resume rules after update</string>
     <string name="sr_update_resume">Tap to resume rule automation after the app update.</string>
     <string name="sr_automation_resumed_update">Automation resumed after app update</string>
-    <string name="sr_failover_secondary">Secondary exit node (optional)</string>
+    <string name="sr_failover_secondary">Secondary exit node (optional, priority 2)</string>
     <string name="sr_failover_none">Not configured</string>
     <string name="sr_failover_no_target">Failover: no reachable target confirmed; VPN remains enabled, checks will retry.</string>
     <string name="sr_failover_shared_automation">Failover uses the same automation service as connection rules. Starting or pausing here also starts or pauses connection rules.</string>

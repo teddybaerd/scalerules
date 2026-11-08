@@ -464,11 +464,11 @@
     <string name="sr_failover_hint">Bis zu drei Exit Nodes nach Priorität nutzen: Hauptknoten, optionaler zweiter Knoten, letzter Ersatz. Änderungen pausieren die gemeinsame Regelautomatik; oben wieder starten. Den Hauptknoten einmal in der Exit-Node-Auswahl aktivieren.</string>
     <string name="sr_failover_login">Zum Auswählen der Exit Nodes mit deinem Konto verbinden.</string>
     <string name="sr_failover_other_profile">Das gespeicherte Failover gehört zu einem anderen Konto und ist hier inaktiv.</string>
-    <string name="sr_failover_primary">Bevorzugter Exit Node</string>
-    <string name="sr_failover_fallback">Ersatz-Exit-Node</string>
+    <string name="sr_failover_primary">Hauptknoten (Priorität 1)</string>
+    <string name="sr_failover_fallback">Letzter Ersatzknoten</string>
     <string name="sr_failover_choose">Knoten auswählen</string>
     <string name="sr_failover_enable">Failover bei laufender Regelautomatik aktivieren</string>
-    <string name="sr_failover_auto_return">Automatisch zum bevorzugten Knoten zurückkehren</string>
+    <string name="sr_failover_auto_return">Automatisch zu einem höher priorisierten Knoten zurückkehren</string>
     <string name="sr_failover_failures">Fehlgeschlagene Prüfungen vor Wechsel</string>
     <string name="sr_failover_grace">Schonfrist nach Status- oder Netzwerkwechsel</string>
     <string name="sr_failover_return_delay">Bestätigungszeit vor Rückkehr</string>
@@ -482,7 +482,7 @@
     <string name="sr_update_resume_title">Regeln nach App-Update fortsetzen</string>
     <string name="sr_update_resume">Tippe hier, um die Regelautomatik nach dem App-Update fortzusetzen.</string>
     <string name="sr_automation_resumed_update">Automatik nach App-Update fortgesetzt</string>
-    <string name="sr_failover_secondary">Zweiter Exit Node (optional)</string>
+    <string name="sr_failover_secondary">Zweiter Knoten (optional, Priorität 2)</string>
     <string name="sr_failover_none">Nicht verwenden</string>
     <string name="sr_failover_no_target">Failover: kein erreichbares Ziel bestätigt; VPN bleibt aktiviert, Prüfung wird wiederholt.</string>
     <string name="sr_failover_shared_automation">Failover verwendet dieselbe Automatik wie die Verbindungsregeln. Starten oder Pausieren gilt gemeinsam für beide Funktionen.</string>

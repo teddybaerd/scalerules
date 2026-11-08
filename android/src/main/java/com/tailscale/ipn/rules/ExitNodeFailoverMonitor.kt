@@ -43,9 +43,7 @@ class ExitNodeFailoverMonitor(
   ) {
     val candidates: List<String>
       get() =
-          if (running && config.controlURL == controlURL && config.selfID == selfID)
-              PriorityFailoverPolicy.candidates(config, selectedID, online)
-          else emptyList()
+          PriorityFailoverPolicy.candidates(config, selectedID, online, controlURL, selfID, running)
   }
 
   fun refresh(available: Boolean) {
@@ -83,6 +81,15 @@ class ExitNodeFailoverMonitor(
           }
           .distinctUntilChanged()
           .collectLatest { initial ->
+            if (initial.config.primaryID.isNotBlank()) {
+              store.log(
+                  context.getString(
+                      R.string.sr_failover_diagnostic,
+                      "running=${initial.running}, profile=${initial.config.controlURL == initial.controlURL && initial.config.selfID == initial.selfID}, " +
+                          "priority=${initial.config.priorityIDs.indexOf(initial.selectedID) + 1}, online=${initial.config.priorityIDs.map { initial.online[it] }}",
+                  )
+              )
+            }
             if (initial.candidates.isEmpty()) return@collectLatest
             delay(initial.config.graceSeconds * 1000L)
             while (currentCoroutineContext().isActive && snapshot() == initial) {

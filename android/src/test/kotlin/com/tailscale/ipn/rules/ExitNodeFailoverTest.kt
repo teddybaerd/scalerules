@@ -292,4 +292,39 @@ class ExitNodeFailoverTest {
     runCurrent()
     assertNull(target)
   }
+
+  @Test
+  fun threeNodePolicyRequiresMatchingRunningProfile() {
+    val online = mapOf("home" to false, "home2" to true, "vps" to true)
+    assertTrue(PriorityFailoverPolicy.candidates(triple, "home", online, running = false).isEmpty())
+    assertTrue(
+        PriorityFailoverPolicy.candidates(triple, "home", online, controlURL = "other").isEmpty()
+    )
+    assertTrue(
+        PriorityFailoverPolicy.candidates(triple, "home", online, selfID = "other").isEmpty()
+    )
+  }
+
+  @Test
+  fun cancelledThreeNodeOutageNeverReachesCandidates() = runTest {
+    val calls = mutableListOf<String>()
+    var target: String? = null
+    val task = launch {
+      target =
+          PriorityFailoverConfirmation(
+                  {
+                    calls += it
+                    false
+                  },
+                  { delay(it) },
+              )
+              .target(triple, "home", true, listOf("home2", "vps"))
+    }
+    runCurrent()
+    task.cancel()
+    advanceTimeBy(600000)
+    runCurrent()
+    assertEquals(listOf("home"), calls)
+    assertNull(target)
+  }
 }

@@ -92,9 +92,19 @@ object PriorityFailoverPolicy {
       config: ExitNodeFailoverConfig,
       selected: String?,
       online: Map<String, Boolean?>,
+      controlURL: String? = config.controlURL,
+      selfID: String? = config.selfID,
+      running: Boolean = true,
   ): List<String> {
     val index = config.priorityIDs.indexOf(selected)
-    if (!config.valid || index < 0) return emptyList()
+    if (
+        !config.valid ||
+            index < 0 ||
+            !running ||
+            config.controlURL != controlURL ||
+            config.selfID != selfID
+    )
+        return emptyList()
     return if (online[selected] == false) config.priorityIDs.filter { it != selected }
     else if (config.autoReturn) config.priorityIDs.take(index) else emptyList()
   }
