@@ -50,9 +50,9 @@ import com.tailscale.ipn.ui.viewModel.SettingsViewModel
 
 @Composable
 fun SettingsView(
-    settingsNav: SettingsNav,
-    viewModel: SettingsViewModel = viewModel(),
-    appViewModel: AppViewModel = viewModel(),
+  settingsNav: SettingsNav,
+  viewModel: SettingsViewModel = viewModel(),
+  appViewModel: AppViewModel = viewModel(),
 ) {
   val handler = LocalUriHandler.current
   val context = LocalContext.current
@@ -69,16 +69,14 @@ fun SettingsView(
   var showDisableLoggingDialog by remember { mutableStateOf(false) }
 
   Scaffold(
-      topBar = {
-        Header(titleRes = R.string.settings_title, onBack = settingsNav.onNavigateBackHome)
-      }
+    topBar = { Header(titleRes = R.string.settings_title, onBack = settingsNav.onNavigateBackHome) }
   ) { innerPadding ->
     Column(modifier = Modifier.padding(innerPadding).verticalScroll(rememberScrollState())) {
       if (isVPNPrepared) {
         UserView(
-            profile = user,
-            actionState = UserActionState.NAV,
-            onClick = settingsNav.onNavigateToUserSwitcher,
+          profile = user,
+          actionState = UserActionState.NAV,
+          onClick = settingsNav.onNavigateToUserSwitcher,
         )
       }
 
@@ -89,42 +87,54 @@ fun SettingsView(
 
       Lists.SectionDivider()
       Setting.Text(
-          titleRes = R.string.sr_rules_title,
-          subtitle = stringResource(R.string.sr_rules_subtitle),
-          onClick = {
-            context.startActivity(
-                android.content.Intent(context, com.tailscale.ipn.rules.RulesActivity::class.java)
-            )
-          },
+        titleRes = R.string.sr_rules_title,
+        subtitle = stringResource(R.string.sr_rules_subtitle),
+        onClick = {
+          context.startActivity(
+            android.content.Intent(context, com.tailscale.ipn.rules.RulesActivity::class.java)
+          )
+        },
       )
       Lists.ItemDivider()
       Setting.Text(
-          R.string.dns_settings,
-          subtitle =
-              corpDNSEnabled?.let {
-                stringResource(
-                    if (it) R.string.using_tailscale_dns else R.string.not_using_tailscale_dns
-                )
-              },
-          onClick = settingsNav.onNavigateToDNSSettings,
+        titleRes = R.string.sr_failover_title,
+        onClick = {
+          context.startActivity(
+            android.content.Intent(
+              context,
+              com.tailscale.ipn.rules.ExitNodeFailoverActivity::class.java,
+            )
+          )
+        },
+      )
+      Lists.ItemDivider()
+      Setting.Text(
+        R.string.dns_settings,
+        subtitle =
+          corpDNSEnabled?.let {
+            stringResource(
+              if (it) R.string.using_tailscale_dns else R.string.not_using_tailscale_dns
+            )
+          },
+        onClick = settingsNav.onNavigateToDNSSettings,
       )
 
       Lists.ItemDivider()
       Setting.Text(
-          R.string.split_tunneling,
-          subtitle = stringResource(R.string.filter_apps_allowed_to_access_tailscale),
-          onClick = settingsNav.onNavigateToSplitTunneling,
+        R.string.split_tunneling,
+        subtitle = stringResource(R.string.filter_apps_allowed_to_access_tailscale),
+        onClick = settingsNav.onNavigateToSplitTunneling,
       )
 
       if (showTailnetLock.value == ShowHide.Show) {
         Lists.ItemDivider()
         Setting.Text(
-            R.string.tailnet_lock,
-            subtitle =
-                tailnetLockEnabled?.let {
-                  stringResource(if (it) R.string.enabled else R.string.disabled)
-                },
-            onClick = settingsNav.onNavigateToTailnetLock,
+          R.string.tailnet_lock,
+          subtitle =
+            tailnetLockEnabled?.let {
+              stringResource(if (it) R.string.enabled else R.string.disabled)
+            },
+          onClick = settingsNav.onNavigateToTailnetLock,
         )
       }
       if (useTailscaleSubnets.value == AlwaysNeverUserDecides.UserDecides) {
@@ -134,22 +144,21 @@ fun SettingsView(
 
       Lists.ItemDivider()
       Setting.Switch(
-          R.string.client_remote_logging_enabled,
-          subtitle =
-              stringResource(
-                  if (MDMSettings.isMDMConfigured)
-                      R.string.client_remote_logging_enabled_subtitle_mdm
-                  else R.string.client_remote_logging_enabled_subtitle
-              ),
-          isOn = isClientRemoteLoggingEnabled,
-          enabled = !MDMSettings.isMDMConfigured,
-          onToggle = {
-            if (isClientRemoteLoggingEnabled) {
-              showDisableLoggingDialog = true
-            } else {
-              viewModel.toggleIsClientRemoteLoggingEnabled()
-            }
-          },
+        R.string.client_remote_logging_enabled,
+        subtitle =
+          stringResource(
+            if (MDMSettings.isMDMConfigured) R.string.client_remote_logging_enabled_subtitle_mdm
+            else R.string.client_remote_logging_enabled_subtitle
+          ),
+        isOn = isClientRemoteLoggingEnabled,
+        enabled = !MDMSettings.isMDMConfigured,
+        onToggle = {
+          if (isClientRemoteLoggingEnabled) {
+            showDisableLoggingDialog = true
+          } else {
+            viewModel.toggleIsClientRemoteLoggingEnabled()
+          }
+        },
       )
 
       if (!AndroidTVUtil.isAndroidTV()) {
@@ -160,45 +169,45 @@ fun SettingsView(
       managedByOrganization.value?.let {
         Lists.ItemDivider()
         Setting.Text(
-            title = stringResource(R.string.managed_by_orgName, it),
-            onClick = settingsNav.onNavigateToManagedBy,
+          title = stringResource(R.string.managed_by_orgName, it),
+          onClick = settingsNav.onNavigateToManagedBy,
         )
       }
 
       Lists.SectionDivider()
       Setting.Text(
-          R.string.sr_background_title,
-          subtitle = stringResource(R.string.sr_background_settings_hint),
-          onClick = {
-            context.startActivity(
-                android.content.Intent(
-                    context,
-                    com.tailscale.ipn.background.BackgroundSettingsActivity::class.java,
-                )
+        R.string.sr_background_title,
+        subtitle = stringResource(R.string.sr_background_settings_hint),
+        onClick = {
+          context.startActivity(
+            android.content.Intent(
+              context,
+              com.tailscale.ipn.background.BackgroundSettingsActivity::class.java,
             )
-          },
+          )
+        },
       )
       Lists.ItemDivider()
       Setting.Text(
-          R.string.su_title,
-          subtitle = stringResource(R.string.su_settings_hint),
-          onClick = {
-            context.startActivity(
-                android.content.Intent(
-                    context,
-                    com.tailscale.ipn.updates.UpdatesActivity::class.java,
-                )
-            )
-          },
+        R.string.su_title,
+        subtitle = stringResource(R.string.su_settings_hint),
+        onClick = {
+          context.startActivity(
+            android.content.Intent(context, com.tailscale.ipn.updates.UpdatesActivity::class.java)
+          )
+        },
       )
       Lists.ItemDivider()
-      Setting.Text(R.string.bug_report, onClick = settingsNav.onNavigateToBugReport)
+      Setting.Text(
+        R.string.bug_report,
+        onClick = { handler.openUri("https://github.com/teddybaerd/scalerules/issues/new/choose") },
+      )
 
       Lists.ItemDivider()
       Setting.Text(
-          R.string.about_tailscale,
-          subtitle = "${stringResource(id = R.string.version)} ${AppVersion.Short()}",
-          onClick = settingsNav.onNavigateToAbout,
+        R.string.about_tailscale,
+        subtitle = "${stringResource(id = R.string.version)} ${AppVersion.Short()}",
+        onClick = settingsNav.onNavigateToAbout,
       )
 
       // TODO: put a heading for the debug section
@@ -212,27 +221,27 @@ fun SettingsView(
 
   if (showDisableLoggingDialog) {
     AlertDialog(
-        onDismissRequest = { showDisableLoggingDialog = false },
-        title = { Text(stringResource(R.string.client_remote_logging_disable_confirm_title)) },
-        text = { Text(stringResource(R.string.client_remote_logging_disable_confirm_message)) },
-        confirmButton = {
-          TextButton(
-              onClick = {
-                showDisableLoggingDialog = false
-                viewModel.toggleIsClientRemoteLoggingEnabled()
-              }
-          ) {
-            Text(
-                stringResource(R.string.client_remote_logging_disable_confirm_button),
-                color = MaterialTheme.colorScheme.error,
-            )
+      onDismissRequest = { showDisableLoggingDialog = false },
+      title = { Text(stringResource(R.string.client_remote_logging_disable_confirm_title)) },
+      text = { Text(stringResource(R.string.client_remote_logging_disable_confirm_message)) },
+      confirmButton = {
+        TextButton(
+          onClick = {
+            showDisableLoggingDialog = false
+            viewModel.toggleIsClientRemoteLoggingEnabled()
           }
-        },
-        dismissButton = {
-          TextButton(onClick = { showDisableLoggingDialog = false }) {
-            Text(stringResource(R.string.cancel))
-          }
-        },
+        ) {
+          Text(
+            stringResource(R.string.client_remote_logging_disable_confirm_button),
+            color = MaterialTheme.colorScheme.error,
+          )
+        }
+      },
+      dismissButton = {
+        TextButton(onClick = { showDisableLoggingDialog = false }) {
+          Text(stringResource(R.string.cancel))
+        }
+      },
     )
   }
 }
@@ -240,70 +249,67 @@ fun SettingsView(
 object Setting {
   @Composable
   fun Text(
-      titleRes: Int = 0,
-      title: String? = null,
-      subtitle: String? = null,
-      destructive: Boolean = false,
-      enabled: Boolean = true,
-      onClick: (() -> Unit)? = null,
+    titleRes: Int = 0,
+    title: String? = null,
+    subtitle: String? = null,
+    destructive: Boolean = false,
+    enabled: Boolean = true,
+    onClick: (() -> Unit)? = null,
   ) {
     var modifier: Modifier = Modifier
     if (enabled) {
       onClick?.let { modifier = modifier.clickable(onClick = it) }
     }
     ListItem(
-        modifier = modifier,
-        colors = MaterialTheme.colorScheme.listItem,
-        headlineContent = {
-          Text(
-              title ?: stringResource(titleRes),
-              style = MaterialTheme.typography.bodyMedium,
-              color = if (destructive) MaterialTheme.colorScheme.error else Color.Unspecified,
-          )
+      modifier = modifier,
+      colors = MaterialTheme.colorScheme.listItem,
+      headlineContent = {
+        Text(
+          title ?: stringResource(titleRes),
+          style = MaterialTheme.typography.bodyMedium,
+          color = if (destructive) MaterialTheme.colorScheme.error else Color.Unspecified,
+        )
+      },
+      supportingContent =
+        subtitle?.let {
+          {
+            Text(
+              it,
+              style = MaterialTheme.typography.bodySmall,
+              color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+          }
         },
-        supportingContent =
-            subtitle?.let {
-              {
-                Text(
-                    it,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-              }
-            },
     )
   }
 
   @Composable
   fun Switch(
-      titleRes: Int = 0,
-      title: String? = null,
-      subtitle: String? = null,
-      isOn: Boolean,
-      enabled: Boolean = true,
-      onToggle: (Boolean) -> Unit = {},
+    titleRes: Int = 0,
+    title: String? = null,
+    subtitle: String? = null,
+    isOn: Boolean,
+    enabled: Boolean = true,
+    onToggle: (Boolean) -> Unit = {},
   ) {
     ListItem(
-        colors = MaterialTheme.colorScheme.listItem,
-        headlineContent = {
-          Text(
-              title ?: stringResource(titleRes),
-              style = MaterialTheme.typography.bodyMedium,
-          )
+      colors = MaterialTheme.colorScheme.listItem,
+      headlineContent = {
+        Text(title ?: stringResource(titleRes), style = MaterialTheme.typography.bodyMedium)
+      },
+      supportingContent =
+        subtitle?.let {
+          {
+            Text(
+              it,
+              style = MaterialTheme.typography.bodySmall,
+              color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+          }
         },
-        supportingContent =
-            subtitle?.let {
-              {
-                Text(
-                    it,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-              }
-            },
-        trailingContent = {
-          TintedSwitch(checked = isOn, onCheckedChange = onToggle, enabled = enabled)
-        },
+      trailingContent = {
+        TintedSwitch(checked = isOn, onCheckedChange = onToggle, enabled = enabled)
+      },
     )
   }
 }
@@ -315,11 +321,8 @@ fun AdminTextView(onNavigateToAdminConsole: () -> Unit) {
 
     pushStringAnnotation(tag = "link", annotation = Links.ADMIN_URL)
     withStyle(
-        style =
-            SpanStyle(
-                color = MaterialTheme.colorScheme.link,
-                textDecoration = TextDecoration.Underline,
-            )
+      style =
+        SpanStyle(color = MaterialTheme.colorScheme.link, textDecoration = TextDecoration.Underline)
     ) {
       append(stringResource(id = R.string.settings_admin_link))
     }

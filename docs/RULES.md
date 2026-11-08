@@ -79,48 +79,54 @@ References: https://developer.android.com/training/monitoring-device-state/doze-
 and https://developer.samsung.com/mobile/app-management.html.
 
 
-## Experimental exit-node failover
+<a id="experimental-exit-node-failover"></a>
 
-In Settings > Connection rules, choose a preferred and backup exit node from the
-current account, then enable failover and resume automation. Select the preferred
-node once in the normal exit-node picker. Defaults: 30-second grace period,
-three failed probes, automatic return with a 120-second confirmation delay.
-Changing failover settings pauses the rule service just like editing rules.
+## Exit-node failover (Beta)
 
-The monitor consumes the VPN engine's existing peer-online events. Healthy steady
-state adds no polling timer, probes, wake lock or new permissions. An explicit
-offline preferred node plus an online backup starts a bounded confirmation burst:
-after the grace period, the preferred node must fail every probe (3 seconds apart),
-and the backup must answer a Tailscale disco ping before selection changes. A
-successful primary probe aborts that burst. Unresolved incidents retry after
-60 seconds. For automatic return, the preferred node must be reported online and
-answer before and after the configured return delay. Status changes cancel and
-restart the confirmation; unrelated peer changes do not reset it. This is two
-reachability samples, not continuous reachability verification.
+In Settings > Exit-node failover, choose a primary, optional secondary and final
+backup exit node from the current account. Enable failover, select the primary
+once in the normal exit-node picker and resume the shared rule automation.
+Defaults remain a 30-second grace period, three failed probes and optional
+automatic return with a 120-second confirmation delay. Changing settings pauses
+rule automation, which can be resumed on either settings page.
 
-The monitor runs only while rule automation, the VPN and its engine are active,
-a non-VPN internet-capable network is available, and the selected exit node is
-one of the configured pair. A matching disconnect rule suppresses it. VPN stops,
-network changes, account changes and automation pause cancel pending decisions.
-The pair is bound to the control URL and local node's stable ID. Choosing a third
-exit node or disabling exit-node use suspends failover. Automatic switching edits
-only ExitNodeID and records successes/errors in the existing decision journal.
+Priority is primary > secondary > final backup. An empty secondary preserves
+existing two-node configurations. Duplicate selections are rejected. A reported
+offline active node must fail every confirmation probe (3 seconds apart), then
+candidates are checked in priority order. Only a reported-online peer still
+offering exit routes and answering a disco ping can become the destination.
+A successful probe of the active node aborts the outage confirmation.
 
-If neither node is available, the monitor leaves the selection and VPN enabled;
-it never falls back to unencrypted internet. Existing split-tunnel exclusions still
-apply. Forwarding failures where a node remains reported online are not detected.
-Online status reflects the control connection and can be delayed. Disco reachability
-is not a guarantee that DNS or internet forwarding works. Configure DNS so it also
-works if the preferred site is unavailable; this feature does not change DNS.
-Existing sessions may break when the public exit IP changes. Android Doze and OEM
-restrictions can delay timers/status delivery; no exact switch deadline or measured
-battery saving is promised. No home-server API key or public ping endpoint is needed.
+While using a backup, automatic return checks higher priorities every 60 seconds,
+with reachability checks before and after the configured return delay. From the
+final backup, return directly to primary when available, otherwise secondary.
+A higher priority becoming reachable during confirmation defers a lower return.
+These are reachability samples, not continuous internet/DNS health verification.
+Healthy operation on primary adds no polling timer or probes. Unresolved outages
+retry after 60 seconds and are recorded in the decision journal.
+
+Monitoring requires active rules and VPN, a non-VPN internet-capable network,
+the matching account/control URL and one of the configured nodes selected.
+Pausing rules, disconnect rules, VPN stops and account/network changes cancel
+pending decisions. A manual selection outside the configured list or disabling
+exit-node use suspends failover. Automatic switching edits only ExitNodeID.
+
+If all nodes fail, selection and VPN remain enabled; no direct-internet fallback
+is introduced. Existing split-tunnel exclusions still apply. Peer status can be
+delayed; online forwarding or DNS failures are not detected. DNS must remain
+available when the primary site fails. Sessions may break when the public exit IP
+changes. Android background restrictions may delay checks and switching.
 
 ### Device acceptance checks before stable release
 
+- Verify 1→2, 1→3 and 2→3 on failure; 3→2, 3→1 and 2→1 on recovery,
+  including with the display locked. Stop all three and verify no unconfirmed switch.
+- Upgrade an existing two-node configuration and verify its settings still work.
+- Check the separate settings page, labeled dropdowns, Beta label and GitHub issue link.
+
 - Install the permanently signed candidate over the current app; retain account,
   rules, split tunneling and autostart settings. Verify failover defaults off.
-- Choose home/VPS, enable, select home, and resume rules. Stop Tailscale on home
+- Choose primary/secondary/VPS, enable, select primary, and resume rules. Stop Tailscale on home
   while the phone uses mobile data; verify confirmed switch and journal entry.
 - Restart home; verify delayed automatic return. Repeat with automatic return off.
 - Stop both nodes; verify no VPN disconnection or selection of an unrelated node.

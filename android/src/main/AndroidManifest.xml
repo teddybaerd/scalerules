@@ -67,7 +67,9 @@
         </provider>
         <activity
             android:name="com.tailscale.ipn.rules.RulesActivity"
+            android:label="@string/sr_rules_title"
             android:exported="false" />
+        <activity android:name="com.tailscale.ipn.rules.ExitNodeFailoverActivity" android:label="@string/sr_failover_title" android:exported="false" />
         <service
             android:name="com.tailscale.ipn.rules.RulesService"
             android:exported="false"
