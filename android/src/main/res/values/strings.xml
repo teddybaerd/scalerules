@@ -530,20 +530,20 @@
     <string name="sr_boot_title">Start rules after reboot</string>
     <string name="sr_boot_resume">Tap to resume rule automation after reboot.</string>
     <string name="sr_boot_hint">Resume only if automation was active before reboot. For named Wi-Fi rules, allow Location → Allow all the time in app info after granting precise location. Otherwise a notification asks you to resume manually. Requires notification permission; Android may delay startup until after unlock. Force stop prevents automatic startup.</string>
-    <string name="sr_failover_title">Exit-node failover (experimental)</string>
-    <string name="sr_failover_hint">Prefer one exit node and use a backup when it goes offline. Uses existing status events and probes only during an incident. Changes pause automation; resume it above. Select the preferred exit node once in the exit-node picker.</string>
+    <string name="sr_failover_title">Exit-node failover (Beta)</string>
+    <string name="sr_failover_hint">Use up to three exit nodes in priority order: primary, optional secondary, final backup. Changes pause shared rule automation; resume it above. Select the primary once in the exit-node picker.</string>
     <string name="sr_failover_login">Connect to your account to choose exit nodes.</string>
     <string name="sr_failover_other_profile">The saved failover belongs to another account and is inactive here.</string>
-    <string name="sr_failover_primary">Preferred exit node</string>
-    <string name="sr_failover_fallback">Backup exit node</string>
+    <string name="sr_failover_primary">Primary exit node (priority 1)</string>
+    <string name="sr_failover_fallback">Final backup exit node</string>
     <string name="sr_failover_choose">Choose a node</string>
     <string name="sr_failover_enable">Enable failover while rules are running</string>
-    <string name="sr_failover_auto_return">Automatically return to preferred node</string>
+    <string name="sr_failover_auto_return">Automatically return to a higher-priority node</string>
     <string name="sr_failover_failures">Failed probes before switching</string>
     <string name="sr_failover_grace">Grace period after a status or network change</string>
     <string name="sr_failover_return_delay">Return confirmation delay</string>
     <string name="sr_failover_seconds">%1$d seconds</string>
-    <string name="sr_failover_safety">Requires both nodes in the same account. Online status is not an internet or DNS health check. Keeps the VPN enabled if both nodes fail. Selecting another node or disabling exit-node use suspends failover. DNS must also work without the preferred location.</string>
+    <string name="sr_failover_safety">All nodes must belong to the same account. Online status does not check internet forwarding or DNS. If all nodes fail, the VPN stays enabled and checks continue. Manually selecting another node suspends failover. DNS must work without the primary site.</string>
     <string name="sr_failover_switched">Exit-node failover: switched to %1$s.</string>
     <string name="sr_failover_failed">Exit-node failover: could not switch to %1$s; will retry.</string>
     <string name="sr_failover_diagnostic">Exit-node failover status: %1$s</string>
@@ -552,5 +552,9 @@
     <string name="sr_update_resume_title">Resume rules after update</string>
     <string name="sr_update_resume">Tap to resume rule automation after the app update.</string>
     <string name="sr_automation_resumed_update">Automation resumed after app update</string>
+    <string name="sr_failover_secondary">Secondary exit node (optional, priority 2)</string>
+    <string name="sr_failover_none">Not configured</string>
+    <string name="sr_failover_no_target">Failover: no reachable target confirmed; VPN remains enabled, checks will retry.</string>
+    <string name="sr_failover_shared_automation">Failover uses the same automation service as connection rules. Starting or pausing here also starts or pauses connection rules.</string>
 </resources>
 

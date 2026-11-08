@@ -37,23 +37,13 @@ class ExitNodeFailoverMonitor(
       val controlURL: String?,
       val selfID: String?,
       val selectedID: String?,
-      val primaryOnline: Boolean?,
-      val fallbackOnline: Boolean?,
+      val online: Map<String, Boolean?>,
+      val eligible: Set<String>,
       val running: Boolean,
-      val diagnostic: String,
-      val fallbackEligible: Boolean,
   ) {
-    val action: FailoverAction
+    val candidates: List<String>
       get() =
-          ExitNodeFailoverPolicy.action(
-              config,
-              controlURL,
-              selfID,
-              running,
-              selectedID,
-              primaryOnline,
-              fallbackOnline,
-          )
+          PriorityFailoverPolicy.candidates(config, selectedID, online, controlURL, selfID, running)
   }
 
   fun refresh(available: Boolean) {
@@ -67,31 +57,18 @@ class ExitNodeFailoverMonitor(
     val prefs = Notifier.prefs.value
     // An offline peer can lose its advertised routes. Keep its online state visible.
     val peers = map?.Peers.orEmpty()
-    val primary = findFailoverPeer(peers, cfg.primaryID)
-    val fallback = findFailoverPeer(peers, cfg.fallbackID)
     val vpnActive = App.get().getAppScopedViewModel().vpnActive.value
-    val engine = Notifier.state.value
-    val profileMatches =
-        cfg.controlURL == prefs?.ControlURL && cfg.selfID == map?.SelfNode?.StableID
-    val diagnostic =
-        "enabled=${cfg.enabled}, valid=${cfg.valid}, profile=$profileMatches, ready=${ready.value}, " +
-            "vpn=$vpnActive, engine=$engine, want=${prefs?.WantRunning}, " +
-            "selected=${prefs?.activeExitNodeID == cfg.primaryID}/${prefs?.activeExitNodeID == cfg.fallbackID}, " +
-            "primary=${primary?.Online}/${primary?.isExitNode}, " +
-            "backup=${fallback?.Online}/${fallback?.isExitNode}"
     return Snapshot(
         cfg,
         prefs?.ControlURL,
         map?.SelfNode?.StableID,
         prefs?.activeExitNodeID,
-        primary?.Online,
-        fallback?.Online,
+        cfg.priorityIDs.associateWith { findFailoverPeer(peers, it)?.Online },
+        cfg.priorityIDs.filter { findFailoverPeer(peers, it)?.isExitNode == true }.toSet(),
         ready.value &&
             prefs?.WantRunning == true &&
             Notifier.state.value == Ipn.State.Running &&
             vpnActive,
-        diagnostic,
-        fallback?.isExitNode == true,
     )
   }
 
@@ -105,32 +82,40 @@ class ExitNodeFailoverMonitor(
           .distinctUntilChanged()
           .collectLatest { initial ->
             if (initial.config.primaryID.isNotBlank()) {
-              store.log(context.getString(R.string.sr_failover_diagnostic, initial.diagnostic))
+              store.log(
+                  context.getString(
+                      R.string.sr_failover_diagnostic,
+                      "running=${initial.running}, profile=${initial.config.controlURL == initial.controlURL && initial.config.selfID == initial.selfID}, " +
+                          "priority=${initial.config.priorityIDs.indexOf(initial.selectedID) + 1}, online=${initial.config.priorityIDs.map { initial.online[it] }}",
+                  )
+              )
             }
-            if (initial.action == FailoverAction.CHECK_FALLBACK && !initial.fallbackEligible)
-                return@collectLatest
-            if (initial.action == FailoverAction.NONE) return@collectLatest
+            if (initial.candidates.isEmpty()) return@collectLatest
             delay(initial.config.graceSeconds * 1000L)
             while (currentCoroutineContext().isActive && snapshot() == initial) {
               val confirmation =
-                  FailoverConfirmation(
+                  PriorityFailoverConfirmation(
                       probe = { id -> peer(id)?.let { probe(it) } ?: false },
                       wait = { delay(it) },
                   )
               val targetID =
-                  when (initial.action) {
-                    FailoverAction.CHECK_FALLBACK ->
-                        if (confirmation.fallback(initial.config)) initial.config.fallbackID
-                        else null
-                    FailoverAction.CHECK_PRIMARY ->
-                        if (confirmation.primary(initial.config)) initial.config.primaryID else null
-                    FailoverAction.NONE -> null
-                  }
+                  confirmation.target(
+                      initial.config,
+                      initial.selectedID ?: return@collectLatest,
+                      initial.online[initial.selectedID] == false,
+                      initial.candidates.filter {
+                        initial.online[it] == true && it in initial.eligible
+                      },
+                  )
+              if (targetID == null && initial.online[initial.selectedID] == false) {
+                store.log(context.getString(R.string.sr_failover_no_target))
+              }
               if (targetID != null && snapshot() == initial) {
                 // The destination must still offer exit routes when the switch is issued.
                 peer(targetID)?.takeIf { it.isExitNode }?.let { switchTo(it, initial) }
               }
-              // Retry only while an incident remains unresolved, never in the healthy steady state.
+              // Retry only while an incident remains unresolved, never in the healthy steady
+              // state.
               delay(60000)
             }
           }

@@ -460,20 +460,20 @@
     <string name="sr_boot_title">Regeln nach Geräteneustart starten</string>
     <string name="sr_boot_resume">Tippe hier, um die Regelautomatik nach dem Neustart fortzusetzen.</string>
     <string name="sr_boot_hint">Fortsetzen nur, wenn die Automatik vor dem Neustart aktiv war. Für Regeln mit WLAN-Namen nach der genauen Standortfreigabe in der App-Info Standort → Immer zulassen wählen. Andernfalls weist eine Benachrichtigung auf das manuelle Fortsetzen hin. Benachrichtigungen müssen erlaubt sein; Android kann den Start bis nach dem Entsperren verzögern. Nach Stopp erzwingen ist kein Autostart möglich.</string>
-    <string name="sr_failover_title">Exit-Node-Failover (experimentell)</string>
-    <string name="sr_failover_hint">Bevorzugten Exit Node bei Ausfall durch einen Ersatz ersetzen. Nutzt vorhandene Statusmeldungen und prüft nur bei einem Vorfall aktiv. Änderungen pausieren die Automatik; oben wieder starten. Den bevorzugten Exit Node einmal in der Exit-Node-Auswahl aktivieren.</string>
+    <string name="sr_failover_title">Exit-Node-Failover (Beta)</string>
+    <string name="sr_failover_hint">Bis zu drei Exit Nodes nach Priorität nutzen: Hauptknoten, optionaler zweiter Knoten, letzter Ersatz. Änderungen pausieren die gemeinsame Regelautomatik; oben wieder starten. Den Hauptknoten einmal in der Exit-Node-Auswahl aktivieren.</string>
     <string name="sr_failover_login">Zum Auswählen der Exit Nodes mit deinem Konto verbinden.</string>
     <string name="sr_failover_other_profile">Das gespeicherte Failover gehört zu einem anderen Konto und ist hier inaktiv.</string>
-    <string name="sr_failover_primary">Bevorzugter Exit Node</string>
-    <string name="sr_failover_fallback">Ersatz-Exit-Node</string>
+    <string name="sr_failover_primary">Hauptknoten (Priorität 1)</string>
+    <string name="sr_failover_fallback">Letzter Ersatzknoten</string>
     <string name="sr_failover_choose">Knoten auswählen</string>
     <string name="sr_failover_enable">Failover bei laufender Regelautomatik aktivieren</string>
-    <string name="sr_failover_auto_return">Automatisch zum bevorzugten Knoten zurückkehren</string>
+    <string name="sr_failover_auto_return">Automatisch zu einem höher priorisierten Knoten zurückkehren</string>
     <string name="sr_failover_failures">Fehlgeschlagene Prüfungen vor Wechsel</string>
     <string name="sr_failover_grace">Schonfrist nach Status- oder Netzwerkwechsel</string>
     <string name="sr_failover_return_delay">Bestätigungszeit vor Rückkehr</string>
     <string name="sr_failover_seconds">%1$d Sekunden</string>
-    <string name="sr_failover_safety">Beide Knoten müssen zum selben Konto gehören. Online-Status prüft weder Internet noch DNS. Bei Ausfall beider Knoten bleibt der VPN aktiviert. Die Auswahl eines anderen Knotens oder das Abschalten der Exit-Node-Nutzung setzt Failover aus. DNS muss auch ohne den bevorzugten Standort funktionieren.</string>
+    <string name="sr_failover_safety">Alle Knoten müssen zum selben Konto gehören. Online-Status prüft weder Internet noch DNS. Bei Totalausfall bleibt der VPN aktiviert; die Prüfung wird wiederholt. Manuelle Auswahl eines anderen Knotens setzt Failover aus. DNS muss ohne den Hauptstandort funktionieren.</string>
     <string name="sr_failover_switched">Exit-Node-Failover: zu %1$s gewechselt.</string>
     <string name="sr_failover_failed">Exit-Node-Failover: Wechsel zu %1$s fehlgeschlagen; erneuter Versuch folgt.</string>
     <string name="sr_failover_diagnostic">Exit-Node-Failover-Status: %1$s</string>
@@ -482,5 +482,9 @@
     <string name="sr_update_resume_title">Regeln nach App-Update fortsetzen</string>
     <string name="sr_update_resume">Tippe hier, um die Regelautomatik nach dem App-Update fortzusetzen.</string>
     <string name="sr_automation_resumed_update">Automatik nach App-Update fortgesetzt</string>
+    <string name="sr_failover_secondary">Zweiter Knoten (optional, Priorität 2)</string>
+    <string name="sr_failover_none">Nicht verwenden</string>
+    <string name="sr_failover_no_target">Failover: kein erreichbares Ziel bestätigt; VPN bleibt aktiviert, Prüfung wird wiederholt.</string>
+    <string name="sr_failover_shared_automation">Failover verwendet dieselbe Automatik wie die Verbindungsregeln. Starten oder Pausieren gilt gemeinsam für beide Funktionen.</string>
 </resources>
 

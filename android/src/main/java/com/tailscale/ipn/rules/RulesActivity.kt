@@ -29,7 +29,7 @@ import java.text.DateFormat
 import java.util.Date
 import java.util.UUID
 
-class RulesActivity : ComponentActivity() {
+open class RulesActivity : ComponentActivity() {
   private val permissionRequest =
       registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) {
         val needsSsid =
@@ -41,12 +41,7 @@ class RulesActivity : ComponentActivity() {
                 ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) !=
                     PackageManager.PERMISSION_GRANTED
         ) {
-          Toast.makeText(
-                  this,
-                  getString(R.string.sr_permission_needed),
-                  Toast.LENGTH_LONG,
-              )
-              .show()
+          Toast.makeText(this, getString(R.string.sr_permission_needed), Toast.LENGTH_LONG).show()
         } else prepareVpn()
       }
   private val vpnRequest =
@@ -56,6 +51,11 @@ class RulesActivity : ComponentActivity() {
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
+    title =
+        getString(
+            if (this is ExitNodeFailoverActivity) R.string.sr_failover_title
+            else R.string.sr_rules_title
+        )
     setContent { AppTheme { Surface { RulesScreen() } } }
   }
 
@@ -101,147 +101,183 @@ class RulesActivity : ComponentActivity() {
     val running by RulesService.running.collectAsState()
     var editing by remember { mutableStateOf<ConnectionRule?>(null) }
     var deleting by remember { mutableStateOf<ConnectionRule?>(null) }
-    Column(
-        Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp),
-    ) {
-      Text(stringResource(R.string.sr_rules_title), style = MaterialTheme.typography.headlineMedium)
-      Text(stringResource(R.string.sr_rules_intro))
-      var bootEnabled by remember {
-        mutableStateOf(store.preferences.getBoolean("start_on_boot", false))
-      }
-      Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
-        Switch(
-            checked = bootEnabled,
-            onCheckedChange = {
-              bootEnabled = it
-              store.preferences.edit().putBoolean("start_on_boot", it).apply()
-            },
+    Scaffold(
+        topBar = {
+          com.tailscale.ipn.ui.view.Header(
+              titleRes =
+                  if (this@RulesActivity is ExitNodeFailoverActivity) R.string.sr_failover_title
+                  else R.string.sr_rules_title,
+              onBack = { finish() },
+          )
+        }
+    ) { innerPadding ->
+      Column(
+          Modifier.fillMaxSize()
+              .padding(innerPadding)
+              .verticalScroll(rememberScrollState())
+              .padding(16.dp),
+          verticalArrangement = Arrangement.spacedBy(12.dp),
+      ) {
+        val failoverPage = this@RulesActivity is ExitNodeFailoverActivity
+        Text(
+            stringResource(
+                if (failoverPage) R.string.sr_failover_shared_automation
+                else R.string.sr_rules_intro
+            )
         )
-        Text(stringResource(R.string.sr_boot_title))
-      }
-      Text(stringResource(R.string.sr_boot_hint))
-      if (bootEnabled) {
+        if (!failoverPage) {
+          var bootEnabled by remember {
+            mutableStateOf(store.preferences.getBoolean("start_on_boot", false))
+          }
+          Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
+            Switch(
+                checked = bootEnabled,
+                onCheckedChange = {
+                  bootEnabled = it
+                  store.preferences.edit().putBoolean("start_on_boot", it).apply()
+                },
+            )
+            Text(stringResource(R.string.sr_boot_title))
+          }
+          Text(stringResource(R.string.sr_boot_hint))
+          if (bootEnabled) {
+            TextButton(
+                onClick = {
+                  startActivity(
+                      Intent(
+                          android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
+                          android.net.Uri.parse("package:$packageName"),
+                      )
+                  )
+                }
+            ) {
+              Text(stringResource(R.string.sr_background_app_button))
+            }
+          }
+        }
+        Button(
+            onClick = {
+              if (running) pauseObserver(Intent(this@RulesActivity, RulesService::class.java))
+              else resumeRules()
+            }
+        ) {
+          Text(
+              if (running) stringResource(R.string.sr_rules_pause)
+              else stringResource(R.string.sr_rules_start)
+          )
+        }
+        Text(
+            if (running) stringResource(R.string.sr_rules_active)
+            else stringResource(R.string.sr_rules_paused),
+            style = MaterialTheme.typography.titleMedium,
+        )
+        if (failoverPage)
+            ExitNodeFailoverSettings(store.failover()) { config ->
+              pauseObserver(Intent(this@RulesActivity, RulesService::class.java))
+              store.saveFailover(config)
+            }
+        Text(stringResource(R.string.sr_rules_permissions))
         TextButton(
             onClick = {
               startActivity(
                   Intent(
-                      android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
-                      android.net.Uri.parse("package:$packageName"),
+                      this@RulesActivity,
+                      com.tailscale.ipn.background.BackgroundSettingsActivity::class.java,
                   )
               )
             }
         ) {
-          Text(stringResource(R.string.sr_background_app_button))
+          Text(stringResource(R.string.sr_background_title))
         }
-      }
-      Button(
-          onClick = {
-            if (running) pauseObserver(Intent(this@RulesActivity, RulesService::class.java))
-            else resumeRules()
-          }
-      ) {
-        Text(
-            if (running) stringResource(R.string.sr_rules_pause)
-            else stringResource(R.string.sr_rules_start)
-        )
-      }
-      Text(
-          if (running) stringResource(R.string.sr_rules_active)
-          else stringResource(R.string.sr_rules_paused),
-          style = MaterialTheme.typography.titleMedium,
-      )
-      ExitNodeFailoverSettings(store.failover()) { config ->
-        pauseObserver(Intent(this@RulesActivity, RulesService::class.java))
-        store.saveFailover(config)
-      }
-      Text(stringResource(R.string.sr_rules_permissions))
-      TextButton(
-          onClick = {
-            startActivity(
-                Intent(
-                    this@RulesActivity,
-                    com.tailscale.ipn.background.BackgroundSettingsActivity::class.java,
-                )
-            )
-          }
-      ) {
-        Text(stringResource(R.string.sr_background_title))
-      }
-      Button(
-          onClick = {
-            editing =
-                ConnectionRule(
-                    UUID.randomUUID().toString(),
-                    "",
-                    RuleCondition.WIFI_NAME,
-                    action = RuleAction.KEEP,
-                )
-          }
-      ) {
-        Text(stringResource(R.string.sr_rules_add))
-      }
-      RuleEngine.warnings(rules).forEach { warning ->
-        Text(
-            stringResource(
-                if (warning.earlier.action == warning.later.action) R.string.sr_warning_shadowed
-                else R.string.sr_warning_conflict,
-                warning.later.name,
-                warning.earlier.name,
-            ),
-            color = MaterialTheme.colorScheme.error,
-        )
-      }
-      if (rules.isEmpty()) Text(stringResource(R.string.sr_rules_empty))
-      rules.forEachIndexed { index, rule ->
-        Card(Modifier.fillMaxWidth()) {
-          Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-            Text("${index + 1}. ${rule.name}", style = MaterialTheme.typography.titleMedium)
-            Text(
-                "${conditionLabel(rule.condition)}${if (rule.condition == RuleCondition.WIFI_NAME) ": ${rule.ssid}" else ""} → ${actionLabel(rule.action)}"
-            )
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-              Switch(
-                  checked = rule.enabled,
-                  onCheckedChange = { enabled ->
-                    pauseObserver(Intent(this@RulesActivity, RulesService::class.java))
-                    store.save(
-                        rules.map { if (it.id == rule.id) it.copy(enabled = enabled) else it }
+        if (!failoverPage) {
+          Button(
+              onClick = {
+                editing =
+                    ConnectionRule(
+                        UUID.randomUUID().toString(),
+                        "",
+                        RuleCondition.WIFI_NAME,
+                        action = RuleAction.KEEP,
                     )
-                  },
-              )
-              TextButton(onClick = { editing = rule }) {
-                Text(stringResource(R.string.sr_rules_edit))
               }
-              TextButton(onClick = { deleting = rule }) {
-                Text(stringResource(R.string.sr_rules_delete))
-              }
-            }
-            Row {
-              TextButton(enabled = index > 0, onClick = { move(store, rules, index, index - 1) }) {
-                Text(stringResource(R.string.sr_rules_higher))
-              }
-              TextButton(
-                  enabled = index < rules.lastIndex,
-                  onClick = { move(store, rules, index, index + 1) },
+          ) {
+            Text(stringResource(R.string.sr_rules_add))
+          }
+          RuleEngine.warnings(rules).forEach { warning ->
+            Text(
+                stringResource(
+                    if (warning.earlier.action == warning.later.action) R.string.sr_warning_shadowed
+                    else R.string.sr_warning_conflict,
+                    warning.later.name,
+                    warning.earlier.name,
+                ),
+                color = MaterialTheme.colorScheme.error,
+            )
+          }
+          if (rules.isEmpty()) Text(stringResource(R.string.sr_rules_empty))
+          rules.forEachIndexed { index, rule ->
+            Card(Modifier.fillMaxWidth()) {
+              Column(
+                  Modifier.padding(12.dp),
+                  verticalArrangement = Arrangement.spacedBy(6.dp),
               ) {
-                Text(stringResource(R.string.sr_rules_lower))
+                Text(
+                    "${index + 1}. ${rule.name}",
+                    style = MaterialTheme.typography.titleMedium,
+                )
+                Text(
+                    "${conditionLabel(rule.condition)}${if (rule.condition == RuleCondition.WIFI_NAME) ": ${rule.ssid}" else ""} → ${actionLabel(rule.action)}"
+                )
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                  Switch(
+                      checked = rule.enabled,
+                      onCheckedChange = { enabled ->
+                        pauseObserver(Intent(this@RulesActivity, RulesService::class.java))
+                        store.save(
+                            rules.map { if (it.id == rule.id) it.copy(enabled = enabled) else it }
+                        )
+                      },
+                  )
+                  TextButton(onClick = { editing = rule }) {
+                    Text(stringResource(R.string.sr_rules_edit))
+                  }
+                  TextButton(onClick = { deleting = rule }) {
+                    Text(stringResource(R.string.sr_rules_delete))
+                  }
+                }
+                Row {
+                  TextButton(
+                      enabled = index > 0,
+                      onClick = { move(store, rules, index, index - 1) },
+                  ) {
+                    Text(stringResource(R.string.sr_rules_higher))
+                  }
+                  TextButton(
+                      enabled = index < rules.lastIndex,
+                      onClick = { move(store, rules, index, index + 1) },
+                  ) {
+                    Text(stringResource(R.string.sr_rules_lower))
+                  }
+                }
               }
             }
           }
         }
-      }
-      HorizontalDivider()
-      Text(stringResource(R.string.sr_rules_journal), style = MaterialTheme.typography.titleLarge)
-      TextButton(onClick = { store.clearJournal() }) {
-        Text(stringResource(R.string.sr_rules_clear_journal))
-      }
-      journal.forEach {
+        HorizontalDivider()
         Text(
-            "${DateFormat.getDateTimeInstance(DateFormat.SHORT, DateFormat.MEDIUM).format(Date(it.time))}\n${it.message}"
+            stringResource(R.string.sr_rules_journal),
+            style = MaterialTheme.typography.titleLarge,
         )
+        TextButton(onClick = { store.clearJournal() }) {
+          Text(stringResource(R.string.sr_rules_clear_journal))
+        }
+        journal.forEach {
+          Text(
+              "${DateFormat.getDateTimeInstance(DateFormat.SHORT, DateFormat.MEDIUM).format(Date(it.time))}\n${it.message}"
+          )
+        }
+        TextButton(onClick = { finish() }) { Text(stringResource(R.string.back)) }
       }
-      TextButton(onClick = { finish() }) { Text(stringResource(R.string.back)) }
     }
     deleting?.let { rule ->
       AlertDialog(
@@ -376,10 +412,7 @@ private fun RuleEditor(
             )
             CurrentWifiButton(onSsid = { ssid = it })
           }
-          ExposedDropdownMenuBox(
-              expanded = actionMenu,
-              onExpandedChange = { actionMenu = it },
-          ) {
+          ExposedDropdownMenuBox(expanded = actionMenu, onExpandedChange = { actionMenu = it }) {
             OutlinedTextField(
                 value = actionLabel(action),
                 onValueChange = {},
