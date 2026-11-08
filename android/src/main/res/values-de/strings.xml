@@ -485,5 +485,6 @@
     <string name="sr_failover_secondary">Zweiter Exit Node (optional)</string>
     <string name="sr_failover_none">Nicht verwenden</string>
     <string name="sr_failover_no_target">Failover: kein erreichbares Ziel bestätigt; VPN bleibt aktiviert, Prüfung wird wiederholt.</string>
+    <string name="sr_failover_shared_automation">Failover verwendet dieselbe Automatik wie die Verbindungsregeln. Starten oder Pausieren gilt gemeinsam für beide Funktionen.</string>
 </resources>
 

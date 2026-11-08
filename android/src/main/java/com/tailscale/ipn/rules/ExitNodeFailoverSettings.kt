@@ -14,8 +14,8 @@ import com.tailscale.ipn.ui.notifier.Notifier
 
 @Composable
 fun ExitNodeFailoverSettings(
-  saved: ExitNodeFailoverConfig,
-  onSave: (ExitNodeFailoverConfig) -> Unit,
+    saved: ExitNodeFailoverConfig,
+    onSave: (ExitNodeFailoverConfig) -> Unit,
 ) {
   val netmap by Notifier.netmap.collectAsState()
   val prefs by Notifier.prefs.collectAsState()
@@ -23,7 +23,7 @@ fun ExitNodeFailoverSettings(
   val controlURL = prefs?.ControlURL.orEmpty()
   val sameProfile = saved.selfID == selfID && saved.controlURL == controlURL
   val config =
-    if (sameProfile) saved else ExitNodeFailoverConfig(controlURL = controlURL, selfID = selfID)
+      if (sameProfile) saved else ExitNodeFailoverConfig(controlURL = controlURL, selfID = selfID)
   val nodes = netmap?.Peers.orEmpty().filter { it.isExitNode }.sortedBy { it.displayName }
   val available = selfID.isNotBlank() && controlURL.isNotBlank()
   Card {
@@ -33,83 +33,84 @@ fun ExitNodeFailoverSettings(
       if (!available) Text(stringResource(R.string.sr_failover_login))
       if (saved.enabled && !sameProfile) Text(stringResource(R.string.sr_failover_other_profile))
       FailoverChoice(
-        stringResource(R.string.sr_failover_primary),
-        nodes.find { it.StableID == config.primaryID }?.displayName
-          ?: stringResource(R.string.sr_failover_choose),
-        nodes
-          .filter { it.StableID != config.fallbackID && it.StableID != config.secondaryID }
-          .map { it.StableID to it.displayName },
+          stringResource(R.string.sr_failover_primary),
+          nodes.find { it.StableID == config.primaryID }?.displayName
+              ?: stringResource(R.string.sr_failover_choose),
+          nodes
+              .filter { it.StableID != config.fallbackID && it.StableID != config.secondaryID }
+              .map { it.StableID to it.displayName },
       ) {
         onSave(config.copy(primaryID = it, enabled = false))
       }
       FailoverChoice(
-        stringResource(R.string.sr_failover_secondary),
-        nodes.find { it.StableID == config.secondaryID }?.displayName
-          ?: stringResource(R.string.sr_failover_none),
-        listOf("" to stringResource(R.string.sr_failover_none)) +
-          nodes
-            .filter { it.StableID != config.primaryID && it.StableID != config.fallbackID }
-            .map { it.StableID to it.displayName },
-        enabled = available,
+          stringResource(R.string.sr_failover_secondary),
+          nodes.find { it.StableID == config.secondaryID }?.displayName
+              ?: stringResource(R.string.sr_failover_none),
+          listOf("" to stringResource(R.string.sr_failover_none)) +
+              nodes
+                  .filter { it.StableID != config.primaryID && it.StableID != config.fallbackID }
+                  .map { it.StableID to it.displayName },
+          enabled = available,
       ) {
         onSave(config.copy(secondaryID = it, enabled = false))
       }
       FailoverChoice(
-        stringResource(R.string.sr_failover_fallback),
-        nodes.find { it.StableID == config.fallbackID }?.displayName
-          ?: stringResource(R.string.sr_failover_choose),
-        nodes
-          .filter { it.StableID != config.primaryID && it.StableID != config.secondaryID }
-          .map { it.StableID to it.displayName },
+          stringResource(R.string.sr_failover_fallback),
+          nodes.find { it.StableID == config.fallbackID }?.displayName
+              ?: stringResource(R.string.sr_failover_choose),
+          nodes
+              .filter { it.StableID != config.primaryID && it.StableID != config.secondaryID }
+              .map { it.StableID to it.displayName },
       ) {
         onSave(config.copy(fallbackID = it, enabled = false))
       }
       Row(verticalAlignment = Alignment.CenterVertically) {
         Switch(
-          checked = config.enabled,
-          enabled =
-            available &&
-              config.copy(enabled = true).valid &&
-              nodes.any { it.StableID == config.primaryID } &&
-              nodes.any { it.StableID == config.fallbackID } &&
-              (config.secondaryID.isEmpty() || nodes.any { it.StableID == config.secondaryID }),
-          onCheckedChange = { onSave(config.copy(enabled = it)) },
+            checked = config.enabled,
+            enabled =
+                available &&
+                    config.copy(enabled = true).valid &&
+                    nodes.any { it.StableID == config.primaryID } &&
+                    nodes.any { it.StableID == config.fallbackID } &&
+                    (config.secondaryID.isEmpty() ||
+                        nodes.any { it.StableID == config.secondaryID }),
+            onCheckedChange = { onSave(config.copy(enabled = it)) },
         )
         Text(stringResource(R.string.sr_failover_enable))
       }
       Row(verticalAlignment = Alignment.CenterVertically) {
         Switch(
-          checked = config.autoReturn,
-          enabled = available,
-          onCheckedChange = { onSave(config.copy(autoReturn = it)) },
+            checked = config.autoReturn,
+            enabled = available,
+            onCheckedChange = { onSave(config.copy(autoReturn = it)) },
         )
         Text(stringResource(R.string.sr_failover_auto_return))
       }
       FailoverChoice(
-        stringResource(R.string.sr_failover_failures),
-        config.failureCount.toString(),
-        (2..5).map { it.toString() to it.toString() },
-        enabled = available,
+          stringResource(R.string.sr_failover_failures),
+          config.failureCount.toString(),
+          (2..5).map { it.toString() to it.toString() },
+          enabled = available,
       ) {
         onSave(config.copy(failureCount = it.toInt()))
       }
       FailoverChoice(
-        stringResource(R.string.sr_failover_grace),
-        stringResource(R.string.sr_failover_seconds, config.graceSeconds),
-        listOf(15, 30, 60, 120).map {
-          it.toString() to stringResource(R.string.sr_failover_seconds, it)
-        },
-        enabled = available,
+          stringResource(R.string.sr_failover_grace),
+          stringResource(R.string.sr_failover_seconds, config.graceSeconds),
+          listOf(15, 30, 60, 120).map {
+            it.toString() to stringResource(R.string.sr_failover_seconds, it)
+          },
+          enabled = available,
       ) {
         onSave(config.copy(graceSeconds = it.toInt()))
       }
       FailoverChoice(
-        stringResource(R.string.sr_failover_return_delay),
-        stringResource(R.string.sr_failover_seconds, config.returnSeconds),
-        listOf(60, 120, 300, 600).map {
-          it.toString() to stringResource(R.string.sr_failover_seconds, it)
-        },
-        enabled = available,
+          stringResource(R.string.sr_failover_return_delay),
+          stringResource(R.string.sr_failover_seconds, config.returnSeconds),
+          listOf(60, 120, 300, 600).map {
+            it.toString() to stringResource(R.string.sr_failover_seconds, it)
+          },
+          enabled = available,
       ) {
         onSave(config.copy(returnSeconds = it.toInt()))
       }
@@ -121,35 +122,35 @@ fun ExitNodeFailoverSettings(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun FailoverChoice(
-  label: String,
-  value: String,
-  choices: List<Pair<String, String>>,
-  enabled: Boolean = true,
-  onSelect: (String) -> Unit,
+    label: String,
+    value: String,
+    choices: List<Pair<String, String>>,
+    enabled: Boolean = true,
+    onSelect: (String) -> Unit,
 ) {
   var expanded by remember { mutableStateOf(false) }
   val selectable = enabled && choices.isNotEmpty()
   ExposedDropdownMenuBox(
-    expanded = expanded,
-    onExpandedChange = { if (selectable) expanded = it },
+      expanded = expanded,
+      onExpandedChange = { if (selectable) expanded = it },
   ) {
     OutlinedTextField(
-      value = value,
-      onValueChange = {},
-      readOnly = true,
-      enabled = selectable,
-      label = { Text(label) },
-      trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded) },
-      modifier = Modifier.menuAnchor().fillMaxWidth(),
+        value = value,
+        onValueChange = {},
+        readOnly = true,
+        enabled = selectable,
+        label = { Text(label) },
+        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded) },
+        modifier = Modifier.menuAnchor().fillMaxWidth(),
     )
     ExposedDropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
       choices.forEach { (id, name) ->
         DropdownMenuItem(
-          text = { Text(name) },
-          onClick = {
-            expanded = false
-            onSelect(id)
-          },
+            text = { Text(name) },
+            onClick = {
+              expanded = false
+              onSelect(id)
+            },
         )
       }
     }

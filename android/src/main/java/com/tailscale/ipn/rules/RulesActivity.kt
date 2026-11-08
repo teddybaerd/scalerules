@@ -31,31 +31,31 @@ import java.util.UUID
 
 open class RulesActivity : ComponentActivity() {
   private val permissionRequest =
-    registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) {
-      val needsSsid =
-        RulesStore(this).rules().any { rule ->
-          rule.enabled && rule.condition == RuleCondition.WIFI_NAME
-        }
-      if (
-        needsSsid &&
-          ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) !=
-            PackageManager.PERMISSION_GRANTED
-      ) {
-        Toast.makeText(this, getString(R.string.sr_permission_needed), Toast.LENGTH_LONG).show()
-      } else prepareVpn()
-    }
+      registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) {
+        val needsSsid =
+            RulesStore(this).rules().any { rule ->
+              rule.enabled && rule.condition == RuleCondition.WIFI_NAME
+            }
+        if (
+            needsSsid &&
+                ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) !=
+                    PackageManager.PERMISSION_GRANTED
+        ) {
+          Toast.makeText(this, getString(R.string.sr_permission_needed), Toast.LENGTH_LONG).show()
+        } else prepareVpn()
+      }
   private val vpnRequest =
-    registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {
-      if (VpnService.prepare(this) == null) startObserver()
-    }
+      registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {
+        if (VpnService.prepare(this) == null) startObserver()
+      }
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
     title =
-      getString(
-        if (this is ExitNodeFailoverActivity) R.string.sr_failover_title
-        else R.string.sr_rules_title
-      )
+        getString(
+            if (this is ExitNodeFailoverActivity) R.string.sr_failover_title
+            else R.string.sr_rules_title
+        )
     setContent { AppTheme { Surface { RulesScreen() } } }
   }
 
@@ -66,10 +66,9 @@ open class RulesActivity : ComponentActivity() {
       permissions += Manifest.permission.ACCESS_FINE_LOCATION
     }
     if (Build.VERSION.SDK_INT >= 33) permissions += Manifest.permission.POST_NOTIFICATIONS
-    val missing =
-      permissions.filter {
-        ContextCompat.checkSelfPermission(this, it) != PackageManager.PERMISSION_GRANTED
-      }
+    val missing = permissions.filter {
+      ContextCompat.checkSelfPermission(this, it) != PackageManager.PERMISSION_GRANTED
+    }
     if (missing.isEmpty()) prepareVpn() else permissionRequest.launch(missing.toTypedArray())
   }
 
@@ -103,128 +102,143 @@ open class RulesActivity : ComponentActivity() {
     var editing by remember { mutableStateOf<ConnectionRule?>(null) }
     var deleting by remember { mutableStateOf<ConnectionRule?>(null) }
     Scaffold(
-      topBar = {
-        com.tailscale.ipn.ui.view.Header(
-          titleRes =
-            if (this@RulesActivity is ExitNodeFailoverActivity) R.string.sr_failover_title
-            else R.string.sr_rules_title,
-          onBack = { finish() },
-        )
-      }
+        topBar = {
+          com.tailscale.ipn.ui.view.Header(
+              titleRes =
+                  if (this@RulesActivity is ExitNodeFailoverActivity) R.string.sr_failover_title
+                  else R.string.sr_rules_title,
+              onBack = { finish() },
+          )
+        }
     ) { innerPadding ->
       Column(
-        Modifier.fillMaxSize()
-          .padding(innerPadding)
-          .verticalScroll(rememberScrollState())
-          .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp),
+          Modifier.fillMaxSize()
+              .padding(innerPadding)
+              .verticalScroll(rememberScrollState())
+              .padding(16.dp),
+          verticalArrangement = Arrangement.spacedBy(12.dp),
       ) {
         val failoverPage = this@RulesActivity is ExitNodeFailoverActivity
-        Text(stringResource(R.string.sr_rules_intro))
-        var bootEnabled by remember {
-          mutableStateOf(store.preferences.getBoolean("start_on_boot", false))
-        }
-        Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
-          Switch(
-            checked = bootEnabled,
-            onCheckedChange = {
-              bootEnabled = it
-              store.preferences.edit().putBoolean("start_on_boot", it).apply()
-            },
-          )
-          Text(stringResource(R.string.sr_boot_title))
-        }
-        Text(stringResource(R.string.sr_boot_hint))
-        if (bootEnabled) {
-          TextButton(
-            onClick = {
-              startActivity(
-                Intent(
-                  android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
-                  android.net.Uri.parse("package:$packageName"),
-                )
-              )
+        Text(
+            stringResource(
+                if (failoverPage) R.string.sr_failover_shared_automation
+                else R.string.sr_rules_intro
+            )
+        )
+        if (!failoverPage) {
+          var bootEnabled by remember {
+            mutableStateOf(store.preferences.getBoolean("start_on_boot", false))
+          }
+          Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
+            Switch(
+                checked = bootEnabled,
+                onCheckedChange = {
+                  bootEnabled = it
+                  store.preferences.edit().putBoolean("start_on_boot", it).apply()
+                },
+            )
+            Text(stringResource(R.string.sr_boot_title))
+          }
+          Text(stringResource(R.string.sr_boot_hint))
+          if (bootEnabled) {
+            TextButton(
+                onClick = {
+                  startActivity(
+                      Intent(
+                          android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
+                          android.net.Uri.parse("package:$packageName"),
+                      )
+                  )
+                }
+            ) {
+              Text(stringResource(R.string.sr_background_app_button))
             }
-          ) {
-            Text(stringResource(R.string.sr_background_app_button))
           }
         }
         Button(
-          onClick = {
-            if (running) pauseObserver(Intent(this@RulesActivity, RulesService::class.java))
-            else resumeRules()
-          }
+            onClick = {
+              if (running) pauseObserver(Intent(this@RulesActivity, RulesService::class.java))
+              else resumeRules()
+            }
         ) {
           Text(
-            if (running) stringResource(R.string.sr_rules_pause)
-            else stringResource(R.string.sr_rules_start)
+              if (running) stringResource(R.string.sr_rules_pause)
+              else stringResource(R.string.sr_rules_start)
           )
         }
         Text(
-          if (running) stringResource(R.string.sr_rules_active)
-          else stringResource(R.string.sr_rules_paused),
-          style = MaterialTheme.typography.titleMedium,
+            if (running) stringResource(R.string.sr_rules_active)
+            else stringResource(R.string.sr_rules_paused),
+            style = MaterialTheme.typography.titleMedium,
         )
         if (failoverPage)
-          ExitNodeFailoverSettings(store.failover()) { config ->
-            pauseObserver(Intent(this@RulesActivity, RulesService::class.java))
-            store.saveFailover(config)
-          }
+            ExitNodeFailoverSettings(store.failover()) { config ->
+              pauseObserver(Intent(this@RulesActivity, RulesService::class.java))
+              store.saveFailover(config)
+            }
         Text(stringResource(R.string.sr_rules_permissions))
         TextButton(
-          onClick = {
-            startActivity(
-              Intent(
-                this@RulesActivity,
-                com.tailscale.ipn.background.BackgroundSettingsActivity::class.java,
+            onClick = {
+              startActivity(
+                  Intent(
+                      this@RulesActivity,
+                      com.tailscale.ipn.background.BackgroundSettingsActivity::class.java,
+                  )
               )
-            )
-          }
+            }
         ) {
           Text(stringResource(R.string.sr_background_title))
         }
         if (!failoverPage) {
           Button(
-            onClick = {
-              editing =
-                ConnectionRule(
-                  UUID.randomUUID().toString(),
-                  "",
-                  RuleCondition.WIFI_NAME,
-                  action = RuleAction.KEEP,
-                )
-            }
+              onClick = {
+                editing =
+                    ConnectionRule(
+                        UUID.randomUUID().toString(),
+                        "",
+                        RuleCondition.WIFI_NAME,
+                        action = RuleAction.KEEP,
+                    )
+              }
           ) {
             Text(stringResource(R.string.sr_rules_add))
           }
           RuleEngine.warnings(rules).forEach { warning ->
             Text(
-              stringResource(
-                if (warning.earlier.action == warning.later.action) R.string.sr_warning_shadowed
-                else R.string.sr_warning_conflict,
-                warning.later.name,
-                warning.earlier.name,
-              ),
-              color = MaterialTheme.colorScheme.error,
+                stringResource(
+                    if (warning.earlier.action == warning.later.action) R.string.sr_warning_shadowed
+                    else R.string.sr_warning_conflict,
+                    warning.later.name,
+                    warning.earlier.name,
+                ),
+                color = MaterialTheme.colorScheme.error,
             )
           }
           if (rules.isEmpty()) Text(stringResource(R.string.sr_rules_empty))
           rules.forEachIndexed { index, rule ->
             Card(Modifier.fillMaxWidth()) {
-              Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                Text("${index + 1}. ${rule.name}", style = MaterialTheme.typography.titleMedium)
+              Column(
+                  Modifier.padding(12.dp),
+                  verticalArrangement = Arrangement.spacedBy(6.dp),
+              ) {
                 Text(
-                  "${conditionLabel(rule.condition)}${if (rule.condition == RuleCondition.WIFI_NAME) ": ${rule.ssid}" else ""} → ${actionLabel(rule.action)}"
+                    "${index + 1}. ${rule.name}",
+                    style = MaterialTheme.typography.titleMedium,
+                )
+                Text(
+                    "${conditionLabel(rule.condition)}${if (rule.condition == RuleCondition.WIFI_NAME) ": ${rule.ssid}" else ""} → ${actionLabel(rule.action)}"
                 )
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                   Switch(
-                    checked = rule.enabled,
-                    onCheckedChange = { enabled ->
-                      pauseObserver(Intent(this@RulesActivity, RulesService::class.java))
-                      store.save(
-                        rules.map { if (it.id == rule.id) it.copy(enabled = enabled) else it }
-                      )
-                    },
+                      checked = rule.enabled,
+                      onCheckedChange = { enabled ->
+                        pauseObserver(Intent(this@RulesActivity, RulesService::class.java))
+                        store.save(
+                            rules.map {
+                              if (it.id == rule.id) it.copy(enabled = enabled) else it
+                            }
+                        )
+                      },
                   )
                   TextButton(onClick = { editing = rule }) {
                     Text(stringResource(R.string.sr_rules_edit))
@@ -235,14 +249,14 @@ open class RulesActivity : ComponentActivity() {
                 }
                 Row {
                   TextButton(
-                    enabled = index > 0,
-                    onClick = { move(store, rules, index, index - 1) },
+                      enabled = index > 0,
+                      onClick = { move(store, rules, index, index - 1) },
                   ) {
                     Text(stringResource(R.string.sr_rules_higher))
                   }
                   TextButton(
-                    enabled = index < rules.lastIndex,
-                    onClick = { move(store, rules, index, index + 1) },
+                      enabled = index < rules.lastIndex,
+                      onClick = { move(store, rules, index, index + 1) },
                   ) {
                     Text(stringResource(R.string.sr_rules_lower))
                   }
@@ -252,13 +266,16 @@ open class RulesActivity : ComponentActivity() {
           }
         }
         HorizontalDivider()
-        Text(stringResource(R.string.sr_rules_journal), style = MaterialTheme.typography.titleLarge)
+        Text(
+            stringResource(R.string.sr_rules_journal),
+            style = MaterialTheme.typography.titleLarge,
+        )
         TextButton(onClick = { store.clearJournal() }) {
           Text(stringResource(R.string.sr_rules_clear_journal))
         }
         journal.forEach {
           Text(
-            "${DateFormat.getDateTimeInstance(DateFormat.SHORT, DateFormat.MEDIUM).format(Date(it.time))}\n${it.message}"
+              "${DateFormat.getDateTimeInstance(DateFormat.SHORT, DateFormat.MEDIUM).format(Date(it.time))}\n${it.message}"
           )
         }
         TextButton(onClick = { finish() }) { Text(stringResource(R.string.back)) }
@@ -266,40 +283,40 @@ open class RulesActivity : ComponentActivity() {
     }
     deleting?.let { rule ->
       AlertDialog(
-        onDismissRequest = { deleting = null },
-        title = { Text(stringResource(R.string.sr_rules_delete_title)) },
-        text = { Text(rule.name) },
-        confirmButton = {
-          TextButton(
-            onClick = {
-              pauseObserver(Intent(this@RulesActivity, RulesService::class.java))
-              store.save(rules.filterNot { it.id == rule.id })
-              deleting = null
+          onDismissRequest = { deleting = null },
+          title = { Text(stringResource(R.string.sr_rules_delete_title)) },
+          text = { Text(rule.name) },
+          confirmButton = {
+            TextButton(
+                onClick = {
+                  pauseObserver(Intent(this@RulesActivity, RulesService::class.java))
+                  store.save(rules.filterNot { it.id == rule.id })
+                  deleting = null
+                }
+            ) {
+              Text(stringResource(R.string.sr_rules_delete))
             }
-          ) {
-            Text(stringResource(R.string.sr_rules_delete))
-          }
-        },
-        dismissButton = {
-          TextButton(onClick = { deleting = null }) { Text(stringResource(R.string.cancel)) }
-        },
+          },
+          dismissButton = {
+            TextButton(onClick = { deleting = null }) { Text(stringResource(R.string.cancel)) }
+          },
       )
     }
     editing?.let { rule ->
       key(rule.id) {
         RuleEditor(
-          rule,
-          onDismiss = { editing = null },
-          onSave = { updated ->
-            // Pause before editing so permission/service types can be rechecked on resume.
-            pauseObserver(Intent(this@RulesActivity, RulesService::class.java))
-            store.save(
-              if (rules.any { it.id == updated.id })
-                rules.map { if (it.id == updated.id) updated else it }
-              else rules + updated
-            )
-            editing = null
-          },
+            rule,
+            onDismiss = { editing = null },
+            onSave = { updated ->
+              // Pause before editing so permission/service types can be rechecked on resume.
+              pauseObserver(Intent(this@RulesActivity, RulesService::class.java))
+              store.save(
+                  if (rules.any { it.id == updated.id })
+                      rules.map { if (it.id == updated.id) updated else it }
+                  else rules + updated
+              )
+              editing = null
+            },
         )
       }
     }
@@ -315,28 +332,28 @@ open class RulesActivity : ComponentActivity() {
 
 @Composable
 private fun conditionLabel(condition: RuleCondition): String =
-  when (condition) {
-    RuleCondition.WIFI_NAME -> stringResource(R.string.sr_condition_ssid)
-    RuleCondition.ANY_WIFI -> stringResource(R.string.sr_condition_wifi)
-    RuleCondition.MOBILE -> stringResource(R.string.sr_condition_mobile)
-    RuleCondition.OFFLINE -> stringResource(R.string.sr_condition_offline)
-    RuleCondition.ANY_NETWORK -> stringResource(R.string.sr_condition_any)
-  }
+    when (condition) {
+      RuleCondition.WIFI_NAME -> stringResource(R.string.sr_condition_ssid)
+      RuleCondition.ANY_WIFI -> stringResource(R.string.sr_condition_wifi)
+      RuleCondition.MOBILE -> stringResource(R.string.sr_condition_mobile)
+      RuleCondition.OFFLINE -> stringResource(R.string.sr_condition_offline)
+      RuleCondition.ANY_NETWORK -> stringResource(R.string.sr_condition_any)
+    }
 
 @Composable
 private fun actionLabel(action: RuleAction): String =
-  when (action) {
-    RuleAction.CONNECT -> stringResource(R.string.sr_action_connect)
-    RuleAction.DISCONNECT -> stringResource(R.string.sr_action_disconnect)
-    RuleAction.KEEP -> stringResource(R.string.sr_action_keep)
-  }
+    when (action) {
+      RuleAction.CONNECT -> stringResource(R.string.sr_action_connect)
+      RuleAction.DISCONNECT -> stringResource(R.string.sr_action_disconnect)
+      RuleAction.KEEP -> stringResource(R.string.sr_action_keep)
+    }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun RuleEditor(
-  rule: ConnectionRule,
-  onDismiss: () -> Unit,
-  onSave: (ConnectionRule) -> Unit,
+    rule: ConnectionRule,
+    onDismiss: () -> Unit,
+    onSave: (ConnectionRule) -> Unit,
 ) {
   var name by rememberSaveable(rule.id) { mutableStateOf(rule.name) }
   var ssid by rememberSaveable(rule.id) { mutableStateOf(rule.ssid) }
@@ -345,100 +362,101 @@ private fun RuleEditor(
   var conditionMenu by remember { mutableStateOf(false) }
   var actionMenu by remember { mutableStateOf(false) }
   AlertDialog(
-    onDismissRequest = onDismiss,
-    title = { Text(stringResource(R.string.sr_rules_editor)) },
-    text = {
-      Column(
-        Modifier.verticalScroll(rememberScrollState()),
-        verticalArrangement = Arrangement.spacedBy(10.dp),
-      ) {
-        OutlinedTextField(
-          value = name,
-          onValueChange = { name = it },
-          label = { Text(stringResource(R.string.sr_rules_name)) },
-          modifier = Modifier.fillMaxWidth(),
-          singleLine = true,
-        )
-        ExposedDropdownMenuBox(
-          expanded = conditionMenu,
-          onExpandedChange = { conditionMenu = it },
+      onDismissRequest = onDismiss,
+      title = { Text(stringResource(R.string.sr_rules_editor)) },
+      text = {
+        Column(
+            Modifier.verticalScroll(rememberScrollState()),
+            verticalArrangement = Arrangement.spacedBy(10.dp),
         ) {
           OutlinedTextField(
-            value = conditionLabel(condition),
-            onValueChange = {},
-            readOnly = true,
-            label = { Text(stringResource(R.string.sr_condition_label)) },
-            supportingText = { Text(stringResource(R.string.sr_condition_hint)) },
-            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(conditionMenu) },
-            modifier = Modifier.menuAnchor().fillMaxWidth(),
+              value = name,
+              onValueChange = { name = it },
+              label = { Text(stringResource(R.string.sr_rules_name)) },
+              modifier = Modifier.fillMaxWidth(),
+              singleLine = true,
           )
-          ExposedDropdownMenu(
-            expanded = conditionMenu,
-            onDismissRequest = { conditionMenu = false },
+          ExposedDropdownMenuBox(
+              expanded = conditionMenu,
+              onExpandedChange = { conditionMenu = it },
           ) {
-            RuleCondition.entries.forEach { item ->
-              DropdownMenuItem(
-                text = { Text(conditionLabel(item)) },
-                onClick = {
-                  condition = item
-                  conditionMenu = false
-                },
-              )
-            }
-          }
-        }
-        if (condition == RuleCondition.WIFI_NAME) {
-          OutlinedTextField(
-            value = ssid,
-            onValueChange = { ssid = it },
-            label = { Text(stringResource(R.string.sr_rules_ssid)) },
-            modifier = Modifier.fillMaxWidth(),
-            singleLine = true,
-          )
-          CurrentWifiButton(onSsid = { ssid = it })
-        }
-        ExposedDropdownMenuBox(expanded = actionMenu, onExpandedChange = { actionMenu = it }) {
-          OutlinedTextField(
-            value = actionLabel(action),
-            onValueChange = {},
-            readOnly = true,
-            label = { Text(stringResource(R.string.sr_action_label)) },
-            supportingText = { Text(stringResource(R.string.sr_action_hint)) },
-            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(actionMenu) },
-            modifier = Modifier.menuAnchor().fillMaxWidth(),
-          )
-          ExposedDropdownMenu(expanded = actionMenu, onDismissRequest = { actionMenu = false }) {
-            RuleAction.entries.forEach { item ->
-              DropdownMenuItem(
-                text = { Text(actionLabel(item)) },
-                onClick = {
-                  action = item
-                  actionMenu = false
-                },
-              )
-            }
-          }
-        }
-        Text(stringResource(R.string.sr_rules_save_note))
-      }
-    },
-    confirmButton = {
-      TextButton(
-        enabled = name.isNotBlank() && (condition != RuleCondition.WIFI_NAME || ssid.isNotBlank()),
-        onClick = {
-          onSave(
-            rule.copy(
-              name = name.trim(),
-              condition = condition,
-              ssid = if (condition == RuleCondition.WIFI_NAME) ssid else "",
-              action = action,
+            OutlinedTextField(
+                value = conditionLabel(condition),
+                onValueChange = {},
+                readOnly = true,
+                label = { Text(stringResource(R.string.sr_condition_label)) },
+                supportingText = { Text(stringResource(R.string.sr_condition_hint)) },
+                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(conditionMenu) },
+                modifier = Modifier.menuAnchor().fillMaxWidth(),
             )
-          )
-        },
-      ) {
-        Text(stringResource(R.string.sr_rules_save))
-      }
-    },
-    dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.cancel)) } },
+            ExposedDropdownMenu(
+                expanded = conditionMenu,
+                onDismissRequest = { conditionMenu = false },
+            ) {
+              RuleCondition.entries.forEach { item ->
+                DropdownMenuItem(
+                    text = { Text(conditionLabel(item)) },
+                    onClick = {
+                      condition = item
+                      conditionMenu = false
+                    },
+                )
+              }
+            }
+          }
+          if (condition == RuleCondition.WIFI_NAME) {
+            OutlinedTextField(
+                value = ssid,
+                onValueChange = { ssid = it },
+                label = { Text(stringResource(R.string.sr_rules_ssid)) },
+                modifier = Modifier.fillMaxWidth(),
+                singleLine = true,
+            )
+            CurrentWifiButton(onSsid = { ssid = it })
+          }
+          ExposedDropdownMenuBox(expanded = actionMenu, onExpandedChange = { actionMenu = it }) {
+            OutlinedTextField(
+                value = actionLabel(action),
+                onValueChange = {},
+                readOnly = true,
+                label = { Text(stringResource(R.string.sr_action_label)) },
+                supportingText = { Text(stringResource(R.string.sr_action_hint)) },
+                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(actionMenu) },
+                modifier = Modifier.menuAnchor().fillMaxWidth(),
+            )
+            ExposedDropdownMenu(expanded = actionMenu, onDismissRequest = { actionMenu = false }) {
+              RuleAction.entries.forEach { item ->
+                DropdownMenuItem(
+                    text = { Text(actionLabel(item)) },
+                    onClick = {
+                      action = item
+                      actionMenu = false
+                    },
+                )
+              }
+            }
+          }
+          Text(stringResource(R.string.sr_rules_save_note))
+        }
+      },
+      confirmButton = {
+        TextButton(
+            enabled =
+                name.isNotBlank() && (condition != RuleCondition.WIFI_NAME || ssid.isNotBlank()),
+            onClick = {
+              onSave(
+                  rule.copy(
+                      name = name.trim(),
+                      condition = condition,
+                      ssid = if (condition == RuleCondition.WIFI_NAME) ssid else "",
+                      action = action,
+                  )
+              )
+            },
+        ) {
+          Text(stringResource(R.string.sr_rules_save))
+        }
+      },
+      dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.cancel)) } },
   )
 }

@@ -555,5 +555,6 @@
     <string name="sr_failover_secondary">Secondary exit node (optional)</string>
     <string name="sr_failover_none">Not configured</string>
     <string name="sr_failover_no_target">Failover: no reachable target confirmed; VPN remains enabled, checks will retry.</string>
+    <string name="sr_failover_shared_automation">Failover uses the same automation service as connection rules. Starting or pausing here also starts or pauses connection rules.</string>
 </resources>
 

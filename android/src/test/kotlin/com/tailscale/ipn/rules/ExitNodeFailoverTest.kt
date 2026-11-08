@@ -15,38 +15,38 @@ import org.junit.Test
 @OptIn(ExperimentalCoroutinesApi::class)
 class ExitNodeFailoverTest {
   private val config =
-    ExitNodeFailoverConfig(
-      enabled = true,
-      controlURL = "https://headscale.example",
-      selfID = "phone",
-      primaryID = "home",
-      fallbackID = "vps",
-    )
+      ExitNodeFailoverConfig(
+          enabled = true,
+          controlURL = "https://headscale.example",
+          selfID = "phone",
+          primaryID = "home",
+          fallbackID = "vps",
+      )
 
   private fun action(
-    cfg: ExitNodeFailoverConfig = config,
-    url: String = config.controlURL,
-    self: String = config.selfID,
-    running: Boolean = true,
-    selected: String? = config.primaryID,
-    primary: Boolean? = false,
-    fallback: Boolean? = true,
+      cfg: ExitNodeFailoverConfig = config,
+      url: String = config.controlURL,
+      self: String = config.selfID,
+      running: Boolean = true,
+      selected: String? = config.primaryID,
+      primary: Boolean? = false,
+      fallback: Boolean? = true,
   ) = ExitNodeFailoverPolicy.action(cfg, url, self, running, selected, primary, fallback)
 
   @Test
   fun offlinePrimaryRemainsMonitoredAfterRouteWithdrawal() {
     val primary = Tailcfg.Node(StableID = "home", Online = false, AllowedIPs = emptyList())
     val backup =
-      Tailcfg.Node(StableID = "vps", Online = true, AllowedIPs = listOf("0.0.0.0/0", "::/0"))
+        Tailcfg.Node(StableID = "vps", Online = true, AllowedIPs = listOf("0.0.0.0/0", "::/0"))
     val peers = listOf(primary, backup)
     assertFalse(primary.isExitNode)
     assertEquals(primary, findFailoverPeer(peers, "home"))
     assertEquals(
-      FailoverAction.CHECK_FALLBACK,
-      action(
-        primary = findFailoverPeer(peers, "home")?.Online,
-        fallback = findFailoverPeer(peers, "vps")?.Online,
-      ),
+        FailoverAction.CHECK_FALLBACK,
+        action(
+            primary = findFailoverPeer(peers, "home")?.Online,
+            fallback = findFailoverPeer(peers, "vps")?.Online,
+        ),
     )
     assertNull(findFailoverPeer(peers, "removed"))
   }
@@ -56,8 +56,8 @@ class ExitNodeFailoverTest {
     assertEquals(FailoverAction.CHECK_FALLBACK, action())
     for (primary in listOf(true, null)) assertEquals(FailoverAction.NONE, action(primary = primary))
     for (fallback in listOf(false, null)) assertEquals(
-      FailoverAction.NONE,
-      action(fallback = fallback),
+        FailoverAction.NONE,
+        action(fallback = fallback),
     )
   }
 
@@ -77,8 +77,8 @@ class ExitNodeFailoverTest {
     assertEquals(FailoverAction.NONE, action(selected = "vps", primary = null))
     assertEquals(FailoverAction.NONE, action(selected = "vps", primary = false))
     assertEquals(
-      FailoverAction.NONE,
-      action(cfg = config.copy(autoReturn = false), selected = "vps", primary = true),
+        FailoverAction.NONE,
+        action(cfg = config.copy(autoReturn = false), selected = "vps", primary = true),
     )
   }
 
@@ -96,13 +96,13 @@ class ExitNodeFailoverTest {
   fun confirmedFailureMustAlsoHaveAReachableBackup() = runTest {
     val calls = mutableListOf<String>()
     val confirmation =
-      FailoverConfirmation(
-        { id ->
-          calls += id
-          id == "vps"
-        },
-        { delay(it) },
-      )
+        FailoverConfirmation(
+            { id ->
+              calls += id
+              id == "vps"
+            },
+            { delay(it) },
+        )
     assertTrue(confirmation.fallback(config))
     assertEquals(listOf("home", "home", "home", "vps"), calls)
     val unreachable = FailoverConfirmation({ false }, { delay(it) })
@@ -113,13 +113,13 @@ class ExitNodeFailoverTest {
   fun successfulPrimaryProbeCancelsFailoverBurst() = runTest {
     val calls = mutableListOf<String>()
     val confirmation =
-      FailoverConfirmation(
-        { id ->
-          calls += id
-          true
-        },
-        { delay(it) },
-      )
+        FailoverConfirmation(
+            { id ->
+              calls += id
+              true
+            },
+            { delay(it) },
+        )
     assertFalse(confirmation.fallback(config))
     assertEquals(listOf("home"), calls)
   }
@@ -128,13 +128,13 @@ class ExitNodeFailoverTest {
   fun returnWaitsAndRequiresTwoSuccessfulProbes() = runTest {
     var probes = 0
     val confirmation =
-      FailoverConfirmation(
-        {
-          ++probes
-          probes == 1
-        },
-        { delay(it) },
-      )
+        FailoverConfirmation(
+            {
+              ++probes
+              probes == 1
+            },
+            { delay(it) },
+        )
     assertFalse(confirmation.primary(config))
     assertEquals(2, probes)
     assertEquals(120000L, testScheduler.currentTime)
@@ -144,13 +144,13 @@ class ExitNodeFailoverTest {
   fun cancellationDuringNetworkOrAccountChangePreventsFurtherProbes() = runTest {
     val calls = mutableListOf<String>()
     val confirmation =
-      FailoverConfirmation(
-        { id ->
-          calls += id
-          false
-        },
-        { delay(it) },
-      )
+        FailoverConfirmation(
+            { id ->
+              calls += id
+              false
+            },
+            { delay(it) },
+        )
     var switched = false
     val task = launch { switched = confirmation.fallback(config) }
     runCurrent()
@@ -165,13 +165,13 @@ class ExitNodeFailoverTest {
   fun cancellationDuringReturnDelayPreventsSecondProbe() = runTest {
     var probes = 0
     val confirmation =
-      FailoverConfirmation(
-        {
-          ++probes
-          true
-        },
-        { delay(it) },
-      )
+        FailoverConfirmation(
+            {
+              ++probes
+              true
+            },
+            { delay(it) },
+        )
     val task = launch { confirmation.primary(config) }
     runCurrent()
     task.cancel()
@@ -186,9 +186,9 @@ class ExitNodeFailoverTest {
   @Test
   fun optionalSecondaryPreservesLegacyJsonAndRejectsDuplicates() {
     val legacy =
-      kotlinx.serialization.json.Json.decodeFromString<ExitNodeFailoverConfig>(
-        """{"enabled":true,"controlURL":"https://headscale.example","selfID":"phone","primaryID":"home","fallbackID":"vps"}"""
-      )
+        kotlinx.serialization.json.Json.decodeFromString<ExitNodeFailoverConfig>(
+            """{"enabled":true,"controlURL":"https://headscale.example","selfID":"phone","primaryID":"home","fallbackID":"vps"}"""
+        )
     assertTrue(legacy.valid)
     assertEquals(listOf("home", "vps"), legacy.priorityIDs)
     assertEquals(listOf("home", "home2", "vps"), triple.priorityIDs)
@@ -200,7 +200,7 @@ class ExitNodeFailoverTest {
   @Test
   fun priorityCandidatesRespectManualSelectionUnknownStatusAndReturnSetting() {
     fun candidates(selected: String?, status: Boolean?, cfg: ExitNodeFailoverConfig = triple) =
-      PriorityFailoverPolicy.candidates(cfg, selected, mapOf(selected.orEmpty() to status))
+        PriorityFailoverPolicy.candidates(cfg, selected, mapOf(selected.orEmpty() to status))
     assertEquals(listOf("home2", "vps"), candidates("home", false))
     assertEquals(listOf("home", "vps"), candidates("home2", false))
     assertEquals(listOf("home", "home2"), candidates("vps", true))
@@ -216,23 +216,23 @@ class ExitNodeFailoverTest {
   @Test
   fun confirmedOutagesChooseFirstReachableCandidateInPriorityOrder() = runTest {
     for ((selected, reachable, expected) in
-      listOf(
-        Triple("home", setOf("home2", "vps"), "home2"),
-        Triple("home", setOf("vps"), "vps"),
-        Triple("home2", setOf("vps"), "vps"),
-        Triple("home2", setOf("home", "vps"), "home"),
-      )) {
+        listOf(
+            Triple("home", setOf("home2", "vps"), "home2"),
+            Triple("home", setOf("vps"), "vps"),
+            Triple("home2", setOf("vps"), "vps"),
+            Triple("home2", setOf("home", "vps"), "home"),
+        )) {
       val calls = mutableListOf<String>()
       val candidates = triple.priorityIDs.filter { it != selected }
       val target =
-        PriorityFailoverConfirmation(
-            {
-              calls += it
-              it in reachable
-            },
-            { delay(it) },
-          )
-          .target(triple, selected, true, candidates)
+          PriorityFailoverConfirmation(
+                  {
+                    calls += it
+                    it in reachable
+                  },
+                  { delay(it) },
+              )
+              .target(triple, selected, true, candidates)
       assertEquals(expected, target)
       assertEquals(List(triple.failureCount) { selected }, calls.take(triple.failureCount))
     }
@@ -249,15 +249,15 @@ class ExitNodeFailoverTest {
   @Test
   fun returnsFromBothBackupsToHighestConfirmedReachablePriority() = runTest {
     for ((selected, reachable, expected) in
-      listOf(
-        Triple("vps", setOf("home2"), "home2"),
-        Triple("vps", setOf("home", "home2"), "home"),
-        Triple("home2", setOf("home"), "home"),
-      )) {
+        listOf(
+            Triple("vps", setOf("home2"), "home2"),
+            Triple("vps", setOf("home", "home2"), "home"),
+            Triple("home2", setOf("home"), "home"),
+        )) {
       val before = testScheduler.currentTime
       val target =
-        PriorityFailoverConfirmation({ it in reachable }, { delay(it) })
-          .target(triple, selected, false, triple.priorityIDs.takeWhile { it != selected })
+          PriorityFailoverConfirmation({ it in reachable }, { delay(it) })
+              .target(triple, selected, false, triple.priorityIDs.takeWhile { it != selected })
       assertEquals(expected, target)
       assertEquals(triple.returnSeconds * 1000L, testScheduler.currentTime - before)
     }
@@ -267,11 +267,11 @@ class ExitNodeFailoverTest {
   fun higherPriorityRecoveryDuringSecondaryConfirmationDefersLowerReturn() = runTest {
     var homeCalls = 0
     val target =
-      PriorityFailoverConfirmation(
-          { id -> id == "home2" || (id == "home" && ++homeCalls > 1) },
-          { delay(it) },
-        )
-        .target(triple, "vps", false, listOf("home", "home2"))
+        PriorityFailoverConfirmation(
+                { id -> id == "home2" || (id == "home" && ++homeCalls > 1) },
+                { delay(it) },
+            )
+            .target(triple, "vps", false, listOf("home", "home2"))
     assertNull(target)
   }
 
@@ -283,8 +283,8 @@ class ExitNodeFailoverTest {
     var target: String? = null
     val task = launch {
       target =
-        PriorityFailoverConfirmation({ true }, { delay(it) })
-          .target(triple, "vps", false, listOf("home", "home2"))
+          PriorityFailoverConfirmation({ true }, { delay(it) })
+              .target(triple, "vps", false, listOf("home", "home2"))
     }
     runCurrent()
     task.cancel()
