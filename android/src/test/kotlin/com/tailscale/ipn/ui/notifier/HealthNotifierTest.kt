@@ -311,5 +311,9 @@ class HealthNotifierTest {
     healthFlow.value = null
     settle()
     assertTrue(notifier.currentWarnings.value.any { it.WarnableCode == "dns-forward-failing" })
+    healthFlow.value = Health.State(Warnings = null)
+    settle()
+    assertTrue(notifier.currentWarnings.value.isEmpty())
+    assertNull(notifier.currentIcon.value)
   }
 }

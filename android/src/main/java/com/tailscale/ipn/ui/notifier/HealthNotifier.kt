@@ -63,7 +63,8 @@ class HealthNotifier(
             if (ipnState == Ipn.State.Running) {
               healthStateFlow
                   .distinctUntilChanged { old, new ->
-                    old?.Warnings.orEmpty() == new?.Warnings.orEmpty()
+                    if (old == null || new == null) old == new
+                    else old.Warnings.orEmpty() == new.Warnings.orEmpty()
                   }
                   .debounce(3000)
             } else {
