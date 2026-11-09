@@ -11,7 +11,6 @@ import com.tailscale.ipn.ui.model.Ipn
 import com.tailscale.ipn.ui.model.IpnLocal
 import com.tailscale.ipn.ui.model.Netmap
 import com.tailscale.ipn.ui.model.Tailcfg
-import com.tailscale.ipn.util.TSLog
 import kotlin.time.Duration.Companion.milliseconds
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -31,7 +30,6 @@ import org.mockito.MockedConstruction
 import org.mockito.Mockito.mockConstruction
 import org.mockito.kotlin.any
 import org.mockito.kotlin.doAnswer
-import org.mockito.kotlin.mock
 import org.mockito.kotlin.whenever
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -47,7 +45,6 @@ class FavoritesManagerTest {
           TKAEnabled = false,
       )
   private val netmap = MutableStateFlow<Netmap.NetworkMap?>(networkMap)
-  private lateinit var originalLogWrapper: TSLog.LibtailscaleWrapper
 
   private data class PendingWrite(
       val request: FavoritesRequest,
@@ -60,8 +57,6 @@ class FavoritesManagerTest {
 
   @Before
   fun setUp() {
-    originalLogWrapper = TSLog.libtailscaleWrapper
-    TSLog.libtailscaleWrapper = mock()
 
     val profile =
         IpnLocal.LoginProfile(
@@ -97,7 +92,6 @@ class FavoritesManagerTest {
   @After
   fun tearDown() {
     clientConstruction.close()
-    TSLog.libtailscaleWrapper = originalLogWrapper
   }
 
   private fun favorites(vararg ids: String) = Favorites(devices = ids.map { FavoriteItem(id = it) })

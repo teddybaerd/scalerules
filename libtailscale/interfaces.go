@@ -4,8 +4,6 @@
 package libtailscale
 
 import (
-	"log"
-
 	_ "golang.org/x/mobile/bind"
 )
 
@@ -50,9 +48,6 @@ type AppContext interface {
 
 	// IsChromeOS reports whether we're on a ChromeOS device.
 	IsChromeOS() (bool, error)
-
-	// IsClientLoggingEnabled reports whether the user has enabled remote client logging.
-	IsClientLoggingEnabled() (bool, error)
 
 	// GetInterfacesAsJson gets a JSON representation of all network
 	// interfaces.
@@ -140,10 +135,6 @@ type Application interface {
 	// NotifyPolicyChanged notifies the backend about a changed MDM policy,
 	// so it can re-read it via the [syspolicyHandler].
 	NotifyPolicyChanged()
-
-	// SetClientLoggingEnabled sets whether diagnostic logs are uploaded to
-	// Tailscale's logging backend. Changes take effect immediately.
-	SetClientLoggingEnabled(enabled bool)
 
 	// WatchNotifications provides a mechanism for subscribing to ipn.Notify
 	// updates. The given NotificationCallback's OnNotify function is invoked
@@ -241,16 +232,6 @@ func RequestVPN(service IPNService) {
 
 func ServiceDisconnect(service IPNService) {
 	onDisconnect <- service
-}
-
-func SendLog(logstr []byte) {
-	select {
-	case onLog <- string(logstr):
-		// Successfully sent log
-	default:
-		// Channel is full, log not sent
-		log.Printf("Log %v not sent", logstr) // missing argument in original code
-	}
 }
 
 func SetShareFileHelper(fileHelper ShareFileHelper) {

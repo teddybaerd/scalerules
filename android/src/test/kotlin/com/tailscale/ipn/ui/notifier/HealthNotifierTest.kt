@@ -8,8 +8,6 @@ import com.tailscale.ipn.UninitializedApp
 import com.tailscale.ipn.ui.model.Health
 import com.tailscale.ipn.ui.model.Health.UnhealthyState
 import com.tailscale.ipn.ui.model.Ipn
-import com.tailscale.ipn.util.TSLog
-import com.tailscale.ipn.util.TSLog.LibtailscaleWrapper
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -18,20 +16,15 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
-import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
-import org.mockito.ArgumentMatchers.anyString
-import org.mockito.Mockito.doNothing
 import org.mockito.Mockito.mock
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class HealthNotifierTest {
-
-  private lateinit var originalWrapper: LibtailscaleWrapper
 
   private fun derpWarning() =
       UnhealthyState(
@@ -59,17 +52,8 @@ class HealthNotifierTest {
 
   @Before
   fun setUp() {
-    val logMock = mock(LibtailscaleWrapper::class.java)
-    doNothing().`when`(logMock).sendLog(anyString(), anyString())
-    originalWrapper = TSLog.libtailscaleWrapper
-    TSLog.libtailscaleWrapper = logMock
 
     UninitializedApp.notificationManager = mock(NotificationManagerCompat::class.java)
-  }
-
-  @After
-  fun tearDown() {
-    TSLog.libtailscaleWrapper = originalWrapper
   }
 
   private fun kotlinx.coroutines.test.TestScope.settle() {

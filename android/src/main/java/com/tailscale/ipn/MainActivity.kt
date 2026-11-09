@@ -67,7 +67,6 @@ import com.tailscale.ipn.ui.util.DeepLinkNavigator
 import com.tailscale.ipn.ui.util.set
 import com.tailscale.ipn.ui.util.universalFit
 import com.tailscale.ipn.ui.view.AboutView
-import com.tailscale.ipn.ui.view.BugReportView
 import com.tailscale.ipn.ui.view.DNSSettingsView
 import com.tailscale.ipn.ui.view.ExitNodePicker
 import com.tailscale.ipn.ui.view.HealthView
@@ -346,7 +345,6 @@ class MainActivity : ComponentActivity() {
                   )
               val settingsNav =
                   SettingsNav(
-                      onNavigateToBugReport = { navController.navigate("bugReport") },
                       onNavigateToAbout = { navController.navigate("about") },
                       onNavigateToDNSSettings = { navController.navigate("dnsSettings") },
                       onNavigateToSplitTunneling = { navController.navigate("splitTunneling") },
@@ -424,7 +422,6 @@ class MainActivity : ComponentActivity() {
                     PingViewModel(),
                 )
               }
-              composable("bugReport") { BugReportView(backTo("settings")) }
               composable("dnsSettings") { DNSSettingsView(backTo("settings")) }
               composable("splitTunneling") { SplitTunnelAppPickerView(backTo("settings")) }
               composable("tailnetLock") { TailnetLockSetupView(backTo("settings")) }

@@ -23,9 +23,6 @@ var (
 	// onDNSConfigChanged is notified when the network changes and the DNS config needs to be updated. It receives the updated interface name.
 	onDNSConfigChanged = make(chan string, 1)
 
-	// onLog receives Android logs to be sent to the logger
-	onLog = make(chan string, 10)
-
 	// onShareFileHelper receives ShareFileHelper references when the app is initialized so that files can be received via Storage Access Framework
 	onShareFileHelper = make(chan ShareFileHelper, 1)
 )

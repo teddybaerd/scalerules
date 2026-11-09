@@ -6,20 +6,10 @@ package libtailscale
 import (
 	"context"
 	"log"
-	"net/http"
-	"path/filepath"
 	"runtime/debug"
-	"time"
 
-	"tailscale.com/health"
-	"tailscale.com/logpolicy"
-	"tailscale.com/logtail"
-	"tailscale.com/logtail/filch"
 	"tailscale.com/net/netmon"
 	"tailscale.com/types/key"
-	"tailscale.com/types/logger"
-	"tailscale.com/types/logid"
-	"tailscale.com/util/clientmetric"
 	"tailscale.com/util/syspolicy/rsop"
 	"tailscale.com/util/syspolicy/setting"
 )
@@ -27,7 +17,6 @@ import (
 const defaultMTU = 1280 // minimalMTU from wgengine/userspace.go
 
 const (
-	logPrefKey               = "privatelogid"
 	loginMethodPrefKey       = "loginmethod"
 	customLoginServerPrefKey = "customloginserver"
 )
@@ -104,72 +93,4 @@ func (a *App) isChromeOS() bool {
 		panic(err)
 	}
 	return isChromeOS
-}
-
-func (a *App) isClientLoggingEnabled() bool {
-	isClientLoggingEnabled, err := a.appCtx.IsClientLoggingEnabled()
-	if err != nil {
-		panic(err)
-	}
-	return isClientLoggingEnabled
-}
-
-// SetupLogs sets up remote logging.
-func (b *backend) setupLogs(logDir string, logID logid.PrivateID, logf logger.Logf, health *health.Tracker, enableUpload bool) {
-	if b.netMon == nil {
-		panic("netMon must be created prior to SetupLogs")
-	}
-	transport := logpolicy.NewLogtailTransport(logtail.DefaultHost, b.netMon, health, log.Printf)
-
-	logcfg := logtail.Config{
-		Collection:          logtail.CollectionNode,
-		PrivateID:           logID,
-		Stderr:              log.Writer(),
-		MetricsDelta:        clientmetric.EncodeLogTailMetricsDelta,
-		IncludeProcID:       true,
-		IncludeProcSequence: true,
-		HTTPC:               &http.Client{Transport: transport},
-		CompressLogs:        true,
-		// Start the logger disabled if the user opted out, so not even
-		// the internal "logtail started" banner reaches the server. The
-		// SetClientLoggingEnabled path flips this at runtime.
-		Disabled: !enableUpload,
-	}
-	logcfg.FlushDelayFn = func() time.Duration { return 2 * time.Minute }
-
-	filchOpts := filch.Options{
-		ReplaceStderr: true,
-	}
-
-	var filchErr error
-	if logDir != "" {
-		logPath := filepath.Join(logDir, "ipn.log.")
-		logcfg.Buffer, filchErr = filch.New(logPath, filchOpts)
-	}
-
-	b.logger = logtail.NewLogger(logcfg, logf)
-	if !enableUpload {
-		log.Printf("remote log upload disabled by user preference")
-	}
-
-	log.SetFlags(0)
-	log.SetOutput(b.logger)
-
-	log.Printf("goSetupLogs: success")
-
-	if logDir == "" {
-		log.Printf("SetupLogs: no logDir, storing logs in memory")
-	}
-	if filchErr != nil {
-		log.Printf("SetupLogs: filch setup failed: %v", filchErr)
-	}
-
-	go func() {
-		for {
-			select {
-			case logstr := <-onLog:
-				b.logger.Logf("%s", logstr)
-			}
-		}
-	}()
 }

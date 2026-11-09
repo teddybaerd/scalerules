@@ -147,6 +147,7 @@ The current foundation is **Tailscale Android 1.104.5**. ScaleRules preserves th
 
 The [security and upstream monitor](https://github.com/teddybaerd/scalerules/issues/6) collects new bulletins and review candidates. Matching a package version to an advisory does not establish an exploitable Android vulnerability. VPN engine changes are reviewed and tested before adoption.
 
+- [Diagnostic logging and remaining network connections](docs/PRIVACY.md)
 - [Provenance and upstream updates](docs/UPSTREAM.md)
 - [Security monitoring and its limitations](docs/SECURITY-MONITORING.md)
 - [Permanent signing and key backup](docs/SIGNING.md)
@@ -298,6 +299,7 @@ Die aktuelle Grundlage ist **Tailscale Android 1.104.5**. ScaleRules behält die
 
 Der [Sicherheits- und Upstream-Monitor](https://github.com/teddybaerd/scalerules/issues/6) sammelt neue Meldungen und Prüfkandidaten. Paketversions-Treffer sind kein Nachweis einer ausnutzbaren Android-Schwachstelle. Änderungen am VPN-Kern werden geprüft und getestet übernommen.
 
+- [Diagnoseprotokolle und verbleibende Netzwerkverbindungen](docs/PRIVACY.md)
 - [Herkunft und Upstream-Updates](docs/UPSTREAM.md)
 - [Sicherheitsüberwachung und ihre Grenzen](docs/SECURITY-MONITORING.md)
 - [Dauerhafte Signatur und Schlüsselsicherung](docs/SIGNING.md)

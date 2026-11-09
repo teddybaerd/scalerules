@@ -361,10 +361,6 @@ class App : UninitializedApp(), libtailscale.AppContext, ViewModelStoreOwner {
     return packageManager.hasSystemFeature("android.hardware.type.pc")
   }
 
-  override fun isClientLoggingEnabled(): Boolean {
-    return getIsClientLoggingEnabled()
-  }
-
   @Serializable
   data class AddrJson(
       val ip: String,
@@ -574,7 +570,6 @@ open class UninitializedApp : Application() {
     private const val SELECTED_APPS_KEY = "disallowedApps"
     private const val ALLOW_SELECTED_APPS_KEY = "allowSelectedApps"
 
-    private const val IS_CLIENT_LOGGING_ENABLED_KEY = "isClientLoggingEnabled"
     // File for shared preferences that are not encrypted.
     private const val UNENCRYPTED_PREFERENCES = "unencrypted"
     private lateinit var appInstance: UninitializedApp
@@ -765,22 +760,6 @@ open class UninitializedApp : Application() {
       )
     }
     return builder.build()
-  }
-
-  fun getIsClientLoggingEnabled(): Boolean {
-
-    // Force client logging to be enabled, when the device is managed by MDM
-    // Later this could become a dedicated MDMSetting / restriction.
-    if (MDMSettings.isMDMConfigured) {
-      return true
-    }
-
-    return getUnencryptedPrefs().getBoolean(IS_CLIENT_LOGGING_ENABLED_KEY, true)
-  }
-
-  fun updateIsClientLoggingEnabled(value: Boolean) {
-    getUnencryptedPrefs().edit().putBoolean(IS_CLIENT_LOGGING_ENABLED_KEY, value).apply()
-    App.get().getLibtailscaleApp().setClientLoggingEnabled(getIsClientLoggingEnabled())
   }
 
   fun updateUserSelectedPackages(packageNames: List<String>) {

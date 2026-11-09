@@ -12,6 +12,10 @@ public class Log {
         return 0;
     }
 
+    public static int v(String tag, String msg) { return d(tag, msg); }
+
+    public static int e(String tag, String msg, Throwable error) { return e(tag, msg); }
+
     public static int i(String tag, String msg) {
         System.out.println("INFO: " + tag + ": " + msg);
         return 0;

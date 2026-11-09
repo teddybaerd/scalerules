@@ -77,13 +77,13 @@ var googleDNSServers = []netip.Addr{
 }
 
 func (b *backend) updateTUN(rcfg *router.Config, dcfg *dns.OSConfig) (err error) {
-	b.logger.Logf("updateTUN: changed")
-	defer b.logger.Logf("updateTUN: finished")
+	log.Printf("updateTUN: changed")
+	defer log.Printf("updateTUN: finished")
 
 	if disableTUN := len(rcfg.LocalAddrs) == 0; disableTUN {
-		b.logger.Logf("updateTUN: closing old TUNs")
+		log.Printf("updateTUN: closing old TUNs")
 		b.CloseTUNs()
-		b.logger.Logf("updateTUN: closed old TUNs")
+		log.Printf("updateTUN: closed old TUNs")
 
 		// Since the previous tunnel(s) are closed, the [multiTUN] device is
 		// not operational until a new underlying tunnel is created and added,
@@ -96,18 +96,18 @@ func (b *backend) updateTUN(rcfg *router.Config, dcfg *dns.OSConfig) (err error)
 		//
 		// TODO(nickkhyl): revisit and simplify the [multiTUN] implementation?
 		if b.devices.Down() {
-			b.logger.Logf("updateTUN: tunnel brought down: %v", err)
+			log.Printf("updateTUN: tunnel brought down: %v", err)
 		}
 		return nil
 	}
 
 	builder := vpnService.service.NewBuilder()
-	b.logger.Logf("updateTUN: got new builder")
+	log.Printf("updateTUN: got new builder")
 
 	if err := builder.SetMTU(defaultMTU); err != nil {
 		return err
 	}
-	b.logger.Logf("updateTUN: set MTU")
+	log.Printf("updateTUN: set MTU")
 	if dcfg != nil {
 		nameservers := dcfg.Nameservers
 		if b.avoidEmptyDNS && len(nameservers) == 0 {
@@ -123,7 +123,7 @@ func (b *backend) updateTUN(rcfg *router.Config, dcfg *dns.OSConfig) (err error)
 				return err
 			}
 		}
-		b.logger.Logf("updateTUN: set nameservers")
+		log.Printf("updateTUN: set nameservers")
 	}
 
 	// Decide whether to use ExcludeRoute (API 33+) or compute included prefixes
@@ -154,12 +154,12 @@ func (b *backend) updateTUN(rcfg *router.Config, dcfg *dns.OSConfig) (err error)
 			}
 		}
 
-		b.logger.Logf("updateTUN: added %d routes (exclude-mode), localRoutes=%d", len(rcfg.Routes), len(rcfg.LocalRoutes))
+		log.Printf("updateTUN: added %d routes (exclude-mode), localRoutes=%d", len(rcfg.Routes), len(rcfg.LocalRoutes))
 	} else {
 		// Older APIs: compute allowed-minus-disallowed prefixes and AddRoute them.
 		prefixesV4, prefixesV6, err := rangescalc.Calculate(rcfg.Routes, rcfg.LocalRoutes)
 		if err != nil {
-			b.logger.Logf("updateTUN: route calculation error: %v", err)
+			log.Printf("updateTUN: route calculation error: %v", err)
 			return err
 		}
 
@@ -176,7 +176,7 @@ func (b *backend) updateTUN(rcfg *router.Config, dcfg *dns.OSConfig) (err error)
 			}
 		}
 
-		b.logger.Logf(
+		log.Printf(
 			"updateTUN: added routes: v4=%d v6=%d total=%d (input routes=%d, localRoutes=%d)",
 			len(prefixesV4),
 			len(prefixesV6),
@@ -184,10 +184,10 @@ func (b *backend) updateTUN(rcfg *router.Config, dcfg *dns.OSConfig) (err error)
 			len(rcfg.Routes),
 			len(rcfg.LocalRoutes),
 		)
-		b.logger.Logf("updateTUN: input routes: %v", rcfg.Routes)
-		b.logger.Logf("updateTUN: input local routes: %v", rcfg.LocalRoutes)
-		b.logger.Logf("updateTUN: effective routes v4: %v", prefixesV4)
-		b.logger.Logf("updateTUN: effective routes v6: %v", prefixesV6)
+		log.Printf("updateTUN: input routes: %v", rcfg.Routes)
+		log.Printf("updateTUN: input local routes: %v", rcfg.LocalRoutes)
+		log.Printf("updateTUN: effective routes v4: %v", prefixesV4)
+		log.Printf("updateTUN: effective routes v6: %v", prefixesV6)
 	}
 
 	for _, addr := range rcfg.LocalAddrs {
@@ -195,13 +195,13 @@ func (b *backend) updateTUN(rcfg *router.Config, dcfg *dns.OSConfig) (err error)
 			return err
 		}
 	}
-	b.logger.Logf("updateTUN: added %d local addrs", len(rcfg.LocalAddrs))
+	log.Printf("updateTUN: added %d local addrs", len(rcfg.LocalAddrs))
 
 	parcelFD, err := builder.Establish()
 	if err != nil {
 		if strings.Contains(err.Error(), "INTERACT_ACROSS_USERS") {
 			// Update VPN status if VPN interface cannot be created
-			b.logger.Logf("updateTUN: could not establish VPN because %v", err)
+			log.Printf("updateTUN: could not establish VPN because %v", err)
 			vpnService.service.UpdateVpnStatus(false)
 			return errMultipleUsers
 		}
@@ -209,10 +209,10 @@ func (b *backend) updateTUN(rcfg *router.Config, dcfg *dns.OSConfig) (err error)
 	}
 	log.Printf("Setting vpn activity status to true")
 	vpnService.service.UpdateVpnStatus(true)
-	b.logger.Logf("updateTUN: established VPN")
+	log.Printf("updateTUN: established VPN")
 
 	if parcelFD == nil {
-		b.logger.Logf("updateTUN: could not establish VPN because builder.Establish returned a nil ParcelFileDescriptor")
+		log.Printf("updateTUN: could not establish VPN because builder.Establish returned a nil ParcelFileDescriptor")
 		return errVPNNotPrepared
 	}
 
@@ -224,7 +224,7 @@ func (b *backend) updateTUN(rcfg *router.Config, dcfg *dns.OSConfig) (err error)
 	if err != nil {
 		return fmt.Errorf("detachFd: %v", err)
 	}
-	b.logger.Logf("updateTUN: detached FD")
+	log.Printf("updateTUN: detached FD")
 
 	// Create TUN device.
 	tunDev, _, err := tun.CreateUnmonitoredTUNFromFD(int(tunFD))
@@ -232,13 +232,13 @@ func (b *backend) updateTUN(rcfg *router.Config, dcfg *dns.OSConfig) (err error)
 		closeFileDescriptor()
 		return err
 	}
-	b.logger.Logf("updateTUN: created TUN device")
+	log.Printf("updateTUN: created TUN device")
 
 	b.devices.add(tunDev)
-	b.logger.Logf("updateTUN: added TUN device")
+	log.Printf("updateTUN: added TUN device")
 
 	if b.devices.Up() {
-		b.logger.Logf("tunnel brought up")
+		log.Printf("tunnel brought up")
 	}
 
 	b.lastCfg = rcfg

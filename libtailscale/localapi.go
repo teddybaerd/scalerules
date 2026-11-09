@@ -21,6 +21,8 @@ import (
 	"time"
 
 	"tailscale.com/ipn"
+
+	"github.com/tailscale/tailscale-android/internal/privacypolicy"
 )
 
 // CallLocalAPI is the method for making localapi calls from Kotlin. It calls
@@ -111,12 +113,6 @@ func (app *App) NotifyPolicyChanged() {
 	app.policyStore.notifyChanged()
 }
 
-func (app *App) SetClientLoggingEnabled(enabled bool) {
-	if lg := app.logger.Load(); lg != nil {
-		lg.SetEnabled(enabled)
-	}
-}
-
 func (app *App) EditPrefs(prefs ipn.MaskedPrefs) (LocalAPIResponse, error) {
 	r, w := io.Pipe()
 	go func() {
@@ -147,10 +143,13 @@ func (app *App) callLocalAPI(timeoutMillis int, method, endpoint string, header 
 	}
 
 	req, err := http.NewRequestWithContext(ctx, method, endpoint, body)
-	maps.Copy(req.Header, header)
 	if err != nil {
 		return nil, fmt.Errorf("error creating new request for %s: %w", endpoint, err)
 	}
+	if !privacypolicy.AllowsLocalAPI(req.URL.Path) {
+		return nil, fmt.Errorf("diagnostic export is disabled in ScaleRules")
+	}
+	maps.Copy(req.Header, header)
 	deadline, _ := ctx.Deadline()
 	pipeReader, pipeWriter := net.Pipe()
 	pipeReader.SetDeadline(deadline)

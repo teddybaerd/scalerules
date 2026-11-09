@@ -8,17 +8,13 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -65,8 +61,6 @@ fun SettingsView(
   val isVPNPrepared by appViewModel.vpnPrepared.collectAsState()
   val showTailnetLock by MDMSettings.manageTailnetLock.flow.collectAsState()
   val useTailscaleSubnets by MDMSettings.useTailscaleSubnets.flow.collectAsState()
-  val isClientRemoteLoggingEnabled by viewModel.isClientRemoteLoggingEnabled.collectAsState()
-  var showDisableLoggingDialog by remember { mutableStateOf(false) }
 
   Scaffold(
       topBar = {
@@ -147,26 +141,6 @@ fun SettingsView(
         Setting.Text(R.string.subnet_routing, onClick = settingsNav.onNavigateToSubnetRouting)
       }
 
-      Lists.ItemDivider()
-      Setting.Switch(
-          R.string.client_remote_logging_enabled,
-          subtitle =
-              stringResource(
-                  if (MDMSettings.isMDMConfigured)
-                      R.string.client_remote_logging_enabled_subtitle_mdm
-                  else R.string.client_remote_logging_enabled_subtitle
-              ),
-          isOn = isClientRemoteLoggingEnabled,
-          enabled = !MDMSettings.isMDMConfigured,
-          onToggle = {
-            if (isClientRemoteLoggingEnabled) {
-              showDisableLoggingDialog = true
-            } else {
-              viewModel.toggleIsClientRemoteLoggingEnabled()
-            }
-          },
-      )
-
       if (!AndroidTVUtil.isAndroidTV()) {
         Lists.ItemDivider()
         Setting.Text(R.string.permissions, onClick = settingsNav.onNavigateToPermissions)
@@ -228,32 +202,6 @@ fun SettingsView(
         Setting.Text(R.string.mdm_settings, onClick = settingsNav.onNavigateToMDMSettings)
       }
     }
-  }
-
-  if (showDisableLoggingDialog) {
-    AlertDialog(
-        onDismissRequest = { showDisableLoggingDialog = false },
-        title = { Text(stringResource(R.string.client_remote_logging_disable_confirm_title)) },
-        text = { Text(stringResource(R.string.client_remote_logging_disable_confirm_message)) },
-        confirmButton = {
-          TextButton(
-              onClick = {
-                showDisableLoggingDialog = false
-                viewModel.toggleIsClientRemoteLoggingEnabled()
-              }
-          ) {
-            Text(
-                stringResource(R.string.client_remote_logging_disable_confirm_button),
-                color = MaterialTheme.colorScheme.error,
-            )
-          }
-        },
-        dismissButton = {
-          TextButton(onClick = { showDisableLoggingDialog = false }) {
-            Text(stringResource(R.string.cancel))
-          }
-        },
-    )
   }
 }
 
@@ -353,5 +301,5 @@ fun SettingsPreview() {
   vm.tailNetLockEnabled.set(true)
   vm.isAdmin.set(true)
   vm.managedByOrganization.set("Tails and Scales Inc.")
-  SettingsView(SettingsNav({}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}), vm)
+  SettingsView(SettingsNav({}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}), vm)
 }

@@ -18,11 +18,6 @@ class MDMSettingsChangedReceiver : BroadcastReceiver() {
           context?.getSystemService(Context.RESTRICTIONS_SERVICE) as RestrictionsManager
 
       MDMSettings.update(App.get(), restrictionsManager)
-
-      // MDM state may have flipped the effective client-logging value
-      // (getIsClientLoggingEnabled forces true under MDM); push the
-      // current effective value so the backend toggles immediately.
-      App.get().getLibtailscaleApp().setClientLoggingEnabled(App.get().getIsClientLoggingEnabled())
     }
   }
 }

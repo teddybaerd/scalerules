@@ -374,7 +374,7 @@ checkandroidsdk: ## Check that Android SDK is installed
 
 .PHONY: go-test                                                                                                                                                                                                 
   go-test: ## Run the Go tests (excludes packages requiring Android NDK)                                                                                                                                                                                     
-	./tool/go test $$(./tool/go list ./... | grep -v '^github.com/tailscale/tailscale-android/libtailscale$$')    
+	./tool/go test -tags="$$(./build-tags.sh)" $$(./tool/go list -tags="$$(./build-tags.sh)" ./... | grep -v '^github.com/tailscale/tailscale-android/libtailscale$$')
 
 .PHONY: test
 test: gradle-dependencies ## Run the Android tests

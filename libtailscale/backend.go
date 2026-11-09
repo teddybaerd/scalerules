@@ -15,8 +15,8 @@ import (
 	"reflect"
 	"runtime/debug"
 	"sync"
-	"sync/atomic"
 
+	"github.com/tailscale/tailscale-android/internal/privacypolicy"
 	"tailscale.com/drive/driveimpl"
 	_ "tailscale.com/feature/condregister"
 	"tailscale.com/feature/taildrop"
@@ -25,7 +25,6 @@ import (
 	"tailscale.com/ipn/ipnauth"
 	"tailscale.com/ipn/ipnlocal"
 	"tailscale.com/ipn/localapi"
-	"tailscale.com/logtail"
 	"tailscale.com/net/dns"
 	"tailscale.com/net/netmon"
 	"tailscale.com/net/netns"
@@ -50,19 +49,13 @@ type App struct {
 	// appCtx is a global reference to the com.tailscale.ipn.App instance.
 	appCtx AppContext
 
-	store             *stateStore
-	policyStore       *syspolicyStore
-	logIDPublicAtomic atomic.Pointer[logid.PublicID]
+	store       *stateStore
+	policyStore *syspolicyStore
 
 	localAPIHandler http.Handler
 	backend         *ipnlocal.LocalBackend
 	ready           sync.WaitGroup
 	backendMu       sync.Mutex
-
-	// logger is the logtail logger whose uploads follow the user's
-	// IsClientLoggingEnabled preference. Populated once runBackend wires
-	// up the backend; nil before then.
-	logger atomic.Pointer[logtail.Logger]
 }
 
 func start(dataDir, directFileRoot string, hwAttestationPref bool, appCtx AppContext) Application {
@@ -73,6 +66,7 @@ func start(dataDir, directFileRoot string, hwAttestationPref bool, appCtx AppCon
 		}
 	}()
 
+	privacypolicy.Initialize()
 	initLogging(appCtx)
 	// Set XDG_CACHE_HOME to make os.UserCacheDir work.
 	if _, exists := os.LookupEnv("XDG_CACHE_HOME"); !exists {
@@ -101,9 +95,6 @@ type backend struct {
 	lastCfg    *router.Config
 	lastDNSCfg *dns.OSConfig
 	netMon     *netmon.Monitor
-
-	logIDPublic logid.PublicID
-	logger      *logtail.Logger
 
 	bus *eventbus.Bus
 
@@ -145,8 +136,6 @@ func (a *App) runBackend(ctx context.Context, hardwareAttestation bool) error {
 	if err != nil {
 		return err
 	}
-	a.logIDPublicAtomic.Store(&b.logIDPublic)
-	a.logger.Store(b.logger)
 	a.backend = b.backend
 	if hardwareAttestation {
 		a.backend.SetHardwareAttested()
@@ -160,7 +149,6 @@ func (a *App) runBackend(ctx context.Context, hardwareAttestation bool) error {
 		Actor:    ipnauth.Self,
 		Backend:  b.backend,
 		Logf:     log.Printf,
-		LogID:    *a.logIDPublicAtomic.Load(),
 		EventBus: b.bus,
 	}
 	h := localapi.NewHandler(hc)
@@ -301,30 +289,11 @@ func (a *App) newBackend(dataDir string, appCtx AppContext, store *stateStore,
 		bus:      sys.Bus.Get(),
 	}
 
-	var logID logid.PrivateID
-	logID.UnmarshalText([]byte("dead0000dead0000dead0000dead0000dead0000dead0000dead0000dead0000"))
-	storedLogID, err := store.read(logPrefKey)
-	// In all failure cases we ignore any errors and continue with the dead value above.
-	if err != nil || storedLogID == nil {
-		// Read failed or there was no previous log id.
-		newLogID, err := logid.NewPrivateID()
-		if err == nil {
-			logID = newLogID
-			enc, err := newLogID.MarshalText()
-			if err == nil {
-				store.write(logPrefKey, enc)
-			}
-		}
-	} else {
-		logID.UnmarshalText([]byte(storedLogID))
-	}
-
 	netMon, err := netmon.New(b.bus, logf)
 	if err != nil {
 		log.Printf("netmon.New: %v", err)
 	}
 	b.netMon = netMon
-	b.setupLogs(dataDir, logID, logf, sys.HealthTracker.Get(), a.isClientLoggingEnabled())
 	dialer := new(tsdial.Dialer)
 	vf := &VPNFacade{
 		SetBoth:           b.setCfg,
@@ -348,7 +317,6 @@ func (a *App) newBackend(dataDir string, appCtx AppContext, store *stateStore,
 		return nil, fmt.Errorf("runBackend: NewUserspaceEngine: %v", err)
 	}
 	sys.Set(engine)
-	b.logIDPublic = logID.Public()
 	ns, err := netstack.Create(logf, sys.Tun.Get(), engine, sys.MagicSock.Get(), dialer, sys.DNSManager.Get(), sys.ProxyMapper())
 	if err != nil {
 		return nil, fmt.Errorf("netstack.Create: %w", err)
@@ -360,7 +328,7 @@ func (a *App) newBackend(dataDir string, appCtx AppContext, store *stateStore,
 	if w, ok := sys.Tun.GetOK(); ok {
 		w.Start()
 	}
-	lb, err := ipnlocal.NewLocalBackend(logf, logID.Public(), sys, 0)
+	lb, err := ipnlocal.NewLocalBackend(logf, logid.PublicID{}, sys, 0)
 	if ext, ok := ipnlocal.GetExt[*taildrop.Extension](lb); ok {
 		ext.SetFileOps(newAndroidFileOps(a.shareFileHelper))
 	}
@@ -371,9 +339,6 @@ func (a *App) newBackend(dataDir string, appCtx AppContext, store *stateStore,
 	}
 	if err := ns.Start(lb); err != nil {
 		return nil, fmt.Errorf("startNetstack: %w", err)
-	}
-	if b.logger != nil {
-		lb.SetLogFlusher(b.logger.StartFlush)
 	}
 	b.engine = engine
 	b.backend = lb
@@ -401,7 +366,7 @@ func (a *App) watchFileOpsChanges() {
 
 func (b *backend) isConfigNonNilAndDifferent(rcfg *router.Config, dcfg *dns.OSConfig) bool {
 	if reflect.DeepEqual(rcfg, b.lastCfg) && reflect.DeepEqual(dcfg, b.lastDNSCfg) {
-		b.logger.Logf("isConfigNonNilAndDifferent: no change to Routes or DNS, ignore")
+		log.Printf("isConfigNonNilAndDifferent: no change to Routes or DNS, ignore")
 		return false
 	}
 	return rcfg != nil
