@@ -264,17 +264,37 @@ open class RulesActivity : ComponentActivity() {
           }
         }
         HorizontalDivider()
+        val category = if (failoverPage) JournalCategory.FAILOVER else JournalCategory.RULES
         Text(
-            stringResource(R.string.sr_rules_journal),
+            stringResource(
+                if (failoverPage) R.string.sr_failover_journal else R.string.sr_rules_journal
+            ),
             style = MaterialTheme.typography.titleLarge,
         )
-        TextButton(onClick = { store.clearJournal() }) {
-          Text(stringResource(R.string.sr_rules_clear_journal))
-        }
-        journal.forEach {
+        TextButton(onClick = { store.clearJournal(category) }) {
           Text(
-              "${DateFormat.getDateTimeInstance(DateFormat.SHORT, DateFormat.MEDIUM).format(Date(it.time))}\n${it.message}"
+              stringResource(
+                  if (failoverPage) R.string.sr_failover_clear_journal
+                  else R.string.sr_rules_clear_journal
+              )
           )
+        }
+        val pageEntries = RuleJournal.select(journal, category)
+        if (pageEntries.isEmpty()) Text(stringResource(R.string.sr_journal_empty))
+        JournalEntries(pageEntries)
+        val legacyEntries = RuleJournal.select(journal, JournalCategory.LEGACY)
+        if (!failoverPage && legacyEntries.isNotEmpty()) {
+          var showLegacy by rememberSaveable { mutableStateOf(false) }
+          TextButton(onClick = { showLegacy = !showLegacy }) {
+            Text(stringResource(R.string.sr_journal_legacy, legacyEntries.size))
+          }
+          if (showLegacy) {
+            Text(stringResource(R.string.sr_journal_legacy_hint))
+            TextButton(onClick = { store.clearJournal(JournalCategory.LEGACY) }) {
+              Text(stringResource(R.string.sr_journal_clear_legacy))
+            }
+            JournalEntries(legacyEntries)
+          }
         }
         TextButton(onClick = { finish() }) { Text(stringResource(R.string.back)) }
       }
@@ -457,4 +477,13 @@ private fun RuleEditor(
       },
       dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.cancel)) } },
   )
+}
+
+@Composable
+private fun JournalEntries(entries: List<RuleJournalEntry>) {
+  entries.forEach {
+    Text(
+        "${DateFormat.getDateTimeInstance(DateFormat.SHORT, DateFormat.MEDIUM).format(Date(it.time))}\n${it.message}"
+    )
+  }
 }

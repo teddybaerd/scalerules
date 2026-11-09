@@ -87,7 +87,7 @@ class ExitNodeFailoverMonitor(
           .distinctUntilChanged()
           .collectLatest { initial ->
             if (initial.config.primaryID.isNotBlank()) {
-              store.log(
+              log(
                   context.getString(
                       R.string.sr_failover_diagnostic,
                       "running=${initial.running}, profile=${initial.config.controlURL == initial.controlURL && initial.config.selfID == initial.selfID}, " +
@@ -113,7 +113,7 @@ class ExitNodeFailoverMonitor(
                       },
                   )
               if (targetID == null && initial.online[initial.selectedID] == false) {
-                store.log(context.getString(R.string.sr_failover_no_target))
+                log(context.getString(R.string.sr_failover_no_target))
               }
               if (targetID != null && snapshot() == initial) {
                 // The destination must still offer exit routes when the switch is issued.
@@ -127,6 +127,8 @@ class ExitNodeFailoverMonitor(
     }
   }
 
+  private fun log(message: String) = store.log(message, JournalCategory.FAILOVER)
+
   private fun peer(id: String): Tailcfg.Node? =
       findFailoverPeer(Notifier.netmap.value?.Peers.orEmpty(), id)
 
@@ -135,7 +137,7 @@ class ExitNodeFailoverMonitor(
         Client(scope).ping(peer) { result ->
           if (continuation.isActive) {
             val reachable = result.getOrNull()?.Err?.isEmpty() == true
-            store.log(
+            log(
                 context.getString(
                     if (reachable) R.string.sr_failover_probe_ok
                     else R.string.sr_failover_probe_failed,
@@ -154,7 +156,7 @@ class ExitNodeFailoverMonitor(
     Client(scope).editPrefs(prefs) { result ->
       // The resulting preference event cancels the confirmation collector. Keep the
       // acknowledgement in the service scope so successful switches are still journaled.
-      store.log(
+      log(
           context.getString(
               if (result.isSuccess) R.string.sr_failover_switched else R.string.sr_failover_failed,
               peer.displayName,
@@ -198,7 +200,7 @@ class ExitNodeFailoverMonitor(
               }
             } == true
         if (!current()) return@launch
-        store.log(
+        log(
             context.getString(
                 if (available) R.string.sr_failover_dns_ok else R.string.sr_failover_dns_failed
             )

@@ -419,8 +419,8 @@
     <string name="sr_rules_delete">Delete</string>
     <string name="sr_rules_higher">Higher priority ↑</string>
     <string name="sr_rules_lower">Lower priority ↓</string>
-    <string name="sr_rules_journal">Decision journal</string>
-    <string name="sr_rules_clear_journal">Clear journal</string>
+    <string name="sr_rules_journal">Rule decisions and automation</string>
+    <string name="sr_rules_clear_journal">Clear rule journal</string>
     <string name="sr_rules_delete_title">Delete rule?</string>
     <string name="sr_rules_editor">Edit rule</string>
     <string name="sr_rules_name">Rule name</string>
@@ -561,5 +561,11 @@
     <string name="sr_failover_dns_ok">Exit-node failover: DNS responds through the configured resolver after switching.</string>
     <string name="sr_failover_dns_failed">Exit-node failover: DNS check after switching failed; the warning is retained while DNS remains unavailable.</string>
     <string name="sr_failover_timing_dns_hint">The same waiting time and confirmation count apply to outage switches and returns. DNS is checked after each switch through the configured resolver; persistent DNS failures remain visible.</string>
+    <string name="sr_failover_journal">Failover journal</string>
+    <string name="sr_failover_clear_journal">Clear failover journal</string>
+    <string name="sr_journal_empty">No entries yet.</string>
+    <string name="sr_journal_legacy">Earlier combined entries (%1$d)</string>
+    <string name="sr_journal_legacy_hint">Journal from earlier app versions, containing both rule and failover events. Shown only here.</string>
+    <string name="sr_journal_clear_legacy">Delete earlier combined entries</string>
 </resources>
 

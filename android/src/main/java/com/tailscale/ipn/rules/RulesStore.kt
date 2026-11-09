@@ -3,15 +3,16 @@
 package com.tailscale.ipn.rules
 
 import android.content.Context
-import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
-
-@Serializable data class RuleJournalEntry(val time: Long, val message: String)
 
 class RulesStore(context: Context) {
   val preferences = context.getSharedPreferences("scalerules_manual_rules_v1", Context.MODE_PRIVATE)
   private val json = Json { ignoreUnknownKeys = true }
+  private val journalJson = Json {
+    ignoreUnknownKeys = true
+    coerceInputValues = true
+  }
 
   fun failover(): ExitNodeFailoverConfig = runCatching {
     json.decodeFromString<ExitNodeFailoverConfig>(preferences.getString("failover", "{}")!!)
@@ -29,15 +30,22 @@ class RulesStore(context: Context) {
   }
 
   fun journal(): List<RuleJournalEntry> =
-      json.decodeFromString(preferences.getString("journal", "[]")!!)
+      journalJson.decodeFromString(preferences.getString("journal", "[]")!!)
 
-  fun log(message: String) {
-    val entries =
-        (listOf(RuleJournalEntry(System.currentTimeMillis(), message)) + journal()).take(200)
-    preferences.edit().putString("journal", json.encodeToString(entries)).apply()
+  fun log(message: String, category: JournalCategory = JournalCategory.RULES) {
+    saveJournal(
+        RuleJournal.append(
+            journal(),
+            RuleJournalEntry(System.currentTimeMillis(), message, category),
+        )
+    )
   }
 
-  fun clearJournal() {
-    preferences.edit().remove("journal").apply()
+  fun clearJournal(category: JournalCategory) {
+    saveJournal(RuleJournal.clear(journal(), category))
+  }
+
+  private fun saveJournal(entries: List<RuleJournalEntry>) {
+    preferences.edit().putString("journal", journalJson.encodeToString(entries)).apply()
   }
 }

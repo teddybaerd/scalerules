@@ -349,8 +349,8 @@
     <string name="sr_rules_delete">Löschen</string>
     <string name="sr_rules_higher">Höher ↑</string>
     <string name="sr_rules_lower">Tiefer ↓</string>
-    <string name="sr_rules_journal">Entscheidungsprotokoll</string>
-    <string name="sr_rules_clear_journal">Protokoll leeren</string>
+    <string name="sr_rules_journal">Regelentscheidungen und Automatik</string>
+    <string name="sr_rules_clear_journal">Regelprotokoll leeren</string>
     <string name="sr_rules_delete_title">Regel löschen?</string>
     <string name="sr_rules_editor">Regel bearbeiten</string>
     <string name="sr_rules_name">Regelname</string>
@@ -491,5 +491,11 @@
     <string name="sr_failover_dns_ok">Exit-Node-Failover: DNS antwortet nach dem Wechsel über den konfigurierten Resolver.</string>
     <string name="sr_failover_dns_failed">Exit-Node-Failover: DNS-Prüfung nach dem Wechsel fehlgeschlagen; bei weiterhin gestörtem DNS bleibt die Warnung bestehen.</string>
     <string name="sr_failover_timing_dns_hint">Für Ausfallwechsel und Rückkehr gelten dieselbe Wartezeit und Anzahl an Bestätigungsprüfungen. Nach jedem Wechsel wird DNS über den konfigurierten Resolver geprüft; anhaltende DNS-Fehler bleiben sichtbar.</string>
+    <string name="sr_failover_journal">Failover-Protokoll</string>
+    <string name="sr_failover_clear_journal">Failover-Protokoll leeren</string>
+    <string name="sr_journal_empty">Noch keine Einträge.</string>
+    <string name="sr_journal_legacy">Ältere gemeinsame Einträge (%1$d)</string>
+    <string name="sr_journal_legacy_hint">Protokoll früherer App-Versionen mit Regel- und Failover-Ereignissen. Wird nur hier angezeigt.</string>
+    <string name="sr_journal_clear_legacy">Ältere gemeinsame Einträge löschen</string>
 </resources>
 
