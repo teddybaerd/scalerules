@@ -15,6 +15,7 @@ data class ExitNodeFailoverConfig(
     val autoReturn: Boolean = true,
     val failureCount: Int = 3,
     val graceSeconds: Int = 30,
+    // Retained solely for compatibility with saved configurations; timing is shared now.
     val returnSeconds: Int = 120,
 ) {
   val priorityIDs: List<String>
@@ -33,8 +34,7 @@ data class ExitNodeFailoverConfig(
                     secondaryID != primaryID &&
                     secondaryID != fallbackID)) &&
             failureCount in 2..5 &&
-            graceSeconds in 15..120 &&
-            returnSeconds in 60..600
+            graceSeconds in 15..120
 }
 
 enum class FailoverAction {
@@ -80,9 +80,11 @@ class FailoverConfirmation(
   }
 
   suspend fun primary(config: ExitNodeFailoverConfig): Boolean {
-    if (!probe(config.primaryID)) return false
-    wait(config.returnSeconds * 1000L)
-    return probe(config.primaryID)
+    repeat(config.failureCount) {
+      if (!probe(config.primaryID)) return false
+      if (it < config.failureCount - 1) wait(3000)
+    }
+    return true
   }
 }
 
@@ -129,9 +131,15 @@ class PriorityFailoverConfirmation(
     for (id in candidates) {
       if (!probe(id)) continue
       if (!offline) {
-        wait(config.returnSeconds * 1000L)
-        if (!probe(id)) continue
-        // Reconsider higher priorities after the delay before committing a lower target.
+        var confirmed = true
+        repeat(config.failureCount - 1) {
+          if (confirmed) {
+            wait(3000)
+            confirmed = probe(id)
+          }
+        }
+        if (!confirmed) continue
+        // Reconsider higher priorities before committing a lower target.
         for (higher in candidates.takeWhile { it != id }) {
           if (probe(higher)) return null
         }

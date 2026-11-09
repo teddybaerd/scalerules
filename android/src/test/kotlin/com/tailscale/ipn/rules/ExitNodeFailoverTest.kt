@@ -88,7 +88,7 @@ class ExitNodeFailoverTest {
     assertFalse(config.copy(fallbackID = "home").valid)
     assertFalse(config.copy(selfID = "").valid)
     assertFalse(config.copy(failureCount = 0).valid)
-    assertFalse(config.copy(returnSeconds = 0).valid)
+    assertTrue(config.copy(returnSeconds = 0).valid)
     assertFalse(config.copy(graceSeconds = -1).valid)
   }
 
@@ -125,7 +125,7 @@ class ExitNodeFailoverTest {
   }
 
   @Test
-  fun returnWaitsAndRequiresTwoSuccessfulProbes() = runTest {
+  fun returnUsesTheSameProbeSpacingAsOutageConfirmation() = runTest {
     var probes = 0
     val confirmation =
         FailoverConfirmation(
@@ -137,7 +137,7 @@ class ExitNodeFailoverTest {
         )
     assertFalse(confirmation.primary(config))
     assertEquals(2, probes)
-    assertEquals(120000L, testScheduler.currentTime)
+    assertEquals(3000L, testScheduler.currentTime)
   }
 
   @Test
@@ -259,7 +259,7 @@ class ExitNodeFailoverTest {
           PriorityFailoverConfirmation({ it in reachable }, { delay(it) })
               .target(triple, selected, false, triple.priorityIDs.takeWhile { it != selected })
       assertEquals(expected, target)
-      assertEquals(triple.returnSeconds * 1000L, testScheduler.currentTime - before)
+      assertEquals((triple.failureCount - 1) * 3000L, testScheduler.currentTime - before)
     }
   }
 
@@ -326,5 +326,18 @@ class ExitNodeFailoverTest {
     runCurrent()
     assertEquals(listOf("home"), calls)
     assertNull(target)
+  }
+
+  @Test
+  fun returnAndOutageHaveIdenticalConfirmationDurationsDespiteLegacyReturnSetting() = runTest {
+    val cfg = triple.copy(returnSeconds = 600)
+    val before = testScheduler.currentTime
+    val outage = PriorityFailoverConfirmation({ it != "home" }, { delay(it) })
+    assertEquals("home2", outage.target(cfg, "home", true, listOf("home2", "vps")))
+    val outageTime = testScheduler.currentTime - before
+    val back = testScheduler.currentTime
+    val recovery = PriorityFailoverConfirmation({ true }, { delay(it) })
+    assertEquals("home", recovery.target(cfg, "vps", false, listOf("home", "home2")))
+    assertEquals(outageTime, testScheduler.currentTime - back)
   }
 }

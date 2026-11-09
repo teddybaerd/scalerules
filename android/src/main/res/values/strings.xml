@@ -539,8 +539,8 @@
     <string name="sr_failover_choose">Choose a node</string>
     <string name="sr_failover_enable">Enable failover while rules are running</string>
     <string name="sr_failover_auto_return">Automatically return to a higher-priority node</string>
-    <string name="sr_failover_failures">Failed probes before switching</string>
-    <string name="sr_failover_grace">Grace period after a status or network change</string>
+    <string name="sr_failover_failures">Confirmation probes before switching</string>
+    <string name="sr_failover_grace">Waiting time for switching and returning</string>
     <string name="sr_failover_return_delay">Return confirmation delay</string>
     <string name="sr_failover_seconds">%1$d seconds</string>
     <string name="sr_failover_safety">All nodes must belong to the same account. Online status does not check internet forwarding or DNS. If all nodes fail, the VPN stays enabled and checks continue. Manually selecting another node suspends failover. DNS must work without the primary site.</string>
@@ -556,5 +556,10 @@
     <string name="sr_failover_none">Not configured</string>
     <string name="sr_failover_no_target">Failover: no reachable target confirmed; VPN remains enabled, checks will retry.</string>
     <string name="sr_failover_shared_automation">Failover uses the same automation service as connection rules. Starting or pausing here also starts or pauses connection rules.</string>
+    <string name="sr_dns_unavailable_title">DNS unavailable</string>
+    <string name="sr_dns_unavailable_text">ScaleRules cannot reach the configured DNS servers. Internet connectivity may be affected.</string>
+    <string name="sr_failover_dns_ok">Exit-node failover: DNS responds through the configured resolver after switching.</string>
+    <string name="sr_failover_dns_failed">Exit-node failover: DNS check after switching failed; the warning is retained while DNS remains unavailable.</string>
+    <string name="sr_failover_timing_dns_hint">The same waiting time and confirmation count apply to outage switches and returns. DNS is checked after each switch through the configured resolver; persistent DNS failures remain visible.</string>
 </resources>
 

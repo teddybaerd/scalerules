@@ -469,8 +469,8 @@
     <string name="sr_failover_choose">Knoten auswählen</string>
     <string name="sr_failover_enable">Failover bei laufender Regelautomatik aktivieren</string>
     <string name="sr_failover_auto_return">Automatisch zu einem höher priorisierten Knoten zurückkehren</string>
-    <string name="sr_failover_failures">Fehlgeschlagene Prüfungen vor Wechsel</string>
-    <string name="sr_failover_grace">Schonfrist nach Status- oder Netzwerkwechsel</string>
+    <string name="sr_failover_failures">Bestätigungsprüfungen vor Wechsel</string>
+    <string name="sr_failover_grace">Wartezeit für Wechsel und Rückkehr</string>
     <string name="sr_failover_return_delay">Bestätigungszeit vor Rückkehr</string>
     <string name="sr_failover_seconds">%1$d Sekunden</string>
     <string name="sr_failover_safety">Alle Knoten müssen zum selben Konto gehören. Online-Status prüft weder Internet noch DNS. Bei Totalausfall bleibt der VPN aktiviert; die Prüfung wird wiederholt. Manuelle Auswahl eines anderen Knotens setzt Failover aus. DNS muss ohne den Hauptstandort funktionieren.</string>
@@ -486,5 +486,10 @@
     <string name="sr_failover_none">Nicht verwenden</string>
     <string name="sr_failover_no_target">Failover: kein erreichbares Ziel bestätigt; VPN bleibt aktiviert, Prüfung wird wiederholt.</string>
     <string name="sr_failover_shared_automation">Failover verwendet dieselbe Automatik wie die Verbindungsregeln. Starten oder Pausieren gilt gemeinsam für beide Funktionen.</string>
+    <string name="sr_dns_unavailable_title">DNS nicht verfügbar</string>
+    <string name="sr_dns_unavailable_text">ScaleRules kann die konfigurierten DNS-Server nicht erreichen. Die Internetverbindung kann dadurch beeinträchtigt sein.</string>
+    <string name="sr_failover_dns_ok">Exit-Node-Failover: DNS antwortet nach dem Wechsel über den konfigurierten Resolver.</string>
+    <string name="sr_failover_dns_failed">Exit-Node-Failover: DNS-Prüfung nach dem Wechsel fehlgeschlagen; bei weiterhin gestörtem DNS bleibt die Warnung bestehen.</string>
+    <string name="sr_failover_timing_dns_hint">Für Ausfallwechsel und Rückkehr gelten dieselbe Wartezeit und Anzahl an Bestätigungsprüfungen. Nach jedem Wechsel wird DNS über den konfigurierten Resolver geprüft; anhaltende DNS-Fehler bleiben sichtbar.</string>
 </resources>
 

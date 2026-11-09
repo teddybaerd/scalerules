@@ -74,7 +74,11 @@ class HealthNotifier(
           }
           .collect { health ->
             TSLog.d(TAG, "Health updated: ${health?.Warnings?.keys?.sorted()}")
-            health?.Warnings?.values?.filterNotNull()?.toTypedArray()?.let(::notifyHealthUpdated)
+            // A healthy Go health.State omits Warnings instead of sending an empty map.
+            // Null State means unknown; a present State with null Warnings means healthy.
+            health?.let {
+              notifyHealthUpdated(it.Warnings.orEmpty().values.filterNotNull().toTypedArray())
+            }
           }
     }
   }
@@ -120,7 +124,8 @@ class HealthNotifier(
         this.currentWarnings.set(this.currentWarnings.value + warning)
         dropDependenciesForAddedWarning(warning)
         if (warning.Severity == Health.Severity.high) {
-          this.sendNotification(warning.Title, warning.Text, warning.WarnableCode)
+          val (title, text) = localizedHealthWarning(App.get().applicationContext, warning)
+          this.sendNotification(title, text, warning.WarnableCode)
         }
       } else {
         TSLog.d(TAG, "Ignoring ${warning.WarnableCode} because warming up")

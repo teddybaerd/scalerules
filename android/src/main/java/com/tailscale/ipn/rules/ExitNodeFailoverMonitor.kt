@@ -18,9 +18,11 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlinx.coroutines.withTimeoutOrNull
 
 /** Observes the existing IPN bus. Timers and probes run only during a failover incident. */
 class ExitNodeFailoverMonitor(
@@ -31,6 +33,7 @@ class ExitNodeFailoverMonitor(
   private val ready = MutableStateFlow(false)
   private val config = MutableStateFlow(store.failover())
   private var job: Job? = null
+  private var dnsJob: Job? = null
 
   private data class Snapshot(
       val config: ExitNodeFailoverConfig,
@@ -47,7 +50,9 @@ class ExitNodeFailoverMonitor(
   }
 
   fun refresh(available: Boolean) {
-    config.value = store.failover()
+    val updated = store.failover()
+    if (!available || updated != config.value) dnsJob?.cancel()
+    config.value = updated
     ready.value = available
   }
 
@@ -116,7 +121,7 @@ class ExitNodeFailoverMonitor(
               }
               // Retry only while an incident remains unresolved, never in the healthy steady
               // state.
-              delay(60000)
+              delay(initial.config.graceSeconds * 1000L)
             }
           }
     }
@@ -155,6 +160,52 @@ class ExitNodeFailoverMonitor(
               peer.displayName,
           )
       )
+      if (result.isSuccess) checkDNSAfterSwitch(peer.StableID, initial)
+    }
+  }
+
+  private fun checkDNSAfterSwitch(targetID: String, initial: Snapshot) {
+    dnsJob?.cancel()
+    dnsJob = scope.launch {
+      fun current(): Boolean {
+        val now = snapshot()
+        return now.running &&
+            now.config == initial.config &&
+            now.controlURL == initial.controlURL &&
+            now.selfID == initial.selfID &&
+            now.selectedID == targetID
+      }
+      // Wait for the selected-node event, rather than assuming preference acknowledgement
+      // means the new DNS configuration is already applied.
+      val applied =
+          withTimeoutOrNull(10000) {
+            Notifier.prefs.first { it?.activeExitNodeID == targetID }
+            true
+          } == true
+      if (!applied) return@launch
+      // Give the applied exit-node/DNS configuration time to settle. Never reconnect the VPN.
+      delay(2000)
+      repeat(3) { attempt ->
+        if (!current()) return@launch
+        val available =
+            withTimeoutOrNull(6000) {
+              val requestScope = CoroutineScope(currentCoroutineContext())
+              suspendCancellableCoroutine<Boolean> { continuation ->
+                Client(requestScope).checkDNS { result ->
+                  if (continuation.isActive)
+                      continuation.resume(result.getOrNull()?.available == true)
+                }
+              }
+            } == true
+        if (!current()) return@launch
+        store.log(
+            context.getString(
+                if (available) R.string.sr_failover_dns_ok else R.string.sr_failover_dns_failed
+            )
+        )
+        if (available) return@launch
+        if (attempt < 2) delay(5000)
+      }
     }
   }
 
@@ -162,6 +213,8 @@ class ExitNodeFailoverMonitor(
     ready.value = false
     job?.cancel()
     job = null
+    dnsJob?.cancel()
+    dnsJob = null
   }
 }
 

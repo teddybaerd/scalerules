@@ -94,6 +94,15 @@ class Client(private val scope: CoroutineScope) {
     post(path, timeoutMillis = 2000L, responseHandler = responseHandler)
   }
 
+  /** Query the configured Tailscale resolver, never a public resolver outside the VPN. */
+  fun checkDNS(responseHandler: (Result<DNSProbeResponse>) -> Unit) {
+    get(
+        "dns-query?name=example.com&type=A",
+        timeoutMillis = 5000L,
+        responseHandler = responseHandler,
+    )
+  }
+
   fun bugReportId(responseHandler: BugReportIdHandler) {
     post(Endpoint.BUG_REPORT, responseHandler = responseHandler)
   }
@@ -209,6 +218,7 @@ class Client(private val scope: CoroutineScope) {
   private inline fun <reified T> get(
       path: String,
       body: ByteArray? = null,
+      timeoutMillis: Long = 30000,
       noinline responseHandler: (Result<T>) -> Unit,
   ) {
     Request(
@@ -216,6 +226,7 @@ class Client(private val scope: CoroutineScope) {
             method = "GET",
             path = path,
             body = body,
+            timeoutMillis = timeoutMillis,
             responseType = typeOf<T>(),
             responseHandler = responseHandler,
         )

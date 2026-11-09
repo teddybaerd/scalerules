@@ -271,4 +271,45 @@ class HealthNotifierTest {
         notifier.currentWarnings.value.isEmpty(),
     )
   }
+
+  @Test
+  fun dnsWarningClearsWhenHealthyStateOmitsWarningsWithoutReconnecting() = runTest {
+    val (healthFlow, ipnFlow, notifier) = createRunningNotifier()
+    val dns = derpWarning().copy(WarnableCode = "dns-forward-failing", Title = "DNS unavailable")
+    repeat(3) {
+      healthFlow.value = healthState(dns)
+      settle()
+      assertTrue(notifier.currentWarnings.value.any { it.WarnableCode == "dns-forward-failing" })
+      healthFlow.value = Health.State(Warnings = null)
+      settle()
+      assertTrue(notifier.currentWarnings.value.isEmpty())
+      assertNull(notifier.currentIcon.value)
+      assertEquals(Ipn.State.Running, ipnFlow.value)
+    }
+  }
+
+  @Test
+  fun resolvingDnsDoesNotHideAnUnrelatedWarning() = runTest {
+    val (healthFlow, _, notifier) = createRunningNotifier()
+    val dns = derpWarning().copy(WarnableCode = "dns-forward-failing")
+    healthFlow.value = healthState(dns, derpWarning())
+    settle()
+    healthFlow.value = healthState(derpWarning())
+    settle()
+    assertEquals(
+        setOf("no-derp-connection"),
+        notifier.currentWarnings.value.map { it.WarnableCode }.toSet(),
+    )
+  }
+
+  @Test
+  fun unknownHealthStateDoesNotPretendDnsHasRecovered() = runTest {
+    val (healthFlow, _, notifier) = createRunningNotifier()
+    val dns = derpWarning().copy(WarnableCode = "dns-forward-failing")
+    healthFlow.value = healthState(dns)
+    settle()
+    healthFlow.value = null
+    settle()
+    assertTrue(notifier.currentWarnings.value.any { it.WarnableCode == "dns-forward-failing" })
+  }
 }
