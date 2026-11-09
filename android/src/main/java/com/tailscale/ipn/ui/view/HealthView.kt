@@ -42,6 +42,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.tailscale.ipn.R
 import com.tailscale.ipn.ui.model.Health
+import com.tailscale.ipn.ui.notifier.localizedHealthWarning
 import com.tailscale.ipn.ui.theme.success
 import com.tailscale.ipn.ui.util.AndroidTVUtil.isAndroidTV
 import com.tailscale.ipn.ui.viewModel.HealthViewModel
@@ -96,6 +97,7 @@ fun HealthView(backToSettings: BackNavigation, model: HealthViewModel = viewMode
 fun HealthWarningView(warning: Health.UnhealthyState) {
   val localClipboardManager = LocalClipboardManager.current
   val context = LocalContext.current
+  val (title, text) = localizedHealthWarning(context, warning)
   val copiedText = stringResource(R.string.copied)
   var menuExpanded by remember { mutableStateOf(false) }
 
@@ -118,14 +120,14 @@ fun HealthWarningView(warning: Health.UnhealthyState) {
           modifier = itemModifier,
           colors = warning.Severity.listItemColors(),
           headlineContent = {
-            if (warning.Title.isNotEmpty()) {
+            if (title.isNotEmpty()) {
               Text(
-                  warning.Title,
+                  title,
                   style = MaterialTheme.typography.titleMedium,
               )
             }
           },
-          supportingContent = { Text(warning.Text, style = MaterialTheme.typography.bodyMedium) },
+          supportingContent = { Text(text, style = MaterialTheme.typography.bodyMedium) },
       )
 
       // Copy for now; KB-page links to follow.

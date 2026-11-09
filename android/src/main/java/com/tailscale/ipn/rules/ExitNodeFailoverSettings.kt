@@ -104,16 +104,7 @@ fun ExitNodeFailoverSettings(
       ) {
         onSave(config.copy(graceSeconds = it.toInt()))
       }
-      FailoverChoice(
-          stringResource(R.string.sr_failover_return_delay),
-          stringResource(R.string.sr_failover_seconds, config.returnSeconds),
-          listOf(60, 120, 300, 600).map {
-            it.toString() to stringResource(R.string.sr_failover_seconds, it)
-          },
-          enabled = available,
-      ) {
-        onSave(config.copy(returnSeconds = it.toInt()))
-      }
+      Text(stringResource(R.string.sr_failover_timing_dns_hint))
       Text(stringResource(R.string.sr_failover_safety))
     }
   }

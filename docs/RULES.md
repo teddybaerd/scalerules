@@ -86,8 +86,8 @@ and https://developer.samsung.com/mobile/app-management.html.
 In Settings > Exit-node failover, choose a primary, optional secondary and final
 backup exit node from the current account. Enable failover, select the primary
 once in the normal exit-node picker and resume the shared rule automation.
-Defaults remain a 30-second grace period, three failed probes and optional
-automatic return with a 120-second confirmation delay. Changing settings pauses
+Defaults are a 30-second waiting period and three confirmation probes for both
+outage switches and optional automatic returns. Changing settings pauses
 rule automation, which can be resumed on either settings page.
 
 Priority is primary > secondary > final backup. An empty secondary preserves
@@ -97,13 +97,13 @@ candidates are checked in priority order. Only a reported-online peer still
 offering exit routes and answering a disco ping can become the destination.
 A successful probe of the active node aborts the outage confirmation.
 
-While using a backup, automatic return checks higher priorities every 60 seconds,
-with reachability checks before and after the configured return delay. From the
+While using a backup, automatic return confirms higher priorities using the same
+waiting period and probe count as outage confirmation. From the
 final backup, return directly to primary when available, otherwise secondary.
 A higher priority becoming reachable during confirmation defers a lower return.
 These are reachability samples, not continuous internet/DNS health verification.
 Healthy operation on primary adds no polling timer or probes. Unresolved outages
-retry after 60 seconds and are recorded in the decision journal.
+retry after the configured waiting period and are recorded in the decision journal.
 
 Monitoring requires active rules and VPN, a non-VPN internet-capable network,
 the matching account/control URL and one of the configured nodes selected.
@@ -113,7 +113,8 @@ exit-node use suspends failover. Automatic switching edits only ExitNodeID.
 
 If all nodes fail, selection and VPN remain enabled; no direct-internet fallback
 is introduced. Existing split-tunnel exclusions still apply. Peer status can be
-delayed; online forwarding or DNS failures are not detected. DNS must remain
+delayed; online forwarding failures are not detected. DNS is checked after each
+switch, rather than continuously. DNS must remain
 available when the primary site fails. Sessions may break when the public exit IP
 changes. Android background restrictions may delay checks and switching.
 
@@ -177,3 +178,27 @@ Device testing of 0.2.9-rc.2 confirmed preferred-to-backup switching, website ac
 through the backup, delayed return, and both switches while the display was locked.
 Earlier delayed peer status and a transient DNS warning were observed; their causes
 have not been established and this does not prove internet-forwarding detection.
+
+## DNS verification and shared switch timing
+
+Every successful automatic selection (primary, secondary or final backup, including
+return) waits for the selected-node preference event, then queries `example.com`
+(type A) through the existing Tailscale LocalAPI DNS resolver. No public DNS server
+is contacted directly and DNS preferences are never changed. A successful DNS
+response or NXDOMAIN confirms resolver availability; SERVFAIL, REFUSED, malformed
+responses and timeouts do not. Checks are bounded to three attempts, with two
+seconds of initial settling time and five seconds between unsuccessful attempts.
+Configuration/network changes, paused automation or a different selected node
+cancel or invalidate pending checks. Failover does not disconnect/reconnect the VPN
+or suppress genuine DNS failures. DNS results are recorded in the decision journal.
+
+A present healthy backend health state can omit its Warnings map. This now clears
+obsolete warnings/icons without requiring a reconnect; an unknown health state
+is not treated as recovery. Known DNS-unavailable text is localized in the warning
+view and Android notifications; copied diagnostics retain the original code/text.
+
+Outage and return use the same configured grace period and confirmation count,
+with three-second spacing between confirmations. The old extra return delay is no
+longer applied or shown; its saved JSON field is retained for compatibility only.
+Retries use the configured grace period instead of a fixed extra minute. Backend
+online events and probe timeouts can still affect the observed total time.
