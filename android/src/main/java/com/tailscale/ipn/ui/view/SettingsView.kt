@@ -93,7 +93,22 @@ fun SettingsView(
           subtitle = stringResource(R.string.sr_rules_subtitle),
           onClick = {
             context.startActivity(
-                android.content.Intent(context, com.tailscale.ipn.rules.RulesActivity::class.java)
+                android.content.Intent(
+                    context,
+                    com.tailscale.ipn.rules.RulesActivity::class.java,
+                )
+            )
+          },
+      )
+      Lists.ItemDivider()
+      Setting.Text(
+          titleRes = R.string.sr_failover_title,
+          onClick = {
+            context.startActivity(
+                android.content.Intent(
+                    context,
+                    com.tailscale.ipn.rules.ExitNodeFailoverActivity::class.java,
+                )
             )
           },
       )
@@ -192,7 +207,12 @@ fun SettingsView(
           },
       )
       Lists.ItemDivider()
-      Setting.Text(R.string.bug_report, onClick = settingsNav.onNavigateToBugReport)
+      Setting.Text(
+          R.string.bug_report,
+          onClick = {
+            handler.openUri("https://github.com/teddybaerd/scalerules/issues/new/choose")
+          },
+      )
 
       Lists.ItemDivider()
       Setting.Text(
@@ -286,10 +306,7 @@ object Setting {
     ListItem(
         colors = MaterialTheme.colorScheme.listItem,
         headlineContent = {
-          Text(
-              title ?: stringResource(titleRes),
-              style = MaterialTheme.typography.bodyMedium,
-          )
+          Text(title ?: stringResource(titleRes), style = MaterialTheme.typography.bodyMedium)
         },
         supportingContent =
             subtitle?.let {

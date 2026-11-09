@@ -36,15 +36,31 @@ fun ExitNodeFailoverSettings(
           stringResource(R.string.sr_failover_primary),
           nodes.find { it.StableID == config.primaryID }?.displayName
               ?: stringResource(R.string.sr_failover_choose),
-          nodes.filter { it.StableID != config.fallbackID }.map { it.StableID to it.displayName },
+          nodes
+              .filter { it.StableID != config.fallbackID && it.StableID != config.secondaryID }
+              .map { it.StableID to it.displayName },
       ) {
         onSave(config.copy(primaryID = it, enabled = false))
+      }
+      FailoverChoice(
+          stringResource(R.string.sr_failover_secondary),
+          nodes.find { it.StableID == config.secondaryID }?.displayName
+              ?: stringResource(R.string.sr_failover_none),
+          listOf("" to stringResource(R.string.sr_failover_none)) +
+              nodes
+                  .filter { it.StableID != config.primaryID && it.StableID != config.fallbackID }
+                  .map { it.StableID to it.displayName },
+          enabled = available,
+      ) {
+        onSave(config.copy(secondaryID = it, enabled = false))
       }
       FailoverChoice(
           stringResource(R.string.sr_failover_fallback),
           nodes.find { it.StableID == config.fallbackID }?.displayName
               ?: stringResource(R.string.sr_failover_choose),
-          nodes.filter { it.StableID != config.primaryID }.map { it.StableID to it.displayName },
+          nodes
+              .filter { it.StableID != config.primaryID && it.StableID != config.secondaryID }
+              .map { it.StableID to it.displayName },
       ) {
         onSave(config.copy(fallbackID = it, enabled = false))
       }
@@ -55,7 +71,9 @@ fun ExitNodeFailoverSettings(
                 available &&
                     config.copy(enabled = true).valid &&
                     nodes.any { it.StableID == config.primaryID } &&
-                    nodes.any { it.StableID == config.fallbackID },
+                    nodes.any { it.StableID == config.fallbackID } &&
+                    (config.secondaryID.isEmpty() ||
+                        nodes.any { it.StableID == config.secondaryID }),
             onCheckedChange = { onSave(config.copy(enabled = it)) },
         )
         Text(stringResource(R.string.sr_failover_enable))
@@ -86,21 +104,13 @@ fun ExitNodeFailoverSettings(
       ) {
         onSave(config.copy(graceSeconds = it.toInt()))
       }
-      FailoverChoice(
-          stringResource(R.string.sr_failover_return_delay),
-          stringResource(R.string.sr_failover_seconds, config.returnSeconds),
-          listOf(60, 120, 300, 600).map {
-            it.toString() to stringResource(R.string.sr_failover_seconds, it)
-          },
-          enabled = available,
-      ) {
-        onSave(config.copy(returnSeconds = it.toInt()))
-      }
+      Text(stringResource(R.string.sr_failover_timing_dns_hint))
       Text(stringResource(R.string.sr_failover_safety))
     }
   }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun FailoverChoice(
     label: String,
@@ -110,11 +120,21 @@ private fun FailoverChoice(
     onSelect: (String) -> Unit,
 ) {
   var expanded by remember { mutableStateOf(false) }
-  Box {
-    OutlinedButton(onClick = { expanded = true }, enabled = enabled && choices.isNotEmpty()) {
-      Text("$label: $value")
-    }
-    DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+  val selectable = enabled && choices.isNotEmpty()
+  ExposedDropdownMenuBox(
+      expanded = expanded,
+      onExpandedChange = { if (selectable) expanded = it },
+  ) {
+    OutlinedTextField(
+        value = value,
+        onValueChange = {},
+        readOnly = true,
+        enabled = selectable,
+        label = { Text(label) },
+        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded) },
+        modifier = Modifier.menuAnchor().fillMaxWidth(),
+    )
+    ExposedDropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
       choices.forEach { (id, name) ->
         DropdownMenuItem(
             text = { Text(name) },

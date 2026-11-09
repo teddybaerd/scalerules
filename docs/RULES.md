@@ -27,7 +27,7 @@ Exit node, DNS and app exclusions are not modified.
 
 ## Test milestone limitations
 
-- Automation must be resumed explicitly after reboot, process termination or force-stop.
+- Reboot recovery is optional; other process termination or force-stop may require manual resumption.
 - No import/export, Bluetooth, time, battery, or combined conditions in this first version.
 - No automated learning and no remote rules.
 - SSID names alone do not authenticate a Wi-Fi access point.
@@ -79,48 +79,55 @@ References: https://developer.android.com/training/monitoring-device-state/doze-
 and https://developer.samsung.com/mobile/app-management.html.
 
 
-## Experimental exit-node failover
+<a id="experimental-exit-node-failover"></a>
 
-In Settings > Connection rules, choose a preferred and backup exit node from the
-current account, then enable failover and resume automation. Select the preferred
-node once in the normal exit-node picker. Defaults: 30-second grace period,
-three failed probes, automatic return with a 120-second confirmation delay.
-Changing failover settings pauses the rule service just like editing rules.
+## Exit-node failover (Beta)
 
-The monitor consumes the VPN engine's existing peer-online events. Healthy steady
-state adds no polling timer, probes, wake lock or new permissions. An explicit
-offline preferred node plus an online backup starts a bounded confirmation burst:
-after the grace period, the preferred node must fail every probe (3 seconds apart),
-and the backup must answer a Tailscale disco ping before selection changes. A
-successful primary probe aborts that burst. Unresolved incidents retry after
-60 seconds. For automatic return, the preferred node must be reported online and
-answer before and after the configured return delay. Status changes cancel and
-restart the confirmation; unrelated peer changes do not reset it. This is two
-reachability samples, not continuous reachability verification.
+In Settings > Exit-node failover, choose a primary, optional secondary and final
+backup exit node from the current account. Enable failover, select the primary
+once in the normal exit-node picker and resume the shared rule automation.
+Defaults are a 30-second waiting period and three confirmation probes for both
+outage switches and optional automatic returns. Changing settings pauses
+rule automation, which can be resumed on either settings page.
 
-The monitor runs only while rule automation, the VPN and its engine are active,
-a non-VPN internet-capable network is available, and the selected exit node is
-one of the configured pair. A matching disconnect rule suppresses it. VPN stops,
-network changes, account changes and automation pause cancel pending decisions.
-The pair is bound to the control URL and local node's stable ID. Choosing a third
-exit node or disabling exit-node use suspends failover. Automatic switching edits
-only ExitNodeID and records successes/errors in the existing decision journal.
+Priority is primary > secondary > final backup. An empty secondary preserves
+existing two-node configurations. Duplicate selections are rejected. A reported
+offline active node must fail every confirmation probe (3 seconds apart), then
+candidates are checked in priority order. Only a reported-online peer still
+offering exit routes and answering a disco ping can become the destination.
+A successful probe of the active node aborts the outage confirmation.
 
-If neither node is available, the monitor leaves the selection and VPN enabled;
-it never falls back to unencrypted internet. Existing split-tunnel exclusions still
-apply. Forwarding failures where a node remains reported online are not detected.
-Online status reflects the control connection and can be delayed. Disco reachability
-is not a guarantee that DNS or internet forwarding works. Configure DNS so it also
-works if the preferred site is unavailable; this feature does not change DNS.
-Existing sessions may break when the public exit IP changes. Android Doze and OEM
-restrictions can delay timers/status delivery; no exact switch deadline or measured
-battery saving is promised. No home-server API key or public ping endpoint is needed.
+While using a backup, automatic return confirms higher priorities using the same
+waiting period and probe count as outage confirmation. From the
+final backup, return directly to primary when available, otherwise secondary.
+A higher priority becoming reachable during confirmation defers a lower return.
+These are reachability samples, not continuous internet/DNS health verification.
+Healthy operation on primary adds no polling timer or probes. Unresolved outages
+retry after the configured waiting period and are recorded in the decision journal.
+
+Monitoring requires active rules and VPN, a non-VPN internet-capable network,
+the matching account/control URL and one of the configured nodes selected.
+Pausing rules, disconnect rules, VPN stops and account/network changes cancel
+pending decisions. A manual selection outside the configured list or disabling
+exit-node use suspends failover. Automatic switching edits only ExitNodeID.
+
+If all nodes fail, selection and VPN remain enabled; no direct-internet fallback
+is introduced. Existing split-tunnel exclusions still apply. Peer status can be
+delayed; online forwarding failures are not detected. DNS is checked after each
+switch, rather than continuously. DNS must remain
+available when the primary site fails. Sessions may break when the public exit IP
+changes. Android background restrictions may delay checks and switching.
 
 ### Device acceptance checks before stable release
 
+- Verify 1→2, 1→3 and 2→3 on failure; 3→2, 3→1 and 2→1 on recovery,
+  including with the display locked. Stop all three and verify no unconfirmed switch.
+- Upgrade an existing two-node configuration and verify its settings still work.
+- Check the separate settings page, labeled dropdowns, Beta label and GitHub issue link.
+
 - Install the permanently signed candidate over the current app; retain account,
   rules, split tunneling and autostart settings. Verify failover defaults off.
-- Choose home/VPS, enable, select home, and resume rules. Stop Tailscale on home
+- Choose primary/secondary/VPS, enable, select primary, and resume rules. Stop Tailscale on home
   while the phone uses mobile data; verify confirmed switch and journal entry.
 - Restart home; verify delayed automatic return. Repeat with automatic return off.
 - Stop both nodes; verify no VPN disconnection or selection of an unrelated node.
@@ -133,3 +140,65 @@ battery saving is promised. No home-server API key or public ping endpoint is ne
 - Test primary online with forwarding disabled: document that this first version
   does not detect that failure. Observe screen-off behavior and battery use on
   Samsung S10/Tab S8/S24 before deciding whether more probing is justified.
+
+
+Failover diagnostics in the decision journal show the configuration/profile match,
+network readiness, VPN/engine state, active-node role and each configured peer's
+online/exit-route flags (`null` means unknown). Status entries are emitted only
+when that snapshot changes. Probe results are journaled only during an incident;
+no URLs, node IDs, keys or raw backend errors are recorded. An offline primary
+remains monitored even if its exit routes have been withdrawn. The destination
+must still offer exit routes when switching. Capability-only network updates do
+not reset a running grace period; network arrival/loss and rule edits still do.
+
+## Recovery after app updates
+
+Installing an update resumes previously active rule automation in the background,
+independently of the optional reboot setting. Manually paused automation stays
+paused, including when configuration edits paused it. The existing persisted active
+flag is reused, so upgrades from earlier versions retain the intended state.
+Account, rules, exit-node selection, failover, DNS and exclusions are not rewritten.
+The resumed service evaluates current network conditions and saved rules; it does
+not blindly reconnect on a network whose rule says disconnect. A keep-state rule
+or no matching rule does not request a new VPN connection.
+
+The package-replaced receiver uses the existing permission checks and foreground
+service path. SSID rules need background location permission for automatic startup;
+VPN approval is also required. If startup is blocked, an update-specific notification
+opens the rules screen for manual recovery. Notifications must be allowed. Successful
+update recovery is recorded in the decision journal. Android/OEM restrictions still
+apply; this is not a guarantee after force-stop.
+
+Validation: install a signed update without opening the app, with automation active
+and paused, with reboot recovery disabled, and with missing background permissions.
+Check recovery while the display is off, retained settings, current disconnect rules,
+and the update-specific journal/notification text.
+
+Device testing of 0.2.9-rc.2 confirmed preferred-to-backup switching, website access
+through the backup, delayed return, and both switches while the display was locked.
+Earlier delayed peer status and a transient DNS warning were observed; their causes
+have not been established and this does not prove internet-forwarding detection.
+
+## DNS verification and shared switch timing
+
+Every successful automatic selection (primary, secondary or final backup, including
+return) waits for the selected-node preference event, then queries `example.com`
+(type A) through the existing Tailscale LocalAPI DNS resolver. No public DNS server
+is contacted directly and DNS preferences are never changed. A successful DNS
+response or NXDOMAIN confirms resolver availability; SERVFAIL, REFUSED, malformed
+responses and timeouts do not. Checks are bounded to three attempts, with two
+seconds of initial settling time and five seconds between unsuccessful attempts.
+Configuration/network changes, paused automation or a different selected node
+cancel or invalidate pending checks. Failover does not disconnect/reconnect the VPN
+or suppress genuine DNS failures. DNS results are recorded in the decision journal.
+
+A present healthy backend health state can omit its Warnings map. This now clears
+obsolete warnings/icons without requiring a reconnect; an unknown health state
+is not treated as recovery. Known DNS-unavailable text is localized in the warning
+view and Android notifications; copied diagnostics retain the original code/text.
+
+Outage and return use the same configured grace period and confirmation count,
+with three-second spacing between confirmations. The old extra return delay is no
+longer applied or shown; its saved JSON field is retained for compatibility only.
+Retries use the configured grace period instead of a fixed extra minute. Backend
+online events and probe timeouts can still affect the observed total time.

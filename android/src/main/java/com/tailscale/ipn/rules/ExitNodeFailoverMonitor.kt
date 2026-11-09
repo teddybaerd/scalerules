@@ -18,9 +18,11 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlinx.coroutines.withTimeoutOrNull
 
 /** Observes the existing IPN bus. Timers and probes run only during a failover incident. */
 class ExitNodeFailoverMonitor(
@@ -31,31 +33,26 @@ class ExitNodeFailoverMonitor(
   private val ready = MutableStateFlow(false)
   private val config = MutableStateFlow(store.failover())
   private var job: Job? = null
+  private var dnsJob: Job? = null
 
   private data class Snapshot(
       val config: ExitNodeFailoverConfig,
       val controlURL: String?,
       val selfID: String?,
       val selectedID: String?,
-      val primaryOnline: Boolean?,
-      val fallbackOnline: Boolean?,
+      val online: Map<String, Boolean?>,
+      val eligible: Set<String>,
       val running: Boolean,
   ) {
-    val action: FailoverAction
+    val candidates: List<String>
       get() =
-          ExitNodeFailoverPolicy.action(
-              config,
-              controlURL,
-              selfID,
-              running,
-              selectedID,
-              primaryOnline,
-              fallbackOnline,
-          )
+          PriorityFailoverPolicy.candidates(config, selectedID, online, controlURL, selfID, running)
   }
 
   fun refresh(available: Boolean) {
-    config.value = store.failover()
+    val updated = store.failover()
+    if (!available || updated != config.value) dnsJob?.cancel()
+    config.value = updated
     ready.value = available
   }
 
@@ -63,18 +60,20 @@ class ExitNodeFailoverMonitor(
     val cfg = config.value
     val map = Notifier.netmap.value
     val prefs = Notifier.prefs.value
-    val peers = map?.Peers.orEmpty().filter { it.isExitNode }
+    // An offline peer can lose its advertised routes. Keep its online state visible.
+    val peers = map?.Peers.orEmpty()
+    val vpnActive = App.get().getAppScopedViewModel().vpnActive.value
     return Snapshot(
         cfg,
         prefs?.ControlURL,
         map?.SelfNode?.StableID,
         prefs?.activeExitNodeID,
-        peers.find { it.StableID == cfg.primaryID }?.Online,
-        peers.find { it.StableID == cfg.fallbackID }?.Online,
+        cfg.priorityIDs.associateWith { findFailoverPeer(peers, it)?.Online },
+        cfg.priorityIDs.filter { findFailoverPeer(peers, it)?.isExitNode == true }.toSet(),
         ready.value &&
             prefs?.WantRunning == true &&
             Notifier.state.value == Ipn.State.Running &&
-            App.get().getAppScopedViewModel().vpnActive.value,
+            vpnActive,
     )
   }
 
@@ -87,40 +86,64 @@ class ExitNodeFailoverMonitor(
           }
           .distinctUntilChanged()
           .collectLatest { initial ->
-            if (initial.action == FailoverAction.NONE) return@collectLatest
+            if (initial.config.primaryID.isNotBlank()) {
+              store.log(
+                  context.getString(
+                      R.string.sr_failover_diagnostic,
+                      "running=${initial.running}, profile=${initial.config.controlURL == initial.controlURL && initial.config.selfID == initial.selfID}, " +
+                          "priority=${initial.config.priorityIDs.indexOf(initial.selectedID) + 1}, online=${initial.config.priorityIDs.map { initial.online[it] }}",
+                  )
+              )
+            }
+            if (initial.candidates.isEmpty()) return@collectLatest
             delay(initial.config.graceSeconds * 1000L)
             while (currentCoroutineContext().isActive && snapshot() == initial) {
               val confirmation =
-                  FailoverConfirmation(
+                  PriorityFailoverConfirmation(
                       probe = { id -> peer(id)?.let { probe(it) } ?: false },
                       wait = { delay(it) },
                   )
               val targetID =
-                  when (initial.action) {
-                    FailoverAction.CHECK_FALLBACK ->
-                        if (confirmation.fallback(initial.config)) initial.config.fallbackID
-                        else null
-                    FailoverAction.CHECK_PRIMARY ->
-                        if (confirmation.primary(initial.config)) initial.config.primaryID else null
-                    FailoverAction.NONE -> null
-                  }
-              if (targetID != null && snapshot() == initial) {
-                peer(targetID)?.let { switchTo(it, initial) }
+                  confirmation.target(
+                      initial.config,
+                      initial.selectedID ?: return@collectLatest,
+                      initial.online[initial.selectedID] == false,
+                      initial.candidates.filter {
+                        initial.online[it] == true && it in initial.eligible
+                      },
+                  )
+              if (targetID == null && initial.online[initial.selectedID] == false) {
+                store.log(context.getString(R.string.sr_failover_no_target))
               }
-              // Retry only while an incident remains unresolved, never in the healthy steady state.
-              delay(60000)
+              if (targetID != null && snapshot() == initial) {
+                // The destination must still offer exit routes when the switch is issued.
+                peer(targetID)?.takeIf { it.isExitNode }?.let { switchTo(it, initial) }
+              }
+              // Retry only while an incident remains unresolved, never in the healthy steady
+              // state.
+              delay(initial.config.graceSeconds * 1000L)
             }
           }
     }
   }
 
   private fun peer(id: String): Tailcfg.Node? =
-      Notifier.netmap.value?.Peers?.find { it.StableID == id && it.isExitNode }
+      findFailoverPeer(Notifier.netmap.value?.Peers.orEmpty(), id)
 
   private suspend fun probe(peer: Tailcfg.Node): Boolean =
       suspendCancellableCoroutine { continuation ->
         Client(scope).ping(peer) { result ->
-          if (continuation.isActive) continuation.resume(result.getOrNull()?.Err?.isEmpty() == true)
+          if (continuation.isActive) {
+            val reachable = result.getOrNull()?.Err?.isEmpty() == true
+            store.log(
+                context.getString(
+                    if (reachable) R.string.sr_failover_probe_ok
+                    else R.string.sr_failover_probe_failed,
+                    peer.displayName,
+                )
+            )
+            continuation.resume(reachable)
+          }
         }
       }
 
@@ -137,6 +160,52 @@ class ExitNodeFailoverMonitor(
               peer.displayName,
           )
       )
+      if (result.isSuccess) checkDNSAfterSwitch(peer.StableID, initial)
+    }
+  }
+
+  private fun checkDNSAfterSwitch(targetID: String, initial: Snapshot) {
+    dnsJob?.cancel()
+    dnsJob = scope.launch {
+      fun current(): Boolean {
+        val now = snapshot()
+        return now.running &&
+            now.config == initial.config &&
+            now.controlURL == initial.controlURL &&
+            now.selfID == initial.selfID &&
+            now.selectedID == targetID
+      }
+      // Wait for the selected-node event, rather than assuming preference acknowledgement
+      // means the new DNS configuration is already applied.
+      val applied =
+          withTimeoutOrNull(10000) {
+            Notifier.prefs.first { it?.activeExitNodeID == targetID }
+            true
+          } == true
+      if (!applied) return@launch
+      // Give the applied exit-node/DNS configuration time to settle. Never reconnect the VPN.
+      delay(2000)
+      repeat(3) { attempt ->
+        if (!current()) return@launch
+        val available =
+            withTimeoutOrNull(6000) {
+              val requestScope = CoroutineScope(currentCoroutineContext())
+              suspendCancellableCoroutine<Boolean> { continuation ->
+                Client(requestScope).checkDNS { result ->
+                  if (continuation.isActive)
+                      continuation.resume(result.getOrNull()?.available == true)
+                }
+              }
+            } == true
+        if (!current()) return@launch
+        store.log(
+            context.getString(
+                if (available) R.string.sr_failover_dns_ok else R.string.sr_failover_dns_failed
+            )
+        )
+        if (available) return@launch
+        if (attempt < 2) delay(5000)
+      }
     }
   }
 
@@ -144,5 +213,12 @@ class ExitNodeFailoverMonitor(
     ready.value = false
     job?.cancel()
     job = null
+    dnsJob?.cancel()
+    dnsJob = null
   }
+}
+
+/** Monitoring an offline node must not depend on its current route advertisement. */
+internal fun findFailoverPeer(peers: List<Tailcfg.Node>, id: String): Tailcfg.Node? = peers.find {
+  it.StableID == id
 }

@@ -58,7 +58,7 @@ class RulesService : Service() {
         override fun onLost(network: Network) = schedule()
 
         override fun onCapabilitiesChanged(network: Network, capabilities: NetworkCapabilities) =
-            schedule()
+            schedule(invalidateFailover = false)
       }
 
   override fun onCreate() {
@@ -80,7 +80,7 @@ class RulesService : Service() {
             ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) !=
                 PackageManager.PERMISSION_GRANTED
     ) {
-      if (intent?.action == RulesBootReceiver.ACTION_BOOT) RulesBootReceiver.remind(this)
+      remindIfAutomaticResume(intent)
       store.log(getString(R.string.sr_automation_no_permission))
       stopSelf()
       return START_NOT_STICKY
@@ -118,12 +118,18 @@ class RulesService : Service() {
         failover.start()
         store.preferences.edit().putBoolean("resume_after_boot", true).apply()
         getSystemService(NotificationManager::class.java).cancel(7102)
-        store.log(getString(R.string.sr_automation_started))
+        store.log(
+            getString(
+                if (intent?.action == RulesBootReceiver.ACTION_UPDATE)
+                    R.string.sr_automation_resumed_update
+                else R.string.sr_automation_started
+            )
+        )
       }
       lastDecision = null
       schedule()
     } catch (e: RuntimeException) {
-      if (intent?.action == RulesBootReceiver.ACTION_BOOT) RulesBootReceiver.remind(this)
+      remindIfAutomaticResume(intent)
       store.log(getString(R.string.sr_automation_failed, e.javaClass.simpleName))
       stopSelf()
     }
@@ -131,10 +137,20 @@ class RulesService : Service() {
     return START_NOT_STICKY
   }
 
-  private fun schedule() {
+  private fun remindIfAutomaticResume(intent: Intent?) {
+    if (
+        intent?.action == RulesBootReceiver.ACTION_BOOT ||
+            intent?.action == RulesBootReceiver.ACTION_UPDATE
+    ) {
+      RulesBootReceiver.remind(this, intent?.action == RulesBootReceiver.ACTION_UPDATE)
+    }
+  }
+
+  private fun schedule(invalidateFailover: Boolean = true) {
     handler.post {
-      // Cancel pending probes immediately on network/rule changes, before the debounce.
-      failover.refresh(false)
+      // Network loss/arrival and rule edits cancel confirmations immediately. Capability
+      // refreshes on the same network must not endlessly restart the failover grace period.
+      if (invalidateFailover) failover.refresh(false)
       handler.removeCallbacks(evaluateTask)
       handler.postDelayed(evaluateTask, 2000)
     }

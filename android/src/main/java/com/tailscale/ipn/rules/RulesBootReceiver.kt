@@ -15,11 +15,15 @@ import com.tailscale.ipn.util.ScaleRulesNotice
 
 class RulesBootReceiver : BroadcastReceiver() {
   override fun onReceive(context: Context, intent: Intent) {
-    if (intent.action != Intent.ACTION_BOOT_COMPLETED) return
+    val afterUpdate = intent.action == Intent.ACTION_MY_PACKAGE_REPLACED
+    if (!afterUpdate && intent.action != Intent.ACTION_BOOT_COMPLETED) return
     val store = RulesStore(context)
     if (
-        !store.preferences.getBoolean("start_on_boot", false) ||
-            !store.preferences.getBoolean("resume_after_boot", false)
+        !shouldResumeRules(
+            afterUpdate,
+            store.preferences.getBoolean("resume_after_boot", false),
+            store.preferences.getBoolean("start_on_boot", false),
+        )
     )
         return
     val rules = runCatching {
@@ -38,31 +42,40 @@ class RulesBootReceiver : BroadcastReceiver() {
                 Manifest.permission.ACCESS_BACKGROUND_LOCATION,
             ) == PackageManager.PERMISSION_GRANTED
     if (!backgroundAllowed || VpnService.prepare(context) != null) {
-      remind(context)
+      remind(context, afterUpdate)
       return
     }
     try {
       ContextCompat.startForegroundService(
           context,
-          Intent(context, RulesService::class.java).setAction(ACTION_BOOT),
+          Intent(context, RulesService::class.java)
+              .setAction(if (afterUpdate) ACTION_UPDATE else ACTION_BOOT),
       )
     } catch (_: RuntimeException) {
-      remind(context)
+      remind(context, afterUpdate)
     }
   }
 
   companion object {
     const val ACTION_BOOT = "io.github.teddybaerd.scalerules.RESUME_AFTER_BOOT"
 
-    fun remind(context: Context) {
+    const val ACTION_UPDATE = "io.github.teddybaerd.scalerules.RESUME_AFTER_UPDATE"
+
+    fun remind(context: Context, afterUpdate: Boolean = false) {
       ScaleRulesNotice.show(
           context,
           "scalerules_boot",
           7102,
-          R.string.sr_boot_title,
-          context.getString(R.string.sr_boot_resume),
+          if (afterUpdate) R.string.sr_update_resume_title else R.string.sr_boot_title,
+          context.getString(
+              if (afterUpdate) R.string.sr_update_resume else R.string.sr_boot_resume
+          ),
           Intent(context, RulesActivity::class.java),
       )
     }
   }
 }
+
+/** Updates restore the saved active state independently of the optional boot setting. */
+internal fun shouldResumeRules(afterUpdate: Boolean, wasActive: Boolean, startOnBoot: Boolean) =
+    wasActive && (afterUpdate || startOnBoot)

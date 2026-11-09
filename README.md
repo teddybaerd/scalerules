@@ -21,7 +21,7 @@
 
 ScaleRules is an independent Android VPN client for **Tailscale and Headscale**, with automatic connection rules that you define yourself.
 
-Current stable release: **[0.2.8](https://github.com/teddybaerd/scalerules/releases/tag/v0.2.8)**.
+Current stable release: **[0.2.9](https://github.com/teddybaerd/scalerules/releases/tag/v0.2.9)**.
 
 Signed APKs are available from [GitHub Releases](https://github.com/teddybaerd/scalerules/releases). Distribution is through GitHub, the built-in updater or Obtainium. Publication on the Google Play Store is not planned.
 
@@ -44,7 +44,7 @@ Under **Settings → Connection rules**, you define conditions and actions:
 - Warnings help identify conflicting rules and rules hidden by earlier rules.
 - A decision journal records recent automation actions.
 
-There is **no automatic learning feature**. Editing the rules pauses automation, which you must explicitly resume. The optional **Start rules after reboot** setting restores previously active automation after a device restart. Manually paused automation remains paused. After the automation process is terminated, manual resumption may still be necessary.
+There is **no automatic learning feature**. Editing the rules pauses automation, which you must explicitly resume. The optional **Start rules after reboot** setting restores previously active automation after a device restart. Manually paused automation remains paused. App updates automatically resume previously active automation with the saved settings, independently of the reboot option. Current connection rules are evaluated again. After other process termination, manual resumption may still be necessary.
 
 For SSID rules, Android requires precise location permission and enabled location services to provide the Wi-Fi name. An SSID alone does not establish that a Wi-Fi network is trustworthy.
 
@@ -60,7 +60,9 @@ Autostart was tested on Samsung Galaxy S10 and Tab S8; the manual-resume notific
 
 More details: [Connection rules](docs/RULES.md).
 
-### Experimental exit-node failover (next test build)
+### Exit-node failover (Beta)
+
+Available since **0.2.9**; disabled by default. Configure it under **Settings → Connection rules**, select the preferred exit node and resume automation. The app currently still labels this feature experimental; Beta reflects the successful device tests, with longer everyday use still to be evaluated.
 
 Connection rules can optionally prefer one exit node and switch to a verified backup
 when the preferred node is reported offline. Automatic delayed return is optional.
@@ -70,6 +72,7 @@ the current account; manual selection of a different node suspends failover.
 
 This is not an internet/DNS health check. DNS must remain available when the preferred
 site fails. Android background restrictions may delay detection and switching.
+Device tests confirmed switching to the backup, website access through it, automatic return, and both switches with the display locked. If both nodes fail, failover leaves the VPN enabled. Existing split-tunnel exclusions still apply.
 See [behavior and device test checklist](docs/RULES.md#experimental-exit-node-failover).
 
 ### Split tunneling and default exclusions
@@ -111,7 +114,8 @@ Choose your sign-in method under **Settings → Accounts**: Tailscale sign-in/re
 
 ## Changes in previous builds
 
-- **0.2.8 (current):** Tailscale Android 1.104.5, reviewed security/dependency maintenance, and nickname-only ScaleRules attribution.
+- **0.2.9 (current):** optional preferred/backup exit-node failover with confirmed switching and delayed return; automatic recovery of active rule automation after app updates, with permission-aware recovery notifications.
+- **0.2.8:** Tailscale Android 1.104.5, reviewed security/dependency maintenance, and nickname-only ScaleRules attribution.
 - **0.2.7:** background update notifications, optional rules autostart after reboot, own copyright in About, and Android/Compose dependency updates. Compile SDK 37.2, target SDK 36, minimum SDK 26.
 - **0.2.6 (test build):** stable Security Crypto 1.1.0; updating an existing installation retained accounts and settings.
 - **0.2.5:** directly accessible account options, explicit provider choice, ScaleRules icon and GitHub link in About.
@@ -167,7 +171,7 @@ ScaleRules is an independent project and is neither published nor endorsed by Ta
 
 ScaleRules ist ein unabhängiger Android-VPN-Client für **Tailscale und Headscale** mit selbst festgelegten automatischen Verbindungsregeln.
 
-Aktuelle stabile Version: **[0.2.8](https://github.com/teddybaerd/scalerules/releases/tag/v0.2.8)**.
+Aktuelle stabile Version: **[0.2.9](https://github.com/teddybaerd/scalerules/releases/tag/v0.2.9)**.
 
 Signierte APKs stehen unter [GitHub Releases](https://github.com/teddybaerd/scalerules/releases) bereit. Die Verteilung erfolgt über GitHub, den integrierten Updater oder Obtainium. Eine Veröffentlichung im Google Play Store ist nicht vorgesehen.
 
@@ -190,7 +194,7 @@ Unter **Einstellungen → Verbindungsregeln** legst du Bedingungen und Aktionen 
 - Warnungen helfen, widersprüchliche oder durch frühere Regeln verdeckte Regeln zu erkennen.
 - Ein Entscheidungsprotokoll macht die letzten Automatik-Aktionen nachvollziehbar.
 
-Es gibt **keine automatische Lernfunktion**. Nach Änderungen an den Regeln ist die Automatik pausiert und muss bewusst wieder gestartet werden. Mit der optionalen Einstellung **Regeln nach Geräteneustart starten** wird zuvor aktive Automatik nach dem Hochfahren fortgesetzt. Bewusst pausierte Automatik bleibt pausiert. Nach dem Beenden des Automatik-Prozesses kann ein manueller Neustart weiterhin erforderlich sein.
+Es gibt **keine automatische Lernfunktion**. Nach Änderungen an den Regeln ist die Automatik pausiert und muss bewusst wieder gestartet werden. Mit der optionalen Einstellung **Regeln nach Geräteneustart starten** wird zuvor aktive Automatik nach dem Hochfahren fortgesetzt. Bewusst pausierte Automatik bleibt pausiert. Seit **0.2.9** wird zuvor aktive Automatik auch nach App-Updates mit den gespeicherten Einstellungen fortgesetzt, unabhängig vom Geräteneustart-Schalter. Die aktuellen Verbindungsregeln werden erneut ausgewertet. Fehlen Berechtigungen oder blockiert Android den Hintergrundstart, erscheint bei erlaubten Benachrichtigungen ein Hinweis zum manuellen Fortsetzen. Nach anderen Beendigungen des Automatik-Prozesses kann ein manueller Neustart weiterhin erforderlich sein.
 
 Für SSID-Regeln benötigt Android die Berechtigung für den genauen Standort und aktivierte Standortdienste, um den WLAN-Namen bereitzustellen. Ein SSID-Name allein bestätigt nicht die Vertrauenswürdigkeit eines WLANs.
 
@@ -206,7 +210,9 @@ Der Autostart wurde auf Samsung Galaxy S10 und Tab S8 getestet; der Hinweis zum 
 
 Weitere Details: [Verbindungsregeln](docs/RULES.md).
 
-### Experimentelles Exit-Node-Failover (nächster Test-Build)
+### Exit-Node-Failover (Beta)
+
+Seit **0.2.9** verfügbar und standardmäßig ausgeschaltet. Unter **Einstellungen → Verbindungsregeln** einrichten, den bevorzugten Exit Node auswählen und die Automatik starten. In der App ist die Funktion derzeit noch als experimentell beschriftet; Beta entspricht den erfolgreichen Gerätetests, während die längere Alltagserprobung noch aussteht.
 
 Die Verbindungsregeln können optional einen Exit Node bevorzugen und bei gemeldetem
 Ausfall zu einem geprüften Ersatz wechseln. Die verzögerte automatische Rückkehr ist
@@ -217,6 +223,7 @@ aktuellen Konto; die manuelle Auswahl eines anderen Knotens setzt Failover aus.
 Dies prüft weder Internetweiterleitung noch DNS. Die Namensauflösung muss auch beim
 Ausfall des bevorzugten Standorts funktionieren. Android-Hintergrundbeschränkungen
 können Erkennung und Wechsel verzögern.
+Gerätetests bestätigten den Wechsel zum Ersatzknoten, Webseitenzugriff darüber, die automatische Rückkehr und beide Wechsel bei gesperrtem Display. Sind beide Knoten ausgefallen, bleibt der VPN eingeschaltet. Bestehende Split-Tunnel-Ausnahmen gelten weiterhin.
 [Verhalten und Gerätetest-Checkliste](docs/RULES.md#experimental-exit-node-failover).
 
 ### Split-Tunneling und voreingestellte Ausnahmen
@@ -258,7 +265,8 @@ Unter **Einstellungen → Konten** sind Tailscale-Anmeldung/Registrierung, weite
 
 ## Änderungen der bisherigen Builds
 
-- **0.2.8 (aktuell):** Tailscale Android 1.104.5, geprüfte Sicherheits-/Abhängigkeitspflege und ScaleRules-Copyright nur mit GitHub-Nick.
+- **0.2.9 (aktuell):** optionales Exit-Node-Failover mit Haupt- und Ersatzknoten, bestätigter Umschaltung und verzögerter Rückkehr; automatische Wiederaufnahme aktiver Regelautomatik nach App-Updates sowie Hinweise zum Fortsetzen bei fehlenden Berechtigungen oder blockiertem Hintergrundstart.
+- **0.2.8:** Tailscale Android 1.104.5, geprüfte Sicherheits-/Abhängigkeitspflege und ScaleRules-Copyright nur mit GitHub-Nick.
 - **0.2.7:** Update-Benachrichtigungen im Hintergrund, optionaler Regelautostart nach Neustart, eigener Copyright-Hinweis unter Über sowie aktualisierte Android-/Compose-Abhängigkeiten. Compile SDK 37.2, Ziel-SDK 36, Mindest-SDK 26.
 - **0.2.6 (Test-Build):** stabile Security Crypto 1.1.0; Konten und Einstellungen blieben beim Update einer bestehenden Installation erhalten.
 - **0.2.5:** direkt erreichbare Kontooptionen, bewusste Serverauswahl, ScaleRules-Icon und GitHub-Link unter Über.
