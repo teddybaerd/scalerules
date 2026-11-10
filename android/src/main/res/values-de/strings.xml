@@ -33,11 +33,11 @@
     <string name="terms_of_service">Nutzungsbedingungen</string>
     <string name="about_view_footnotes">© 2026 teddybaerd – ScaleRules.\n\nWireGuard ist eine eingetragene Marke von Jason A. Donenfeld.\n\n© Tailscale Inc. Alle Rechte vorbehalten.\nTailscale ist eine eingetragene Marke von Tailscale Inc.</string>
     <string name="managed_by">Verwaltet von</string>
-    <string name="bug_report_title">Fehler melden</string>
-    <string name="bug_report_instructions_prefix">"Um einen Fehler zu melden, "</string>
-    <string name="bug_report_instructions_linktext">"kontaktiere den Tailscale-Support "</string>
-    <string name="bug_report_instructions_suffix">"und gib die folgende Kennung an."</string>
-    <string name="bug_report_id_desc">Diese Kennung hilft, das Ereignis in den Diagnoseprotokollen zu finden. Dabei werden keine personenbezogenen Informationen übermittelt.</string>
+
+
+
+
+
     <string name="settings_title">Einstellungen</string>
     <string name="settings_admin_prefix">"Verwalte deine Netzwerkeinstellungen in der "</string>
     <string name="settings_admin_link">Verwaltungskonsole</string>
@@ -148,7 +148,7 @@
     <string name="tailnet_lock_key">Tailnet-Lock-Schlüssel</string>
     <string name="node_key_explainer">Wird verwendet, um dieses Gerät von einem anderen signierenden Gerät im Netzwerk aus zu signieren.</string>
     <string name="tailnet_lock_key_explainer">Wird verwendet, um Änderungen an der Tailnet-Lock-Konfiguration zu autorisieren.</string>
-    <string name="bug_report_id">Fehlerbericht-Kennung</string>
+
     <string name="learn_more">Mehr erfahren</string>
     <string name="dns_settings">DNS-Einstellungen</string>
     <string name="using_tailscale_dns">Tailscale-DNS wird verwendet</string>
@@ -299,12 +299,12 @@
     <string name="run_as_subnet_router">Als Subnetz-Router betreiben</string>
     <string name="use_tailscale_subnets_subtitle">Leite Datenverkehr gemäß den Netzwerkregeln weiter. Manche Netzwerke benötigen dies auch für IP-Adressen außerhalb von 100.x.y.z.</string>
     <string name="subnet_routing">Subnetz-Routing</string>
-    <string name="client_remote_logging_enabled">Entfernte Client-Protokollierung</string>
-    <string name="client_remote_logging_enabled_subtitle">Legt fest, ob Diagnoseprotokolle und optional aktivierte Verbindungsprotokolle hochgeladen werden.</string>
-    <string name="client_remote_logging_enabled_subtitle_mdm">Auf fernverwalteten Geräten ist die Client-Protokollierung immer aktiviert.</string>
-    <string name="client_remote_logging_disable_confirm_title">Entfernte Client-Protokollierung deaktivieren?</string>
-    <string name="client_remote_logging_disable_confirm_message">Dadurch funktionieren gegebenenfalls von der Netzwerkadministration vorgeschriebene Network Flow Logs nicht mehr. Außerdem kann der Tailscale-Support Probleme mit diesem Gerät nicht mehr anhand dieser Protokolle untersuchen.</string>
-    <string name="client_remote_logging_disable_confirm_button">Ja, deaktivieren</string>
+
+
+
+
+
+
     <string name="specifies_a_device_name_to_be_used_instead_of_the_automatic_default">Legt einen Gerätenamen anstelle des automatisch vergebenen Namens fest.</string>
     <string name="hostname">Gerätename</string>
     <string name="failed_to_save">Speichern fehlgeschlagen</string>
@@ -349,8 +349,8 @@
     <string name="sr_rules_delete">Löschen</string>
     <string name="sr_rules_higher">Höher ↑</string>
     <string name="sr_rules_lower">Tiefer ↓</string>
-    <string name="sr_rules_journal">Entscheidungsprotokoll</string>
-    <string name="sr_rules_clear_journal">Protokoll leeren</string>
+    <string name="sr_rules_journal">Regelentscheidungen und Automatik</string>
+    <string name="sr_rules_clear_journal">Regelprotokoll leeren</string>
     <string name="sr_rules_delete_title">Regel löschen?</string>
     <string name="sr_rules_editor">Regel bearbeiten</string>
     <string name="sr_rules_name">Regelname</string>
@@ -491,5 +491,11 @@
     <string name="sr_failover_dns_ok">Exit-Node-Failover: DNS antwortet nach dem Wechsel über den konfigurierten Resolver.</string>
     <string name="sr_failover_dns_failed">Exit-Node-Failover: DNS-Prüfung nach dem Wechsel fehlgeschlagen; bei weiterhin gestörtem DNS bleibt die Warnung bestehen.</string>
     <string name="sr_failover_timing_dns_hint">Für Ausfallwechsel und Rückkehr gelten dieselbe Wartezeit und Anzahl an Bestätigungsprüfungen. Nach jedem Wechsel wird DNS über den konfigurierten Resolver geprüft; anhaltende DNS-Fehler bleiben sichtbar.</string>
+    <string name="sr_failover_journal">Failover-Protokoll</string>
+    <string name="sr_failover_clear_journal">Failover-Protokoll leeren</string>
+    <string name="sr_journal_empty">Noch keine Einträge.</string>
+    <string name="sr_journal_legacy">Ältere gemeinsame Einträge (%1$d)</string>
+    <string name="sr_journal_legacy_hint">Protokoll früherer App-Versionen mit Regel- und Failover-Ereignissen. Wird nur hier angezeigt.</string>
+    <string name="sr_journal_clear_legacy">Ältere gemeinsame Einträge löschen</string>
 </resources>
 

@@ -42,7 +42,7 @@ Under **Settings → Connection rules**, you define conditions and actions:
 - The order determines priority: **the first enabled matching rule wins.**
 - Without a matching rule, the VPN state stays unchanged.
 - Warnings help identify conflicting rules and rules hidden by earlier rules.
-- A decision journal records recent automation actions.
+- A decision journal records rule decisions and automation messages. Exit-node failover has its own journal; clearing one preserves the other.
 
 There is **no automatic learning feature**. Editing the rules pauses automation, which you must explicitly resume. The optional **Start rules after reboot** setting restores previously active automation after a device restart. Manually paused automation remains paused. App updates automatically resume previously active automation with the saved settings, independently of the reboot option. Current connection rules are evaluated again. After other process termination, manual resumption may still be necessary.
 
@@ -147,6 +147,7 @@ The current foundation is **Tailscale Android 1.104.5**. ScaleRules preserves th
 
 The [security and upstream monitor](https://github.com/teddybaerd/scalerules/issues/6) collects new bulletins and review candidates. Matching a package version to an advisory does not establish an exploitable Android vulnerability. VPN engine changes are reviewed and tested before adoption.
 
+- [Diagnostic logging and remaining network connections](docs/PRIVACY.md)
 - [Provenance and upstream updates](docs/UPSTREAM.md)
 - [Security monitoring and its limitations](docs/SECURITY-MONITORING.md)
 - [Permanent signing and key backup](docs/SIGNING.md)
@@ -192,7 +193,7 @@ Unter **Einstellungen → Verbindungsregeln** legst du Bedingungen und Aktionen 
 - Die Reihenfolge legt die Priorität fest: **Die erste aktivierte passende Regel gewinnt.**
 - Ohne passende Regel bleibt der VPN-Zustand unverändert.
 - Warnungen helfen, widersprüchliche oder durch frühere Regeln verdeckte Regeln zu erkennen.
-- Ein Entscheidungsprotokoll macht die letzten Automatik-Aktionen nachvollziehbar.
+- Ein Entscheidungsprotokoll zeigt Regelentscheidungen und Automatikmeldungen. Exit-Node-Failover hat ein eigenes Protokoll; Leeren eines Protokolls erhält das andere.
 
 Es gibt **keine automatische Lernfunktion**. Nach Änderungen an den Regeln ist die Automatik pausiert und muss bewusst wieder gestartet werden. Mit der optionalen Einstellung **Regeln nach Geräteneustart starten** wird zuvor aktive Automatik nach dem Hochfahren fortgesetzt. Bewusst pausierte Automatik bleibt pausiert. Seit **0.2.9** wird zuvor aktive Automatik auch nach App-Updates mit den gespeicherten Einstellungen fortgesetzt, unabhängig vom Geräteneustart-Schalter. Die aktuellen Verbindungsregeln werden erneut ausgewertet. Fehlen Berechtigungen oder blockiert Android den Hintergrundstart, erscheint bei erlaubten Benachrichtigungen ein Hinweis zum manuellen Fortsetzen. Nach anderen Beendigungen des Automatik-Prozesses kann ein manueller Neustart weiterhin erforderlich sein.
 
@@ -298,6 +299,7 @@ Die aktuelle Grundlage ist **Tailscale Android 1.104.5**. ScaleRules behält die
 
 Der [Sicherheits- und Upstream-Monitor](https://github.com/teddybaerd/scalerules/issues/6) sammelt neue Meldungen und Prüfkandidaten. Paketversions-Treffer sind kein Nachweis einer ausnutzbaren Android-Schwachstelle. Änderungen am VPN-Kern werden geprüft und getestet übernommen.
 
+- [Diagnoseprotokolle und verbleibende Netzwerkverbindungen](docs/PRIVACY.md)
 - [Herkunft und Upstream-Updates](docs/UPSTREAM.md)
 - [Sicherheitsüberwachung und ihre Grenzen](docs/SECURITY-MONITORING.md)
 - [Dauerhafte Signatur und Schlüsselsicherung](docs/SIGNING.md)

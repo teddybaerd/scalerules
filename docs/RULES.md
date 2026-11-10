@@ -202,3 +202,15 @@ with three-second spacing between confirmations. The old extra return delay is n
 longer applied or shown; its saved JSON field is retained for compatibility only.
 Retries use the configured grace period instead of a fixed extra minute. Backend
 online events and probe timeouts can still affect the observed total time.
+
+## Separate local journals
+
+Connection rules shows rule decisions and automation lifecycle/permission messages.
+Exit-node failover shows peer probes, confirmed switches, DNS checks, return and
+failover errors. Categories are stored with each entry and do not depend on the
+message language. Each page clears only its own category and retains up to 200
+entries; probe bursts cannot evict rule decisions.
+
+Older combined entries are preserved without guessing their category. They appear
+once in an expandable historical section under Connection rules, with a separate
+clear action. New failover events do not appear in the rule journal.
