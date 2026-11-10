@@ -21,7 +21,7 @@
 
 ScaleRules is an independent Android VPN client for **Tailscale and Headscale**, with automatic connection rules that you define yourself.
 
-Current stable release: **[0.2.9](https://github.com/teddybaerd/scalerules/releases/tag/v0.2.9)**.
+Current stable release: **[0.3.0](https://github.com/teddybaerd/scalerules/releases/tag/v0.3.0)**.
 
 Signed APKs are available from [GitHub Releases](https://github.com/teddybaerd/scalerules/releases). Distribution is through GitHub, the built-in updater or Obtainium. Publication on the Google Play Store is not planned.
 
@@ -62,18 +62,13 @@ More details: [Connection rules](docs/RULES.md).
 
 ### Exit-node failover (Beta)
 
-Available since **0.2.9**; disabled by default. Configure it under **Settings → Connection rules**, select the preferred exit node and resume automation. The app currently still labels this feature experimental; Beta reflects the successful device tests, with longer everyday use still to be evaluated.
+Configure failover under **Settings → Exit-node failover** and resume automation. It is disabled by default and supports three prioritized nodes: **primary → optional secondary → final backup**. Existing two-node configurations remain compatible.
 
-Connection rules can optionally prefer one exit node and switch to a verified backup
-when the preferred node is reported offline. Automatic delayed return is optional.
-The monitor uses existing peer status events, with active probes only during an
-incident, and works only while rules and VPN are running. Configuration belongs to
-the current account; manual selection of a different node suspends failover.
+The monitor uses peer status and confirmation probes to switch to a reachable replacement. Optional automatic return selects the highest-priority confirmed reachable node. Outage switching and return use the same configured waiting period and confirmation count. Failover works while automation and VPN are running; its settings belong to the current account. Manually selecting a different node suspends failover.
 
-This is not an internet/DNS health check. DNS must remain available when the preferred
-site fails. Android background restrictions may delay detection and switching.
-Device tests confirmed switching to the backup, website access through it, automatic return, and both switches with the display locked. If both nodes fail, failover leaves the VPN enabled. Existing split-tunnel exclusions still apply.
-See [behavior and device test checklist](docs/RULES.md#experimental-exit-node-failover).
+The configured DNS resolver is checked after automatic switches without reconnecting or changing DNS settings. A DNS warning can still appear temporarily and clear itself. This is not continuous internet-health monitoring; peer reachability does not guarantee working internet forwarding. DNS must remain reachable if a home site fails. Android background restrictions may delay switching. If all configured nodes fail, the VPN remains enabled. Split-tunnel exclusions still apply.
+
+Device tests covered three-node failures and recovery, suitable return timing, connections and separate journals. Longer everyday use remains to be evaluated. See [behavior and device test checklist](docs/RULES.md#experimental-exit-node-failover).
 
 ### Split tunneling and default exclusions
 
@@ -114,7 +109,8 @@ Choose your sign-in method under **Settings → Accounts**: Tailscale sign-in/re
 
 ## Changes in previous builds
 
-- **0.2.9 (current):** optional preferred/backup exit-node failover with confirmed switching and delayed return; automatic recovery of active rule automation after app updates, with permission-aware recovery notifications.
+- **0.3.0 (current):** three prioritized exit nodes, dedicated Beta failover settings, matching switch/return timing, DNS recovery checks, separate rule/failover journals and removal of automatic Tailscale diagnostic uploads. [Full release notes](docs/releases/0.3.0.md).
+- **0.2.9:** optional preferred/backup exit-node failover with confirmed switching and delayed return; automatic recovery of active rule automation after app updates, with permission-aware recovery notifications.
 - **0.2.8:** Tailscale Android 1.104.5, reviewed security/dependency maintenance, and nickname-only ScaleRules attribution.
 - **0.2.7:** background update notifications, optional rules autostart after reboot, own copyright in About, and Android/Compose dependency updates. Compile SDK 37.2, target SDK 36, minimum SDK 26.
 - **0.2.6 (test build):** stable Security Crypto 1.1.0; updating an existing installation retained accounts and settings.
@@ -172,7 +168,7 @@ ScaleRules is an independent project and is neither published nor endorsed by Ta
 
 ScaleRules ist ein unabhängiger Android-VPN-Client für **Tailscale und Headscale** mit selbst festgelegten automatischen Verbindungsregeln.
 
-Aktuelle stabile Version: **[0.2.9](https://github.com/teddybaerd/scalerules/releases/tag/v0.2.9)**.
+Aktuelle stabile Version: **[0.3.0](https://github.com/teddybaerd/scalerules/releases/tag/v0.3.0)**.
 
 Signierte APKs stehen unter [GitHub Releases](https://github.com/teddybaerd/scalerules/releases) bereit. Die Verteilung erfolgt über GitHub, den integrierten Updater oder Obtainium. Eine Veröffentlichung im Google Play Store ist nicht vorgesehen.
 
@@ -213,19 +209,13 @@ Weitere Details: [Verbindungsregeln](docs/RULES.md).
 
 ### Exit-Node-Failover (Beta)
 
-Seit **0.2.9** verfügbar und standardmäßig ausgeschaltet. Unter **Einstellungen → Verbindungsregeln** einrichten, den bevorzugten Exit Node auswählen und die Automatik starten. In der App ist die Funktion derzeit noch als experimentell beschriftet; Beta entspricht den erfolgreichen Gerätetests, während die längere Alltagserprobung noch aussteht.
+Unter **Einstellungen → Exit-Node-Failover** einrichten und die Automatik starten. Die Funktion ist standardmäßig ausgeschaltet und unterstützt drei priorisierte Knoten: **Hauptknoten → optionaler zweiter Knoten → letzter Ersatzknoten**. Bestehende Konfigurationen mit zwei Knoten bleiben kompatibel.
 
-Die Verbindungsregeln können optional einen Exit Node bevorzugen und bei gemeldetem
-Ausfall zu einem geprüften Ersatz wechseln. Die verzögerte automatische Rückkehr ist
-abschaltbar. Die Überwachung nutzt vorhandene Statusmeldungen und prüft nur bei einem
-Vorfall aktiv, solange Regelautomatik und VPN laufen. Die Konfiguration gehört zum
-aktuellen Konto; die manuelle Auswahl eines anderen Knotens setzt Failover aus.
+Die Überwachung verwendet Statusmeldungen und Bestätigungsprüfungen für den Wechsel zu einem erreichbaren Ersatz. Die optionale automatische Rückkehr wählt den höchstpriorisierten, bestätigt erreichbaren Knoten. Ausweichen und Rückkehr verwenden dieselbe eingestellte Wartezeit und Anzahl von Bestätigungen. Failover läuft bei aktiver Automatik und aktivem VPN; die Einstellungen gehören zum aktuellen Konto. Die manuelle Auswahl eines anderen Knotens setzt Failover aus.
 
-Dies prüft weder Internetweiterleitung noch DNS. Die Namensauflösung muss auch beim
-Ausfall des bevorzugten Standorts funktionieren. Android-Hintergrundbeschränkungen
-können Erkennung und Wechsel verzögern.
-Gerätetests bestätigten den Wechsel zum Ersatzknoten, Webseitenzugriff darüber, die automatische Rückkehr und beide Wechsel bei gesperrtem Display. Sind beide Knoten ausgefallen, bleibt der VPN eingeschaltet. Bestehende Split-Tunnel-Ausnahmen gelten weiterhin.
-[Verhalten und Gerätetest-Checkliste](docs/RULES.md#experimental-exit-node-failover).
+Nach automatischen Wechseln wird der konfigurierte DNS-Resolver geprüft, ohne Reconnect oder Änderung der DNS-Einstellungen. Eine DNS-Warnung kann weiterhin kurzzeitig erscheinen und von selbst verschwinden. Es erfolgt keine kontinuierliche Internet-Funktionsprüfung; die Erreichbarkeit eines Knotens bestätigt keine funktionierende Internetweiterleitung. DNS muss auch beim Ausfall eines Heimstandorts erreichbar bleiben. Android-Hintergrundbeschränkungen können Wechsel verzögern. Bei Ausfall aller konfigurierten Knoten bleibt der VPN eingeschaltet. Split-Tunnel-Ausnahmen gelten weiterhin.
+
+Gerätetests bestätigten Ausfälle und Rückkehr bei drei Knoten, passende Rückkehrzeiten, Verbindungen und getrennte Protokolle. Die längere Alltagserprobung steht noch aus. Siehe [Verhalten und Gerätetest-Checkliste](docs/RULES.md#experimental-exit-node-failover).
 
 ### Split-Tunneling und voreingestellte Ausnahmen
 
@@ -266,7 +256,8 @@ Unter **Einstellungen → Konten** sind Tailscale-Anmeldung/Registrierung, weite
 
 ## Änderungen der bisherigen Builds
 
-- **0.2.9 (aktuell):** optionales Exit-Node-Failover mit Haupt- und Ersatzknoten, bestätigter Umschaltung und verzögerter Rückkehr; automatische Wiederaufnahme aktiver Regelautomatik nach App-Updates sowie Hinweise zum Fortsetzen bei fehlenden Berechtigungen oder blockiertem Hintergrundstart.
+- **0.3.0 (aktuell):** drei priorisierte Exit Nodes, eigene Beta-Failover-Einstellungen, gleiche Ausweich-/Rückkehrzeiten, DNS-Prüfung nach Wechseln, getrennte Regel-/Failover-Protokolle und Entfernung automatischer Tailscale-Diagnose-Uploads. [Vollständige Release-Hinweise](docs/releases/0.3.0.md).
+- **0.2.9:** optionales Exit-Node-Failover mit Haupt- und Ersatzknoten, bestätigter Umschaltung und verzögerter Rückkehr; automatische Wiederaufnahme aktiver Regelautomatik nach App-Updates sowie Hinweise zum Fortsetzen bei fehlenden Berechtigungen oder blockiertem Hintergrundstart.
 - **0.2.8:** Tailscale Android 1.104.5, geprüfte Sicherheits-/Abhängigkeitspflege und ScaleRules-Copyright nur mit GitHub-Nick.
 - **0.2.7:** Update-Benachrichtigungen im Hintergrund, optionaler Regelautostart nach Neustart, eigener Copyright-Hinweis unter Über sowie aktualisierte Android-/Compose-Abhängigkeiten. Compile SDK 37.2, Ziel-SDK 36, Mindest-SDK 26.
 - **0.2.6 (Test-Build):** stabile Security Crypto 1.1.0; Konten und Einstellungen blieben beim Update einer bestehenden Installation erhalten.
